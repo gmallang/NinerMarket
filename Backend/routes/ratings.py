@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+import uuid
+from fastapi import APIRouter, HTTPException
 from models import Rating
 from database import ratings
 
@@ -6,6 +7,7 @@ router = APIRouter()
 
 @router.post("/ratings")
 def create_rating(rating: Rating):
+    rating.id = str(uuid.uuid4())
     ratings[rating.id] = rating
     return rating
 

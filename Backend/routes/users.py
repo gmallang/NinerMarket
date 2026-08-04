@@ -1,27 +1,37 @@
-from fastapi import APIRouter
-from models import User
+from fastapi import APIRouter, HTTPException
+
 from database import db, users
+from models import User
 
 router = APIRouter()
+
 
 @router.post("/users")
 def create_user(user: User):
     if not user.email.endswith("@charlotte.edu"):
-        return {"error": "Must use a .charlotte.edu email"}
-    
+        raise HTTPException(status_code=400, detail="Must use a .charlotte.edu email")
+
     if db:
-        return db.table("users").insert(user.dict()).execute()
-    
+        existing = db.table("users").select("id").eq("id", user.id).execute()
+        if existing.data:
+            raise HTTPException(status_code=409, detail="User already exists")
+        data = db.table("users").insert(user.model_dump(mode="json")).execute()
+        return data.data[0]
+
     if user.id in users:
-        return {"error": "User already exists"}
+        raise HTTPException(status_code=409, detail="User already exists")
     users[user.id] = user
     return user
+
 
 @router.get("/users/{id}")
 def get_user(id: str):
     if db:
-        return db.table("users").select("*").eq("id", id).execute()
-    
+        data = db.table("users").select("*").eq("id", id).execute()
+        if not data.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        return data.data[0]
+
     if id not in users:
-        return {"error": "User not found"}
+        raise HTTPException(status_code=404, detail="User not found")
     return users[id]

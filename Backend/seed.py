@@ -1,0 +1,70 @@
+from datetime import datetime, timedelta, timezone
+
+from models import Listing, User
+
+
+def seed_dev_store(users: dict, listings: dict) -> None:
+    if users or listings:
+        return
+
+    now = datetime.now(timezone.utc)
+
+    def user(user_id: str, name: str, rating_avg: float, rating_count: int) -> User:
+        return User(
+            id=user_id,
+            email=f"{user_id}@charlotte.edu",
+            display_name=name,
+            rating_avg=rating_avg,
+            rating_count=rating_count,
+        )
+
+    sellers = {
+        "seller-1":  user("seller-1",  "Maya T.",    4.9, 32),
+        "seller-2":  user("seller-2",  "Jordan K.",  5.0, 18),
+        "seller-3":  user("seller-3",  "Priya S.",   4.7, 41),
+        "seller-4":  user("seller-4",  "Chris L.",   4.8, 27),
+        "seller-5":  user("seller-5",  "Sam R.",     4.6, 15),
+        "seller-6":  user("seller-6",  "Alex P.",    4.5, 22),
+        "seller-7":  user("seller-7",  "Olivia M.",  4.9, 38),
+        "seller-8":  user("seller-8",  "Nadia W.",   4.8, 11),
+        "seller-9":  user("seller-9",  "Tyler B.",   4.4, 9),
+        "seller-10": user("seller-10", "Emma Z.",    5.0, 25),
+        "seller-11": user("seller-11", "Lena H.",    4.7, 19),
+        "seller-12": user("seller-12", "Felix G.",   4.6, 14),
+        "u-anna":    user("u-anna",    "Anna C.",    4.8, 21),
+    }
+    users.update(sellers)
+
+    demo = [
+        (1, "Organic Chemistry (Clayden) 2nd Ed.", 45, "textbooks", "Good", "North Campus", "photo-1544716278-ca5e3f4abd8c", "seller-1", "2h"),
+        (2, "IKEA KALLAX Shelf Unit (White)", 35, "furniture", "Like New", "West Dorms", "photo-1555041469-a586c61ea9bc", "seller-2", "5h"),
+        (3, "Twin XL Mattress Topper", 28, "movein", "Good", "East Side", "photo-1631049307264-da0ec9d70304", "seller-3", "1d"),
+        (4, 'MacBook Pro 14" M2 (2023)', 1100, "electronics", "Excellent", "Main Quad", "photo-1517336714731-489689fd1ca8", "seller-4", "3h"),
+        (5, "Trek 7.2 FX City Bike", 280, "bikes", "Good", "South Gate", "photo-1485965120184-e220f721d03e", "seller-5", "6h"),
+        (6, "Calculus: Early Transcendentals 8e", 30, "textbooks", "Fair", "Engineering Hall", "photo-1509228468518-180dd4864904", "seller-6", "12h"),
+        (7, "Mini Fridge (Galanz 3.1 cu ft)", 65, "movein", "Good", "Res Life Complex", "photo-1584568694244-14fbdf83bd30", "seller-7", "2d"),
+        (8, "Desk Lamp + USB Charging Hub", 18, "movein", "Like New", "North Campus", "photo-1507473885765-e6ed057f782c", "seller-8", "4h"),
+        (9, "Sigma Chi Formal Suit (38R)", 55, "clothing", "Good", "Greek Row", "photo-1594938298603-c8148c4dae35", "seller-9", "1d"),
+        (10, "Peer Tutoring — Orgo & Bio Chem", 20, "services", "Service", "Science Center", "photo-1434030216411-0b793f4b4173", "seller-10", "3d"),
+        (11, "Psychology 101 Course Pack Bundle", 22, "textbooks", "Good", "Social Sciences", "photo-1456513080510-7bf3a84b82f8", "seller-11", "7h"),
+        (12, "Standing Desk Converter", 48, "furniture", "Like New", "Off-Campus Ave", "photo-1593642632559-0c6d3fc62b89", "seller-12", "5d"),
+    ]
+
+    hours_map = {"h": 1, "d": 24}
+
+    for _, name, price, category, condition, campus, image, seller_id, ago in demo:
+        n = int(ago[:-1])
+        listing = Listing(
+            id=str(_),
+            seller_id=seller_id,
+            name=name,
+            price=price,
+            category=category,
+            condition=condition,
+            description=name,
+            status="active",
+            photos=[f"https://images.unsplash.com/{image}?w=400&h=400&fit=crop&auto=format"],
+            pickup_location=campus,
+            created_at=now - timedelta(hours=n * hours_map[ago[-1]]),
+        )
+        listings[listing.id] = listing

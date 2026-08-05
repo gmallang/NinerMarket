@@ -1,0 +1,78 @@
+export interface Seller {
+  id: string;
+  display_name: string;
+  rating_avg: number;
+  rating_count: number;
+}
+
+export interface ListingDto {
+  id: string;
+  seller_id: string;
+  name: string;
+  price: number;
+  category: string;
+  condition: string;
+  description: string;
+  status: string;
+  photos: string[];
+  pickup_location: string;
+  created_at: string;
+  seller: Seller | null;
+}
+
+export interface Listing {
+  id: string;
+  title: string;
+  price: number;
+  category: string;
+  campus: string;
+  time: string;
+  condition: string;
+  image: string;
+  seller: string;
+  sellerRating: number;
+}
+
+export interface NewListing {
+  seller_id: string;
+  name: string;
+  price: number;
+  category: string;
+  condition: string;
+  description: string;
+  pickup_location: string;
+}
+
+export const CURRENT_USER_ID = "u-anna";
+
+const PLACEHOLDER_IMG =
+  "https://placehold.co/400x400/e8f5e9/1a7a3c?text=NinerMarket";
+
+export function fromDto(d: ListingDto): Listing {
+  return {
+    id: d.id,
+    title: d.name,
+    price: d.price,
+    category: d.category,
+    campus: d.pickup_location,
+    time: formatRelativeTime(d.created_at),
+    condition: d.condition,
+    image: d.photos?.[0] ?? PLACEHOLDER_IMG,
+    seller: d.seller?.display_name ?? "Unknown seller",
+    sellerRating: d.seller?.rating_avg ?? 0,
+  };
+}
+
+export function formatRelativeTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const diffMs = Date.now() - then;
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString();
+}

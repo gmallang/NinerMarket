@@ -1,0 +1,133 @@
+/* ─────────────────────────────────────────────
+   CampusMarket — Main design tokens
+   All other CSS files pull from these variables.
+   ───────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap');
+
+:root {
+  /* Fonts */
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', sans-serif;
+
+  /* Brand greens */
+  --color-primary:       #1a7a3c;
+  --color-primary-dark:  #145c2d;
+  --color-primary-light: #22a050;
+  --color-primary-fg:    #ffffff;
+
+  /* Surfaces */
+  --color-bg:      #f0f2f0;
+  --color-card:    #ffffff;
+  --color-muted:   #eef0ee;
+  --color-accent:  #e8f5ec;
+
+  /* Text */
+  --color-fg:         #1c1e1c;
+  --color-fg-muted:   #6b7a6b;
+  --color-fg-subtle:  #9daa9d;
+  --color-fg-inverse: #ffffff;
+
+  /* Borders */
+  --color-border:       rgba(0, 0, 0, 0.10);
+  --color-border-focus: #1a7a3c;
+
+  /* Semantic */
+  --color-danger:  #d4183d;
+  --color-warn:    #d97706;
+  --color-success: #16a34a;
+
+  /* Condition badge colours */
+  --badge-like-new-bg:   #d1fae5;
+  --badge-like-new-fg:   #065f46;
+  --badge-excellent-bg:  #dcfce7;
+  --badge-excellent-fg:  #14532d;
+  --badge-good-bg:       #fef9c3;
+  --badge-good-fg:       #713f12;
+  --badge-fair-bg:       #ffedd5;
+  --badge-fair-fg:       #7c2d12;
+  --badge-service-bg:    #ede9fe;
+  --badge-service-fg:    #4c1d95;
+
+  /* Chat bubble colours */
+  --bubble-sent-bg:     #1a7a3c;
+  --bubble-sent-fg:     #ffffff;
+  --bubble-recv-bg:     #eef0ee;
+  --bubble-recv-fg:     #1c1e1c;
+
+  /* Spacing scale */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+
+  /* Radii */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.14), 0 4px 10px rgba(0,0,0,0.08);
+
+  /* Nav height */
+  --nav-h: 56px;
+
+  /* Sidebar width */
+  --sidebar-w: 256px;
+
+  /* Transitions */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration: 180ms;
+}
+
+/* ── Base resets ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-fg);
+  min-height: 100vh;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input, select, textarea {
+  font-family: var(--font-body);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* ── Scrollbar polish ── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: var(--radius-full); }

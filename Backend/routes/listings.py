@@ -2,14 +2,41 @@ import uuid
 
 from fastapi import APIRouter, HTTPException, Query
 
-from database import db, listings
+from database import db, listings, users
 from models import Listing
 
 router = APIRouter()
 
+SELLER_COLUMNS = "id, display_name, rating_avg, rating_count"
+
 
 def generate_id():
     return str(uuid.uuid4())
+
+
+def _seller_dict(user):
+    if not user:
+        return None
+    return {
+        "id": user.id,
+        "display_name": user.display_name,
+        "rating_avg": user.rating_avg,
+        "rating_count": user.rating_count,
+    }
+
+
+def _with_seller(entry):
+    if isinstance(entry, Listing):
+        data = entry.model_dump(mode="json")
+    else:
+        data = dict(entry)
+
+    if db:
+        res = db.table("users").select(SELLER_COLUMNS).eq("id", data.get("seller_id")).execute()
+        data["seller"] = res.data[0] if res.data else None
+    else:
+        data["seller"] = _seller_dict(users.get(data.get("seller_id")))
+    return data
 
 
 @router.get("/listings")
@@ -29,7 +56,16 @@ def list_listings(
             query = query.lte("price", max_price)
         if status:
             query = query.eq("status", status)
-        return query.execute().data
+        rows = query.execute().data
+
+        seller_ids = {r.get("seller_id") for r in rows if r.get("seller_id")}
+        sellers = {}
+        if seller_ids:
+            sres = db.table("users").select(SELLER_COLUMNS).in_("id", list(seller_ids)).execute()
+            sellers = {s["id"]: s for s in sres.data}
+        for r in rows:
+            r["seller"] = sellers.get(r.get("seller_id"))
+        return rows
 
     results = listings.values()
     if category:
@@ -40,7 +76,7 @@ def list_listings(
         results = [l for l in results if l.price <= max_price]
     if status:
         results = [l for l in results if l.status == status]
-    return list(results)
+    return [_with_seller(l) for l in results]
 
 
 @router.post("/listings")
@@ -48,10 +84,10 @@ def create_listing(listing: Listing):
     listing.id = listing.id or generate_id()
     if db:
         data = db.table("listings").insert(listing.model_dump(mode="json")).execute()
-        return data.data[0]
+        return _with_seller(data.data[0])
 
     listings[listing.id] = listing
-    return listing
+    return _with_seller(listing)
 
 
 @router.get("/listings/{id}")
@@ -60,11 +96,11 @@ def get_listing(id: str):
         data = db.table("listings").select("*").eq("id", id).execute()
         if not data.data:
             raise HTTPException(status_code=404, detail="Listing not found")
-        return data.data[0]
+        return _with_seller(data.data[0])
 
     if id not in listings:
         raise HTTPException(status_code=404, detail="Listing not found")
-    return listings[id]
+    return _with_seller(listings[id])
 
 
 @router.patch("/listings/{id}")
@@ -74,13 +110,13 @@ def update_listing(id: str, updates: dict):
         if not existing.data:
             raise HTTPException(status_code=404, detail="Listing not found")
         data = db.table("listings").update(updates).eq("id", id).execute()
-        return data.data[0]
+        return _with_seller(data.data[0])
 
     if id not in listings:
         raise HTTPException(status_code=404, detail="Listing not found")
     for key, value in updates.items():
         setattr(listings[id], key, value)
-    return listings[id]
+    return _with_seller(listings[id])
 
 
 @router.delete("/listings/{id}")

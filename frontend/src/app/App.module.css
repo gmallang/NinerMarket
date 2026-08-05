@@ -32,24 +32,27 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 6px;
   flex-shrink: 0;
   text-decoration: none;
 }
 
 .logoIcon {
   display: block;
-  width: 60px;
-  height: 60px;
+  width: 32px;
+  height: 26px;
   object-fit: contain;
+  flex-shrink: 0;
   filter: brightness(0) invert(1);
 }
 
 .logoText {
   font-family: var(--font-display);
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
   letter-spacing: 0.05em;
+  line-height: 1;
+  white-space: nowrap;
   color: var(--color-fg-inverse);
 }
 
@@ -1660,15 +1663,14 @@
 
 .xLogoImg {
   display: block;
-  width: 100%;
-  max-width: 480px;
-  height: 280px;
+  width: min(300px, 70%);
+  height: 240px;
   object-fit: contain;
-  filter: brightness(0) invert(0.7) sepia(1) saturate(5) hue-rotate(-5deg) brightness(0.95);
+  filter: brightness(0) invert(72%) sepia(50%) saturate(250%) hue-rotate(4deg) brightness(72%);
 }
 
 @media (max-width: 860px) {
-  .xLogoImg { height: 160px; max-width: 260px; }
+  .xLogoImg { width: min(160px, 55%); height: 130px; }
 }
 
 /* Right — light side with join panel */
@@ -1935,10 +1937,11 @@
 }
 
 .xModalLogo {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 32px;
   object-fit: contain;
   flex-shrink: 0;
+  filter: brightness(0) invert(72%) sepia(50%) saturate(250%) hue-rotate(4deg) brightness(72%);
 }
 
 .xModalTitle {
@@ -2114,10 +2117,11 @@
 }
 
 .setupLogo {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 32px;
   object-fit: contain;
   flex-shrink: 0;
+  filter: brightness(0) invert(72%) sepia(50%) saturate(250%) hue-rotate(4deg) brightness(72%);
 }
 
 .setupTitle {

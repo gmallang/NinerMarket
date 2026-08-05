@@ -1,4 +1,4 @@
-import type { ListingDto, NewListing } from "./types";
+import type { ListingDto, NewListing, UserDto } from "./types";
 
 const BASE_URL: string = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -47,4 +47,12 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  createUser: (data: { id: string; email: string; display_name: string }) =>
+    request<UserDto>("/users", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getUser: (id: string) => request<UserDto>(`/users/${id}`),
 };

@@ -1,14 +1,14 @@
 /* ─────────────────────────────────────────────
-   CampusMarket — Main design tokens
+   NinerMarket — Main design tokens
    All other CSS files pull from these variables.
    ───────────────────────────────────────────── */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geom:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
 
 :root {
   /* Fonts */
-  --font-body:    'Inter', system-ui, sans-serif;
-  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body:    'Geom', 'Inter', system-ui, sans-serif;
+  --font-display: 'Geom', 'Barlow Condensed', sans-serif;
 
   /* Brand greens */
   --color-primary:       #1a7a3c;

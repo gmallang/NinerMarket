@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import type { KeyboardEvent, FormEvent } from "react";
+import type { KeyboardEvent, FormEvent, ChangeEvent } from "react";
 import {
   Search, ShoppingBag, BookOpen, Sofa, Laptop, Bike, Shirt,
   ChevronRight, Heart, MapPin, Bell, MessageCircle, Plus,
   Star, Filter, Grid, List, GraduationCap, Home, Package,
-  X, Send, Paperclip, Smile,
+  X, Send, Paperclip, Smile, LogOut, ImagePlus, ShieldCheck,
 } from "lucide-react";
 import { api } from "../lib/api";
-import { fromDto, CURRENT_USER_ID } from "../lib/types";
-import type { Listing } from "../lib/types";
+import { fromDto, currentUserId, loadUser, saveUser, clearUser } from "../lib/types";
+import type { Listing, CurrentUser } from "../lib/types";
 import s from "./App.module.css";
 import m from "./Messaging.module.css";
 
@@ -30,18 +30,18 @@ const CONDITIONS = ["Like New", "Excellent", "Good", "Fair", "Service"];
 
 // Demo data shown only when the backend is unreachable
 const DEMO_LISTINGS: Listing[] = [
-  { id: "1",  title: "Organic Chemistry (Clayden) 2nd Ed.",  price: 45,   category: "textbooks",   campus: "North Campus",     time: "2h ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=400&fit=crop&auto=format",  seller: "Maya T.",   sellerRating: 4.9 },
-  { id: "2",  title: "IKEA KALLAX Shelf Unit (White)",        price: 35,   category: "furniture",   campus: "West Dorms",       time: "5h ago",  condition: "Like New", image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop&auto=format",  seller: "Jordan K.", sellerRating: 5.0 },
-  { id: "3",  title: "Twin XL Mattress Topper",               price: 28,   category: "movein",      campus: "East Side",        time: "1d ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=400&fit=crop&auto=format",  seller: "Priya S.",  sellerRating: 4.7 },
-  { id: "4",  title: "MacBook Pro 14\" M2 (2023)",            price: 1100, category: "electronics", campus: "Main Quad",        time: "3h ago",  condition: "Excellent",image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop&auto=format",  seller: "Chris L.",  sellerRating: 4.8 },
-  { id: "5",  title: "Trek 7.2 FX City Bike",                 price: 280,  category: "bikes",       campus: "South Gate",       time: "6h ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&h=400&fit=crop&auto=format",  seller: "Sam R.",    sellerRating: 4.6 },
-  { id: "6",  title: "Calculus: Early Transcendentals 8e",    price: 30,   category: "textbooks",   campus: "Engineering Hall", time: "12h ago", condition: "Fair",     image: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=400&h=400&fit=crop&auto=format",  seller: "Alex P.",   sellerRating: 4.5 },
-  { id: "7",  title: "Mini Fridge (Galanz 3.1 cu ft)",        price: 65,   category: "movein",      campus: "Res Life Complex", time: "2d ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=400&h=400&fit=crop&auto=format",  seller: "Olivia M.", sellerRating: 4.9 },
-  { id: "8",  title: "Desk Lamp + USB Charging Hub",          price: 18,   category: "movein",      campus: "North Campus",     time: "4h ago",  condition: "Like New", image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&h=400&fit=crop&auto=format",  seller: "Nadia W.",  sellerRating: 4.8 },
-  { id: "9",  title: "Sigma Chi Formal Suit (38R)",            price: 55,   category: "clothing",    campus: "Greek Row",        time: "1d ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=400&fit=crop&auto=format",  seller: "Tyler B.",  sellerRating: 4.4 },
-  { id: "10", title: "Peer Tutoring — Orgo & Bio Chem",       price: 20,   category: "services",    campus: "Science Center",   time: "3d ago",  condition: "Service",  image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=400&fit=crop&auto=format",  seller: "Emma Z.",   sellerRating: 5.0 },
-  { id: "11", title: "Psychology 101 Course Pack Bundle",      price: 22,   category: "textbooks",   campus: "Social Sciences",  time: "7h ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=400&fit=crop&auto=format",  seller: "Lena H.",   sellerRating: 4.7 },
-  { id: "12", title: "Standing Desk Converter",               price: 48,   category: "furniture",   campus: "Off-Campus Ave",   time: "5d ago",  condition: "Like New", image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400&h=400&fit=crop&auto=format",  seller: "Felix G.",  sellerRating: 4.6 },
+  { id: "1",  title: "Organic Chemistry (Clayden) 2nd Ed.",  price: 45,   category: "textbooks",   campus: "North Campus",     time: "2h ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=400&fit=crop&auto=format",  seller: "Maya T.",   sellerRating: 4.9, description: "Well-kept textbook, no highlighting, all pages intact. Used for CHEM 2131/2132." },
+  { id: "2",  title: "IKEA KALLAX Shelf Unit (White)",        price: 35,   category: "furniture",   campus: "West Dorms",       time: "5h ago",  condition: "Like New", image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop&auto=format",  seller: "Jordan K.", sellerRating: 5.0, description: "Disassembles for easy move-out. Some assembly required, all tools included." },
+  { id: "3",  title: "Twin XL Mattress Topper",               price: 28,   category: "movein",      campus: "East Side",        time: "1d ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=400&fit=crop&auto=format",  seller: "Priya S.",  sellerRating: 4.7, description: "Memory foam topper, deep-cleaned and stored fresh." },
+  { id: "4",  title: "MacBook Pro 14\" M2 (2023)",            price: 1100, category: "electronics", campus: "Main Quad",        time: "3h ago",  condition: "Excellent",image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=400&fit=crop&auto=format",  seller: "Chris L.",  sellerRating: 4.8, description: "Battery cycle count under 90, always cased, comes with charger. Selling for class upgrade." },
+  { id: "5",  title: "Trek 7.2 FX City Bike",                 price: 280,  category: "bikes",       campus: "South Gate",       time: "6h ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&h=400&fit=crop&auto=format",  seller: "Sam R.",    sellerRating: 4.6, description: "Great commuter bike for campus. Recently tuned, new brake pads." },
+  { id: "6",  title: "Calculus: Early Transcendentals 8e",    price: 30,   category: "textbooks",   campus: "Engineering Hall", time: "12h ago", condition: "Fair",     image: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=400&h=400&fit=crop&auto=format",  seller: "Alex P.",   sellerRating: 4.5, description: "Some pencil notes in the first few chapters, otherwise clean." },
+  { id: "7",  title: "Mini Fridge (Galanz 3.1 cu ft)",        price: 65,   category: "movein",      campus: "Res Life Complex", time: "2d ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=400&h=400&fit=crop&auto=format",  seller: "Olivia M.", sellerRating: 4.9, description: "Works perfectly, energy efficient, moved out and no longer needed." },
+  { id: "8",  title: "Desk Lamp + USB Charging Hub",          price: 18,   category: "movein",      campus: "North Campus",     time: "4h ago",  condition: "Like New", image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&h=400&fit=crop&auto=format",  seller: "Nadia W.",  sellerRating: 4.8, description: "Adjustable LED lamp with 3 USB ports built in." },
+  { id: "9",  title: "Sigma Chi Formal Suit (38R)",            price: 55,   category: "clothing",    campus: "Greek Row",        time: "1d ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=400&fit=crop&auto=format",  seller: "Tyler B.",  sellerRating: 4.4, description: "Worn once. Jacket, trousers, and tie included." },
+  { id: "10", title: "Peer Tutoring — Orgo & Bio Chem",       price: 20,   category: "services",    campus: "Science Center",   time: "3d ago",  condition: "Service",  image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=400&fit=crop&auto=format",  seller: "Emma Z.",   sellerRating: 5.0, description: "Hourly tutoring sessions for organic and biochemistry, A-range student." },
+  { id: "11", title: "Psychology 101 Course Pack Bundle",      price: 22,   category: "textbooks",   campus: "Social Sciences",  time: "7h ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=400&fit=crop&auto=format",  seller: "Lena H.",   sellerRating: 4.7, description: "Textbook plus study guide, all chapters intact." },
+  { id: "12", title: "Standing Desk Converter",               price: 48,   category: "furniture",   campus: "Off-Campus Ave",   time: "5d ago",  condition: "Like New", image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400&h=400&fit=crop&auto=format",  seller: "Felix G.",  sellerRating: 4.6, description: "Clamps onto any desk, easy to move between dorm rooms." },
 ];
 
 const CONDITION_CLASS: Record<string, string> = {
@@ -51,6 +51,108 @@ const CONDITION_CLASS: Record<string, string> = {
   "Fair":      s.condFair,
   "Service":   s.condService,
 };
+
+// ─── Auth helpers ───────────────────────────────────────────────────────────
+
+function isCharlotteEmail(email: string): boolean {
+  return /^[^\s@]+@charlotte\.edu$/.test(email.trim().toLowerCase());
+}
+
+function makeUserId(email: string): string {
+  return (
+    "u-" +
+    email
+      .split("@")[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+  );
+}
+
+async function signInOrUp(
+  mode: "signin" | "signup",
+  name: string,
+  email: string
+): Promise<CurrentUser> {
+  const id = makeUserId(email);
+  const normalized = email.trim().toLowerCase();
+  const display_name =
+    mode === "signup" ? name.trim() : normalized.split("@")[0];
+
+  try {
+    if (mode === "signup") {
+      await api.createUser({ id, email: normalized, display_name });
+    } else {
+      await api.getUser(id);
+    }
+  } catch {
+    // Backend is optional — the app works fully in local demo mode.
+  }
+
+  const user: CurrentUser = { id, email: normalized, display_name };
+  saveUser(user);
+  return user;
+}
+
+// ─── Terms & Conditions ─────────────────────────────────────────────────────
+
+const TERMS_SECTIONS: { title: string; body: string }[] = [
+  {
+    title: "Eligibility",
+    body:
+      "NinerMarket is exclusively for current UNC Charlotte students, faculty, and staff. You must sign in with a valid @charlotte.edu email, and your account is tied to your university identity.",
+  },
+  {
+    title: "Verified community",
+    body:
+      "By using NinerMarket you confirm you are an active member of the UNC Charlotte community. Accounts that misrepresent their university affiliation will be suspended.",
+  },
+  {
+    title: "Prohibited & restricted items",
+    body:
+      "You may not list any item that violates UNC Charlotte policy or the law, including weapons, drugs, alcohol (when prohibited), stolen goods, counterfeit items, or anything that endangers campus safety.",
+  },
+  {
+    title: "Reporting to the university",
+    body:
+      "Any item against university policies will be reported and sent to the university. We reserve the right to report listings, messages, or users to UNC Charlotte officials (including the Dean of Students and University Police) when policy or law may have been violated.",
+  },
+  {
+    title: "Transactions & payment disputes",
+    body:
+      "NinerMarket is a platform only and is not a party to any sale. Payment arrangements, refunds, delivery, and meetups are strictly between the buyer and the seller. Disputes about payment are not our fault and will not be handled by NinerMarket.",
+  },
+  {
+    title: "Meetups & personal safety",
+    body:
+      "Always meet in well-lit, public areas on campus. NinerMarket does not arrange or supervise meetings, and you are responsible for your own safety.",
+  },
+  {
+    title: "Items sold as-is",
+    body:
+      "Listings are described by their sellers. Inspect items in person before paying. NinerMarket does not guarantee the condition, authenticity, or availability of any item.",
+  },
+  {
+    title: "Acceptable use",
+    body:
+      "Be honest and respectful. No spam, harassment, fraud, or misleading listings. Messages are for legitimate buying, selling, and requesting items only.",
+  },
+  {
+    title: "Ratings",
+    body:
+      "Ratings reflect your community reputation. We may remove ratings that are fraudulent or retaliatory.",
+  },
+  {
+    title: "Enforcement",
+    body:
+      "We may remove listings, restrict accounts, or revoke access at any time for violating these terms or university policy.",
+  },
+  {
+    title: "Changes to these terms",
+    body:
+      "We may update these terms from time to time. Continued use of NinerMarket after changes means you accept the updated terms.",
+  },
+];
 
 // ─── Conversation seed data (local; messaging backend not built yet) ────────
 
@@ -117,9 +219,10 @@ const QUICK_REPLIES = ["Is it still available?", "Can you do lower?", "Where can
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [listings, setListings]         = useState<Listing[]>([]);
-  const [loading, setLoading]           = useState(true);
-  const [usingDemo, setUsingDemo]       = useState(false);
+  const [user, setUser]             = useState<CurrentUser | null>(() => loadUser());
+  const [listings, setListings]     = useState<Listing[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [usingDemo, setUsingDemo]   = useState(false);
   const [activeCategory, setActiveCategory] = useState("all");
   const [searchQuery, setSearchQuery]       = useState("");
   const [savedItems, setSavedItems]         = useState<Set<string>>(new Set(["2", "5", "12"]));
@@ -130,9 +233,12 @@ export default function App() {
   const [convs, setConvs]                   = useState<Conversation[]>(CONVS);
   const [inputText, setInputText]           = useState("");
   const [sellOpen, setSellOpen]             = useState(false);
+  const [detailItem, setDetailItem]         = useState<Listing | null>(null);
+  const [profileOpen, setProfileOpen]       = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!user) return;
     let cancelled = false;
     api
       .listListings()
@@ -150,7 +256,13 @@ export default function App() {
         if (!cancelled) setLoading(false);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [user]);
+
+  const handleLogout = () => {
+    clearUser();
+    setUser(null);
+    setProfileOpen(false);
+  };
 
   const toggleSave = (id: string) => {
     setSavedItems(prev => {
@@ -182,6 +294,11 @@ export default function App() {
       setActiveConvId(newConv.id);
     }
     setMsgOpen(true);
+  };
+
+  const messageFromDetail = (listingId: string) => {
+    setDetailItem(null);
+    openMsgForListing(listingId);
   };
 
   const sendMessage = () => {
@@ -223,6 +340,10 @@ export default function App() {
   const activeListing = listings.find(l => l.id === activeConv.listingId);
   const totalUnread  = convs.reduce((n, c) => n + c.unread, 0);
 
+  if (!user) {
+    return <LoginPage onAuthed={setUser} />;
+  }
+
   return (
     <div className={s.page}>
       {/* ── Navbar ── */}
@@ -230,7 +351,7 @@ export default function App() {
         <div className={s.navInner}>
           <div className={s.logo}>
             <div className={s.logoIcon}><GraduationCap size={18} /></div>
-            <span className={s.logoText}>CampusMarket</span>
+            <span className={s.logoText}>NinerMarket</span>
           </div>
 
           <div className={s.searchWrap}>
@@ -264,11 +385,28 @@ export default function App() {
               <Plus size={14} />
               <span className={s.sellBtnLabel}>Sell</span>
             </button>
-            <img
-              className={s.navAvatar}
-              src="https://images.unsplash.com/photo-1529665253569-6d01c0eaf7b6?w=64&h=64&fit=crop&auto=format"
-              alt="Your profile"
-            />
+            <div className={s.profileWrap}>
+              <button className={s.navAvatar} onClick={() => setProfileOpen(v => !v)}>
+                <img
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.display_name)}&size=64&background=1a7a3c&color=fff`}
+                  alt="Your profile"
+                />
+              </button>
+              {profileOpen && (
+                <>
+                  <div className={s.profileBackdrop} onClick={() => setProfileOpen(false)} />
+                  <div className={s.profileMenu}>
+                    <div className={s.profileMenuHeader}>
+                      <p className={s.profileEmail}>{user.email}</p>
+                      <p className={s.profileName}>{user.display_name}</p>
+                    </div>
+                    <button className={s.profileMenuItem} onClick={handleLogout}>
+                      <LogOut size={14} /> Sign out
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </nav>
@@ -397,7 +535,7 @@ export default function App() {
                   item={item}
                   saved={savedItems.has(item.id)}
                   onToggleSave={() => toggleSave(item.id)}
-                  onMessage={() => openMsgForListing(item.id)}
+                  onOpen={() => setDetailItem(item)}
                 />
               ))}
             </div>
@@ -409,6 +547,7 @@ export default function App() {
                   item={item}
                   saved={savedItems.has(item.id)}
                   onToggleSave={() => toggleSave(item.id)}
+                  onOpen={() => setDetailItem(item)}
                   onMessage={() => openMsgForListing(item.id)}
                 />
               ))}
@@ -416,6 +555,17 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* ── Listing detail overlay ── */}
+      {detailItem && (
+        <ListingDetail
+          item={detailItem}
+          saved={savedItems.has(detailItem.id)}
+          onClose={() => setDetailItem(null)}
+          onToggleSave={() => toggleSave(detailItem.id)}
+          onMessage={() => messageFromDetail(detailItem.id)}
+        />
+      )}
 
       {/* ── Messaging panel ── */}
       {msgOpen && (
@@ -571,7 +721,444 @@ export default function App() {
   );
 }
 
-// ─── Sell modal ──────────────────────────────────────────────────────────────
+// ─── Login page ─────────────────────────────────────────────────────────────
+
+function GoogleG() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8.1 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z" />
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8.1 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.7l6.2 5.2C36.9 40.4 44 34.5 44 24c0-1.3-.1-2.6-.4-3.9z" />
+    </svg>
+  );
+}
+
+function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
+  const [mode, setMode]         = useState<"signin" | "signup">("signin");
+  const [name, setName]         = useState("");
+  const [email, setEmail]       = useState("");
+  const [password, setPassword] = useState("");
+  const [agree, setAgree]       = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [googleOpen, setGoogleOpen] = useState(false);
+  const [error, setError]       = useState("");
+  const [busy, setBusy]         = useState(false);
+
+  const validate = (requirePassword: boolean): string => {
+    if (!isCharlotteEmail(email)) {
+      return "Access is restricted to the UNC Charlotte community. Use a valid @charlotte.edu email.";
+    }
+    if (requirePassword && !password.trim()) {
+      return "Please enter your password.";
+    }
+    if (!agree) {
+      return "Please accept the Terms & Conditions to continue.";
+    }
+    return "";
+  };
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (mode === "signup" && !name.trim()) {
+      setError("Please enter your full name.");
+      return;
+    }
+    const err = validate(true);
+    if (err) { setError(err); return; }
+    setError("");
+    setBusy(true);
+    try {
+      const u = await signInOrUp(mode, name, email);
+      onAuthed(u);
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const googleContinue = async (googleEmail: string) => {
+    setEmail(googleEmail);
+    const err = validate(false);
+    if (err) { setError(err); setGoogleOpen(false); return; }
+    setGoogleOpen(false);
+    setError("");
+    setBusy(true);
+    try {
+      const u = await signInOrUp("signin", name, googleEmail);
+      onAuthed(u);
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const forgotPassword = () => {
+    setError(
+      "Password reset isn't available in this demo. Use the demo account or sign in with Google."
+    );
+  };
+
+  const fillDemo = () => {
+    setMode("signin");
+    setEmail("anna@charlotte.edu");
+    setPassword("ninermarket-demo");
+    setAgree(true);
+    setError("");
+  };
+
+  const switchMode = (next: "signin" | "signup") => {
+    setMode(next);
+    setError("");
+  };
+
+  return (
+    <div className={s.fbPage}>
+      <div className={s.fbMain}>
+        {/* Left — brand panel */}
+        <div className={s.fbLeft}>
+          <div className={s.fbBrand}>
+            <div className={s.fbLogoIcon}><GraduationCap size={38} /></div>
+            <span className={s.fbWordmark}>NinerMarket</span>
+          </div>
+          <p className={s.fbTagline}>
+            Connect with the UNC Charlotte community and buy, sell, or request textbooks, dorm
+            furniture, electronics, and more — right on campus.
+          </p>
+        </div>
+
+        {/* Right — login card */}
+        <div className={s.fbRight}>
+          <div className={s.fbCard}>
+            {mode === "signin" ? (
+              <>
+                <form onSubmit={submit} className={s.fbForm}>
+                  <input
+                    className={s.fbInput}
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="Email address (@charlotte.edu)"
+                    autoFocus
+                  />
+                  {email && email.includes("@") && !isCharlotteEmail(email) && (
+                    <span className={s.loginFieldError}>Must be a @charlotte.edu email to access NinerMarket.</span>
+                  )}
+                  <input
+                    className={s.fbInput}
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Password"
+                  />
+                  <button type="button" className={s.fbForgot} onClick={forgotPassword}>
+                    Forgot password?
+                  </button>
+                  <label className={s.fbTerms}>
+                    <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
+                    <span>
+                      I agree to the{" "}
+                      <button type="button" className={s.loginTermsLink} onClick={() => setTermsOpen(true)}>
+                        Terms &amp; Conditions
+                      </button>
+                    </span>
+                  </label>
+                  {error && <p className={s.formError}>{error}</p>}
+                  <button type="submit" className={s.fbLoginBtn} disabled={busy}>
+                    {busy ? "Please wait..." : "Login"}
+                  </button>
+                </form>
+
+                <div className={s.fbDivider}><span>or</span></div>
+
+                <button type="button" className={s.fbGoogleBtn} onClick={() => setGoogleOpen(true)}>
+                  <GoogleG />
+                  Continue with Google
+                </button>
+
+                <button type="button" className={s.fbCreateBtn} onClick={() => switchMode("signup")}>
+                  Create new account
+                </button>
+              </>
+            ) : (
+              <>
+                <h2 className={s.fbCardTitle}>Create your account</h2>
+                <form onSubmit={submit} className={s.fbForm}>
+                  <input
+                    className={s.fbInput}
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Full name"
+                  />
+                  <input
+                    className={s.fbInput}
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="Email address (@charlotte.edu)"
+                  />
+                  {email && email.includes("@") && !isCharlotteEmail(email) && (
+                    <span className={s.loginFieldError}>Must be a @charlotte.edu email to access NinerMarket.</span>
+                  )}
+                  <input
+                    className={s.fbInput}
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Password"
+                  />
+                  <label className={s.fbTerms}>
+                    <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
+                    <span>
+                      I agree to the{" "}
+                      <button type="button" className={s.loginTermsLink} onClick={() => setTermsOpen(true)}>
+                        Terms &amp; Conditions
+                      </button>
+                    </span>
+                  </label>
+                  {error && <p className={s.formError}>{error}</p>}
+                  <button type="submit" className={s.fbLoginBtn} disabled={busy}>
+                    {busy ? "Please wait..." : "Sign Up"}
+                  </button>
+                  <button type="button" className={s.fbBackLink} onClick={() => switchMode("signin")}>
+                    Already have an account? Log in
+                  </button>
+                </form>
+              </>
+            )}
+
+            <button type="button" className={s.fbDemoHint} onClick={fillDemo}>
+              Demo account: sign in as anna@charlotte.edu
+            </button>
+          </div>
+
+          <p className={s.fbUnderCard}>
+            Restricted to current UNC Charlotte students, faculty, and staff with an active @charlotte.edu account.
+          </p>
+        </div>
+      </div>
+
+      <footer className={s.fbFooter}>
+        <span className={s.fbFooterBrand}>NinerMarket</span>
+        <span>·</span>
+        <span>© 2026</span>
+        <span>·</span>
+        <button type="button" className={s.fbFooterLink} onClick={() => setTermsOpen(true)}>
+          Terms &amp; Conditions
+        </button>
+        <span>·</span>
+        <span>@charlotte.edu only</span>
+      </footer>
+
+      {googleOpen && (
+        <GoogleChooser
+          agreed={agree}
+          onAgree={setAgree}
+          onClose={() => setGoogleOpen(false)}
+          onContinue={googleContinue}
+        />
+      )}
+
+      {termsOpen && (
+        <TermsModal
+          accepted={agree}
+          onAccept={() => { setAgree(true); setTermsOpen(false); }}
+          onClose={() => setTermsOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── Google account chooser (mock) ──────────────────────────────────────────
+
+function GoogleChooser({ agreed, onAgree, onClose, onContinue }: {
+  agreed: boolean;
+  onAgree: (v: boolean) => void;
+  onClose: () => void;
+  onContinue: (email: string) => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [termsOpen, setTermsOpen] = useState(false);
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!isCharlotteEmail(email)) {
+      setError("Choose the Google account associated with your @charlotte.edu email.");
+      return;
+    }
+    if (!agreed) {
+      setError("Please accept the Terms & Conditions to continue.");
+      return;
+    }
+    onContinue(email);
+  };
+
+  return (
+    <>
+      <div className={s.googleOverlay} onClick={onClose} />
+      <div className={s.googleModal} role="dialog" aria-modal="true" aria-label="Sign in with Google">
+        <div className={s.googleLogo}><GoogleG /></div>
+        <h2 className={s.googleTitle}>Sign in with Google</h2>
+        <p className={s.googleSub}>Use your UNC Charlotte account</p>
+        <form onSubmit={submit} className={s.googleForm}>
+          <input
+            className={s.loginInput}
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="you@charlotte.edu"
+            autoFocus
+          />
+          <label className={s.loginTerms} style={{ justifyContent: "flex-start", textAlign: "left" }}>
+            <input type="checkbox" checked={agreed} onChange={e => onAgree(e.target.checked)} />
+            <span>
+              I agree to the{" "}
+              <button type="button" className={s.loginTermsLink} onClick={() => setTermsOpen(true)}>
+                Terms &amp; Conditions
+              </button>
+            </span>
+          </label>
+          {error && <p className={s.formError}>{error}</p>}
+          <button type="submit" className={`${s.loginSubmit} ${s.btnPrimary}`}>Continue</button>
+        </form>
+        <button type="button" className={s.googleBack} onClick={onClose}>Cancel</button>
+      </div>
+
+      {termsOpen && (
+        <TermsModal
+          accepted={agreed}
+          onAccept={() => { onAgree(true); setTermsOpen(false); }}
+          onClose={() => setTermsOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+// ─── Terms & Conditions modal ───────────────────────────────────────────────
+
+function TermsModal({ accepted, onAccept, onClose }: {
+  accepted: boolean;
+  onAccept: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <div className={s.googleOverlay} onClick={onClose} />
+      <div className={`${s.googleModal} ${s.termsModal}`} role="dialog" aria-modal="true" aria-label="Terms and conditions">
+        <div className={s.termsHeader}>
+          <ShieldCheck size={20} className={s.termsIcon} />
+          <h2 className={s.googleTitle}>NinerMarket Terms &amp; Conditions</h2>
+        </div>
+        <div className={s.termsScroll}>
+          {TERMS_SECTIONS.map((t, i) => (
+            <div key={i} className={s.termsSection}>
+              <h3>{i + 1}. {t.title}</h3>
+              <p>{t.body}</p>
+            </div>
+          ))}
+        </div>
+        <div className={s.termsActions}>
+          <button type="button" className={s.btnGhost} onClick={onClose}>Decline</button>
+          <button type="button" className={s.btnPrimary} onClick={onAccept}>
+            {accepted ? "Done" : "I Accept"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Listing detail overlay ─────────────────────────────────────────────────
+
+function ListingDetail({ item, saved, onClose, onToggleSave, onMessage }: {
+  item: Listing;
+  saved: boolean;
+  onClose: () => void;
+  onToggleSave: () => void;
+  onMessage: () => void;
+}) {
+  const photos = item.photos?.length ? item.photos : [item.image];
+  const [activeImg, setActiveImg] = useState(0);
+  const categoryLabel = CATEGORIES.find(c => c.id === item.category)?.label ?? item.category;
+
+  return (
+    <>
+      <div className={s.detailOverlay} onClick={onClose} />
+      <div className={s.detailModal} role="dialog" aria-modal="true" aria-label={item.title}>
+        <button className={`${s.detailClose} ${s.modalClose}`} onClick={onClose} aria-label="Close">
+          <X size={18} />
+        </button>
+        <div className={s.detailBody}>
+          <div className={s.detailGallery}>
+            <img src={photos[activeImg]} alt={item.title} className={s.detailMainImg} />
+            {photos.length > 1 && (
+              <div className={s.detailThumbs}>
+                {photos.map((p, i) => (
+                  <img
+                    key={i}
+                    src={p}
+                    alt={`${item.title} ${i + 1}`}
+                    className={`${s.detailThumb} ${i === activeImg ? s.detailThumbActive : ""}`}
+                    onClick={() => setActiveImg(i)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+          <div className={s.detailInfo}>
+            <div className={s.detailTags}>
+              <span className={`${s.detailCond} ${CONDITION_CLASS[item.condition]}`} style={{ position: "static" }}>
+                {item.condition}
+              </span>
+              <span className={s.detailCategory}>{categoryLabel}</span>
+            </div>
+            <h2 className={s.detailTitle}>{item.title}</h2>
+            <p className={s.detailPrice}>${item.price.toLocaleString()}</p>
+            <div className={s.detailMeta}>
+              <MapPin size={13} className={s.detailMetaIcon} />
+              <span>{item.campus}</span>
+              <span className={s.detailTime}>{item.time}</span>
+            </div>
+            <div className={s.detailSeller}>
+              <img
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(item.seller)}&size=64&background=1a7a3c&color=fff`}
+                alt={item.seller}
+                className={s.detailSellerAvatar}
+              />
+              <div className={s.detailSellerInfo}>
+                <p className={s.detailSellerName}>{item.seller}</p>
+                <p className={s.detailSellerRating}>★ {item.sellerRating.toFixed(1)} rating</p>
+              </div>
+            </div>
+            <div className={s.detailDesc}>
+              <h3 className={s.detailDescTitle}>Description</h3>
+              <p className={s.detailDescText}>
+                {item.description || "No description provided by the seller."}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className={s.detailFooter}>
+          <button className={s.btnGhost} onClick={onToggleSave}>
+            <Heart size={15} fill={saved ? "currentColor" : "none"} />
+            {saved ? "Saved" : "Save"}
+          </button>
+          <button className={s.btnPrimary} onClick={onMessage}>
+            <MessageCircle size={16} />
+            Message Seller
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Sell modal ─────────────────────────────────────────────────────────────
 
 function SellModal({ onClose, onCreated }: {
   onClose: () => void;
@@ -583,8 +1170,33 @@ function SellModal({ onClose, onCreated }: {
   const [condition, setCondition] = useState(CONDITIONS[0]);
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
+  const [photos, setPhotos] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const addFiles = (files: FileList | null) => {
+    if (!files) return;
+    Array.from(files).forEach(file => {
+      if (photos.length >= 6) return;
+      if (!file.type.startsWith("image/")) return;
+      if (file.size > 5 * 1024 * 1024) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPhotos(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    addFiles(e.target.files);
+    e.target.value = "";
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -592,13 +1204,14 @@ function SellModal({ onClose, onCreated }: {
     setSubmitting(true);
     try {
       const dto = await api.createListing({
-        seller_id: CURRENT_USER_ID,
+        seller_id: currentUserId(),
         name,
         price: Number(price),
         category,
         condition,
         description,
         pickup_location: location,
+        photos,
       });
       onCreated(fromDto(dto));
     } catch (err) {
@@ -620,6 +1233,44 @@ function SellModal({ onClose, onCreated }: {
         </div>
 
         <form onSubmit={submit} className={s.modalForm}>
+          <div className={s.formField}>
+            <span className={s.formLabel}>Photos</span>
+            {photos.length > 0 && (
+              <div className={s.photoGrid}>
+                {photos.map((p, i) => (
+                  <div key={i} className={s.photoPreview}>
+                    <img src={p} alt={`Upload ${i + 1}`} />
+                    <button type="button" className={s.photoRemove} onClick={() => removePhoto(i)} aria-label="Remove photo">
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+                {photos.length < 6 && (
+                  <button type="button" className={s.photoAddBtn} onClick={() => fileRef.current?.click()}>
+                    <ImagePlus size={16} />
+                  </button>
+                )}
+              </div>
+            )}
+            <button
+              type="button"
+              className={s.photoDrop}
+              onClick={() => fileRef.current?.click()}
+            >
+              <ImagePlus size={20} />
+              <span>{photos.length ? "Add more photos" : "Click to add photos"}</span>
+              <small>JPG or PNG, up to 6 photos</small>
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className={s.photoDropInput}
+              onChange={handleFileChange}
+            />
+          </div>
+
           <label className={s.formField}>
             <span className={s.formLabel}>Title</span>
             <input
@@ -710,11 +1361,11 @@ function SellModal({ onClose, onCreated }: {
 
 // ─── ListingCard ─────────────────────────────────────────────────────────────
 
-function ListingCard({ item, saved, onToggleSave, onMessage }: {
-  item: Listing; saved: boolean; onToggleSave: () => void; onMessage: () => void;
+function ListingCard({ item, saved, onToggleSave, onOpen }: {
+  item: Listing; saved: boolean; onToggleSave: () => void; onOpen: () => void;
 }) {
   return (
-    <div className={s.card} onClick={onMessage}>
+    <div className={s.card} onClick={onOpen}>
       <div className={s.cardImageWrap}>
         <img src={item.image} alt={item.title} className={s.cardImage} />
         <button
@@ -751,11 +1402,11 @@ function ListingCard({ item, saved, onToggleSave, onMessage }: {
 
 // ─── ListingRow ──────────────────────────────────────────────────────────────
 
-function ListingRow({ item, saved, onToggleSave, onMessage }: {
-  item: Listing; saved: boolean; onToggleSave: () => void; onMessage: () => void;
+function ListingRow({ item, saved, onToggleSave, onOpen, onMessage }: {
+  item: Listing; saved: boolean; onToggleSave: () => void; onOpen: () => void; onMessage: () => void;
 }) {
   return (
-    <div className={s.row}>
+    <div className={s.row} onClick={onOpen}>
       <div className={s.rowImageWrap}>
         <img src={item.image} alt={item.title} className={s.rowImage} />
       </div>
@@ -784,7 +1435,12 @@ function ListingRow({ item, saved, onToggleSave, onMessage }: {
         <div className={s.rowBottom}>
           <span className={s.rowSeller}>{item.seller}</span>
           <span className={s.rowRating}>★ {item.sellerRating}</span>
-          <button className={s.msgBtn} onClick={onMessage}>Message</button>
+          <button
+            className={s.msgBtn}
+            onClick={e => { e.stopPropagation(); onMessage(); }}
+          >
+            Message
+          </button>
         </div>
       </div>
     </div>

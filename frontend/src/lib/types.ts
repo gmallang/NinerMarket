@@ -5,6 +5,14 @@ export interface Seller {
   rating_count: number;
 }
 
+export interface UserDto {
+  id: string;
+  email: string;
+  display_name: string;
+  rating_avg: number;
+  rating_count: number;
+}
+
 export interface ListingDto {
   id: string;
   seller_id: string;
@@ -30,7 +38,10 @@ export interface Listing {
   condition: string;
   image: string;
   seller: string;
+  sellerId?: string;
   sellerRating: number;
+  description?: string;
+  photos?: string[];
 }
 
 export interface NewListing {
@@ -41,9 +52,45 @@ export interface NewListing {
   condition: string;
   description: string;
   pickup_location: string;
+  photos?: string[];
 }
 
-export const CURRENT_USER_ID = "u-anna";
+export interface CurrentUser {
+  id: string;
+  email: string;
+  display_name: string;
+}
+
+const USER_KEY = "ninermarket-user";
+
+export function loadUser(): CurrentUser | null {
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? (JSON.parse(raw) as CurrentUser) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveUser(user: CurrentUser): void {
+  try {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+export function clearUser(): void {
+  try {
+    localStorage.removeItem(USER_KEY);
+  } catch {
+    // ignore storage errors
+  }
+}
+
+export function currentUserId(): string {
+  return loadUser()?.id ?? "";
+}
 
 const PLACEHOLDER_IMG =
   "https://placehold.co/400x400/e8f5e9/1a7a3c?text=NinerMarket";
@@ -59,7 +106,10 @@ export function fromDto(d: ListingDto): Listing {
     condition: d.condition,
     image: d.photos?.[0] ?? PLACEHOLDER_IMG,
     seller: d.seller?.display_name ?? "Unknown seller",
+    sellerId: d.seller?.id ?? d.seller_id,
     sellerRating: d.seller?.rating_avg ?? 0,
+    description: d.description,
+    photos: d.photos ?? [],
   };
 }
 

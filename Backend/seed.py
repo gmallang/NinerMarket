@@ -9,29 +9,38 @@ def seed_dev_store(users: dict, listings: dict) -> None:
 
     now = datetime.now(timezone.utc)
 
-    def user(user_id: str, name: str, rating_avg: float, rating_count: int) -> User:
+    def user(
+        user_id: str,
+        name: str,
+        rating_avg: float,
+        rating_count: int,
+        school_year: str = "Junior",
+        payment_methods: list[str] | None = None,
+    ) -> User:
         return User(
             id=user_id,
             email=f"{user_id}@charlotte.edu",
             display_name=name,
+            school_year=school_year,
+            payment_methods=payment_methods or ["Cash", "Venmo"],
             rating_avg=rating_avg,
             rating_count=rating_count,
         )
 
     sellers = {
-        "seller-1":  user("seller-1",  "Maya T.",    4.9, 32),
-        "seller-2":  user("seller-2",  "Jordan K.",  5.0, 18),
-        "seller-3":  user("seller-3",  "Priya S.",   4.7, 41),
-        "seller-4":  user("seller-4",  "Chris L.",   4.8, 27),
-        "seller-5":  user("seller-5",  "Sam R.",     4.6, 15),
-        "seller-6":  user("seller-6",  "Alex P.",    4.5, 22),
-        "seller-7":  user("seller-7",  "Olivia M.",  4.9, 38),
-        "seller-8":  user("seller-8",  "Nadia W.",   4.8, 11),
-        "seller-9":  user("seller-9",  "Tyler B.",   4.4, 9),
-        "seller-10": user("seller-10", "Emma Z.",    5.0, 25),
-        "seller-11": user("seller-11", "Lena H.",    4.7, 19),
-        "seller-12": user("seller-12", "Felix G.",   4.6, 14),
-        "u-anna":    user("u-anna",    "Anna C.",    4.8, 21),
+        "seller-1":  user("seller-1",  "Maya T.",    4.9, 32, "Senior",    ["Cash", "Venmo", "Zelle"]),
+        "seller-2":  user("seller-2",  "Jordan K.",  5.0, 18, "Junior",    ["Cash", "Venmo"]),
+        "seller-3":  user("seller-3",  "Priya S.",   4.7, 41, "Graduate",  ["Zelle", "PayPal"]),
+        "seller-4":  user("seller-4",  "Chris L.",   4.8, 27, "Senior",    ["Cash", "Venmo", "Apple Pay"]),
+        "seller-5":  user("seller-5",  "Sam R.",     4.6, 15, "Sophomore", ["Cash", "Venmo", "PayPal"]),
+        "seller-6":  user("seller-6",  "Alex P.",    4.5, 22, "Junior",    ["Cash", "Venmo"]),
+        "seller-7":  user("seller-7",  "Olivia M.",  4.9, 38, "Senior",    ["Venmo", "Zelle", "Apple Pay"]),
+        "seller-8":  user("seller-8",  "Nadia W.",   4.8, 11, "Freshman",  ["Cash", "Venmo"]),
+        "seller-9":  user("seller-9",  "Tyler B.",   4.4, 9,  "Junior",    ["Cash", "Venmo", "Zelle"]),
+        "seller-10": user("seller-10", "Emma Z.",    5.0, 25, "Faculty / Staff", ["Cash", "PayPal"]),
+        "seller-11": user("seller-11", "Lena H.",    4.7, 19, "Sophomore", ["Cash", "Venmo", "Apple Pay"]),
+        "seller-12": user("seller-12", "Felix G.",   4.6, 14, "Graduate",  ["Venmo", "Zelle"]),
+        "u-anna":    user("u-anna",    "Anna C.",    4.8, 21, "Senior",    ["Cash", "Venmo", "Zelle"]),
     }
     users.update(sellers)
 

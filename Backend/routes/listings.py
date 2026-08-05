@@ -7,7 +7,7 @@ from models import Listing
 
 router = APIRouter()
 
-SELLER_COLUMNS = "id, display_name, rating_avg, rating_count"
+SELLER_COLUMNS = "id, display_name, school_year, payment_methods, rating_avg, rating_count"
 
 
 def generate_id():
@@ -20,6 +20,8 @@ def _seller_dict(user):
     return {
         "id": user.id,
         "display_name": user.display_name,
+        "school_year": getattr(user, "school_year", ""),
+        "payment_methods": getattr(user, "payment_methods", []),
         "rating_avg": user.rating_avg,
         "rating_count": user.rating_count,
     }

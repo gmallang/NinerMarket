@@ -1,6 +1,26 @@
+export const SCHOOL_YEARS = [
+  "Freshman",
+  "Sophomore",
+  "Junior",
+  "Senior",
+  "Graduate",
+  "Faculty / Staff",
+] as const;
+
+export const PAYMENT_METHODS = [
+  "Cash",
+  "Venmo",
+  "Zelle",
+  "PayPal",
+  "Apple Pay",
+  "Niner Cash",
+] as const;
+
 export interface Seller {
   id: string;
   display_name: string;
+  school_year?: string;
+  payment_methods?: string[];
   rating_avg: number;
   rating_count: number;
 }
@@ -9,6 +29,8 @@ export interface UserDto {
   id: string;
   email: string;
   display_name: string;
+  school_year?: string;
+  payment_methods?: string[];
   rating_avg: number;
   rating_count: number;
 }
@@ -40,6 +62,8 @@ export interface Listing {
   seller: string;
   sellerId?: string;
   sellerRating: number;
+  sellerYear?: string;
+  sellerPayments?: string[];
   description?: string;
   photos?: string[];
 }
@@ -59,6 +83,8 @@ export interface CurrentUser {
   id: string;
   email: string;
   display_name: string;
+  school_year?: string;
+  payment_methods?: string[];
 }
 
 const USER_KEY = "ninermarket-user";
@@ -108,6 +134,8 @@ export function fromDto(d: ListingDto): Listing {
     seller: d.seller?.display_name ?? "Unknown seller",
     sellerId: d.seller?.id ?? d.seller_id,
     sellerRating: d.seller?.rating_avg ?? 0,
+    sellerYear: d.seller?.school_year,
+    sellerPayments: d.seller?.payment_methods,
     description: d.description,
     photos: d.photos ?? [],
   };

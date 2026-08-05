@@ -3,12 +3,12 @@
    All other CSS files pull from these variables.
    ───────────────────────────────────────────── */
 
-@import url('https://fonts.googleapis.com/css2?family=Geom:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
 
 :root {
   /* Fonts */
-  --font-body:    'Geom', 'Inter', system-ui, sans-serif;
-  --font-display: 'Geom', 'Barlow Condensed', sans-serif;
+  --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+  --font-display: 'IBM Plex Sans', system-ui, sans-serif;
 
   /* Brand greens */
   --color-primary:       #1a7a3c;

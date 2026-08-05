@@ -1,14 +1,16 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import type { KeyboardEvent, FormEvent, ChangeEvent } from "react";
 import {
   Search, ShoppingBag, BookOpen, Sofa, Laptop, Bike, Shirt,
   ChevronRight, Heart, MapPin, Bell, MessageCircle, Plus,
-  Star, Filter, Grid, List, GraduationCap, Home, Package,
+  Star, Filter, Grid, List, Home, Package,
   X, Send, Paperclip, Smile, LogOut, ImagePlus, ShieldCheck,
 } from "lucide-react";
 import { api } from "../lib/api";
+import ninerLogo from "../assests/NinerMarket.png";
 import { fromDto, currentUserId, loadUser, saveUser, clearUser } from "../lib/types";
 import type { Listing, CurrentUser } from "../lib/types";
+import { SCHOOL_YEARS, PAYMENT_METHODS } from "../lib/types";
 import s from "./App.module.css";
 import m from "./Messaging.module.css";
 
@@ -72,24 +74,38 @@ function makeUserId(email: string): string {
 async function signInOrUp(
   mode: "signin" | "signup",
   name: string,
-  email: string
+  email: string,
+  schoolYear = "",
+  payments: string[] = []
 ): Promise<CurrentUser> {
   const id = makeUserId(email);
   const normalized = email.trim().toLowerCase();
   const display_name =
     mode === "signup" ? name.trim() : normalized.split("@")[0];
 
+  const profile: Partial<CurrentUser> = {};
+
   try {
     if (mode === "signup") {
-      await api.createUser({ id, email: normalized, display_name });
+      await api.createUser({
+        id,
+        email: normalized,
+        display_name,
+        school_year: schoolYear,
+        payment_methods: payments,
+      });
+      profile.school_year = schoolYear;
+      profile.payment_methods = payments;
     } else {
-      await api.getUser(id);
+      const u = await api.getUser(id);
+      profile.school_year = u.school_year;
+      profile.payment_methods = u.payment_methods;
     }
   } catch {
     // Backend is optional — the app works fully in local demo mode.
   }
 
-  const user: CurrentUser = { id, email: normalized, display_name };
+  const user: CurrentUser = { id, email: normalized, display_name, ...profile };
   saveUser(user);
   return user;
 }
@@ -235,6 +251,7 @@ export default function App() {
   const [sellOpen, setSellOpen]             = useState(false);
   const [detailItem, setDetailItem]         = useState<Listing | null>(null);
   const [profileOpen, setProfileOpen]       = useState(false);
+  const [setupUser, setSetupUser]           = useState<CurrentUser | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -262,6 +279,28 @@ export default function App() {
     clearUser();
     setUser(null);
     setProfileOpen(false);
+  };
+
+  const handleAuthed = (u: CurrentUser) => {
+    setUser(u);
+    if (!u.school_year) setSetupUser(u);
+  };
+
+  const handleSetupSave = async (year: string, payments: string[]) => {
+    if (!setupUser) return;
+    const updated: CurrentUser = {
+      ...setupUser,
+      school_year: year,
+      payment_methods: payments,
+    };
+    saveUser(updated);
+    setUser(updated);
+    setSetupUser(null);
+    try {
+      await api.updateUser(updated.id, { school_year: year, payment_methods: payments });
+    } catch {
+      // Backend is optional — the profile is saved locally either way.
+    }
   };
 
   const toggleSave = (id: string) => {
@@ -341,7 +380,7 @@ export default function App() {
   const totalUnread  = convs.reduce((n, c) => n + c.unread, 0);
 
   if (!user) {
-    return <LoginPage onAuthed={setUser} />;
+    return <LoginPage onAuthed={handleAuthed} />;
   }
 
   return (
@@ -350,7 +389,7 @@ export default function App() {
       <nav className={s.navbar}>
         <div className={s.navInner}>
           <div className={s.logo}>
-            <div className={s.logoIcon}><GraduationCap size={18} /></div>
+            <img className={s.logoIcon} src={ninerLogo} alt="NinerMarket" />
             <span className={s.logoText}>NinerMarket</span>
           </div>
 
@@ -717,6 +756,15 @@ export default function App() {
           }}
         />
       )}
+
+      {/* ── First-run account setup ── */}
+      {setupUser && (
+        <AccountSetup
+          name={setupUser.display_name}
+          onSave={handleSetupSave}
+          onSkip={() => setSetupUser(null)}
+        />
+      )}
     </div>
   );
 }
@@ -735,15 +783,17 @@ function GoogleG() {
 }
 
 function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
-  const [mode, setMode]         = useState<"signin" | "signup">("signin");
-  const [name, setName]         = useState("");
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [agree, setAgree]       = useState(false);
+  const [formOpen, setFormOpen]   = useState<"signin" | "signup" | null>(null);
+  const [name, setName]           = useState("");
+  const [email, setEmail]         = useState("");
+  const [password, setPassword]   = useState("");
+  const [agree, setAgree]         = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [googleOpen, setGoogleOpen] = useState(false);
-  const [error, setError]       = useState("");
-  const [busy, setBusy]         = useState(false);
+  const [helpOpen, setHelpOpen]   = useState(false);
+  const [schoolYear, setSchoolYear] = useState("");
+  const [payments, setPayments]   = useState<string[]>([]);
+  const [error, setError]         = useState("");
 
   const validate = (requirePassword: boolean): string => {
     if (!isCharlotteEmail(email)) {
@@ -760,21 +810,27 @@ function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    const mode = formOpen === "signup" ? "signup" : "signin";
     if (mode === "signup" && !name.trim()) {
       setError("Please enter your full name.");
+      return;
+    }
+    if (mode === "signup" && !schoolYear) {
+      setError("Please select your school year.");
+      return;
+    }
+    if (mode === "signup" && payments.length === 0) {
+      setError("Select at least one payment method you accept.");
       return;
     }
     const err = validate(true);
     if (err) { setError(err); return; }
     setError("");
-    setBusy(true);
     try {
-      const u = await signInOrUp(mode, name, email);
+      const u = await signInOrUp(mode, name, email, schoolYear, payments);
       onAuthed(u);
     } catch {
       setError("Something went wrong. Please try again.");
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -784,14 +840,11 @@ function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
     if (err) { setError(err); setGoogleOpen(false); return; }
     setGoogleOpen(false);
     setError("");
-    setBusy(true);
     try {
       const u = await signInOrUp("signin", name, googleEmail);
       onAuthed(u);
     } catch {
       setError("Something went wrong. Please try again.");
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -802,155 +855,188 @@ function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
   };
 
   const fillDemo = () => {
-    setMode("signin");
+    setFormOpen("signin");
     setEmail("anna@charlotte.edu");
     setPassword("ninermarket-demo");
     setAgree(true);
     setError("");
   };
 
-  const switchMode = (next: "signin" | "signup") => {
-    setMode(next);
+  const openForm = (mode: "signin" | "signup") => {
     setError("");
+    setFormOpen(mode);
   };
 
   return (
-    <div className={s.fbPage}>
-      <div className={s.fbMain}>
-        {/* Left — brand panel */}
-        <div className={s.fbLeft}>
-          <div className={s.fbBrand}>
-            <div className={s.fbLogoIcon}><GraduationCap size={38} /></div>
-            <span className={s.fbWordmark}>NinerMarket</span>
+    <div className={s.xPage}>
+      <div className={s.xMain}>
+        {/* Left — light side with headline, logo, features & footer */}
+        <div className={s.xLeft}>
+          <h1 className={s.xHeadline}>More accessible than ever</h1>
+          <div className={s.xLogo}>
+            <img className={s.xLogoImg} src={ninerLogo} alt="NinerMarket" />
           </div>
-          <p className={s.fbTagline}>
-            Connect with the UNC Charlotte community and buy, sell, or request textbooks, dorm
-            furniture, electronics, and more — right on campus.
-          </p>
+          <ul className={s.xFeatures}>
+            <li><ShieldCheck size={16} /> Verified @charlotte.edu community</li>
+            <li><ShoppingBag size={16} /> Textbooks, dorm essentials &amp; more</li>
+            <li><MapPin size={16} /> Meet up on campus, pay your way</li>
+          </ul>
+
+          <footer className={s.xFooter}>
+            <span>About</span>
+            <span>·</span>
+            <button type="button" className={s.xFooterLink} onClick={() => setHelpOpen(true)}>Help</button>
+            <span>·</span>
+            <button type="button" className={s.xFooterLink} onClick={() => setTermsOpen(true)}>Terms</button>
+            <span>·</span>
+            <span>Privacy</span>
+            <span>·</span>
+            <span>© 2026 NinerMarket</span>
+          </footer>
         </div>
 
-        {/* Right — login card */}
-        <div className={s.fbRight}>
-          <div className={s.fbCard}>
-            {mode === "signin" ? (
-              <>
-                <form onSubmit={submit} className={s.fbForm}>
-                  <input
-                    className={s.fbInput}
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="Email address (@charlotte.edu)"
-                    autoFocus
-                  />
-                  {email && email.includes("@") && !isCharlotteEmail(email) && (
-                    <span className={s.loginFieldError}>Must be a @charlotte.edu email to access NinerMarket.</span>
-                  )}
-                  <input
-                    className={s.fbInput}
-                    type="password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="Password"
-                  />
-                  <button type="button" className={s.fbForgot} onClick={forgotPassword}>
-                    Forgot password?
-                  </button>
-                  <label className={s.fbTerms}>
-                    <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
-                    <span>
-                      I agree to the{" "}
-                      <button type="button" className={s.loginTermsLink} onClick={() => setTermsOpen(true)}>
-                        Terms &amp; Conditions
-                      </button>
-                    </span>
-                  </label>
-                  {error && <p className={s.formError}>{error}</p>}
-                  <button type="submit" className={s.fbLoginBtn} disabled={busy}>
-                    {busy ? "Please wait..." : "Login"}
-                  </button>
-                </form>
+        {/* Right — light side with join panel */}
+        <div className={s.xRight}>
+          <div className={s.xCard}>
+            <h2 className={s.xSubheadline}>Shop &amp; sell on campus</h2>
 
-                <div className={s.fbDivider}><span>or</span></div>
-
-                <button type="button" className={s.fbGoogleBtn} onClick={() => setGoogleOpen(true)}>
-                  <GoogleG />
-                  Continue with Google
-                </button>
-
-                <button type="button" className={s.fbCreateBtn} onClick={() => switchMode("signup")}>
-                  Create new account
-                </button>
-              </>
-            ) : (
-              <>
-                <h2 className={s.fbCardTitle}>Create your account</h2>
-                <form onSubmit={submit} className={s.fbForm}>
-                  <input
-                    className={s.fbInput}
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    placeholder="Full name"
-                  />
-                  <input
-                    className={s.fbInput}
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="Email address (@charlotte.edu)"
-                  />
-                  {email && email.includes("@") && !isCharlotteEmail(email) && (
-                    <span className={s.loginFieldError}>Must be a @charlotte.edu email to access NinerMarket.</span>
-                  )}
-                  <input
-                    className={s.fbInput}
-                    type="password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="Password"
-                  />
-                  <label className={s.fbTerms}>
-                    <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
-                    <span>
-                      I agree to the{" "}
-                      <button type="button" className={s.loginTermsLink} onClick={() => setTermsOpen(true)}>
-                        Terms &amp; Conditions
-                      </button>
-                    </span>
-                  </label>
-                  {error && <p className={s.formError}>{error}</p>}
-                  <button type="submit" className={s.fbLoginBtn} disabled={busy}>
-                    {busy ? "Please wait..." : "Sign Up"}
+            <div className={s.xActions}>
+              <button type="button" className={s.xSocialBtn} onClick={() => setGoogleOpen(true)}>
+                <GoogleG />
+                Continue with Google
+              </button>
+              <p className={s.xOnlyNote}>
+                NinerMarket is for UNC Charlotte students, faculty &amp; staff only. Sign in with your
+                @charlotte.edu Google account.
+              </p>
+              <button type="button" className={s.xEmailLink} onClick={() => openForm("signup")}>
+                Sign up with your email instead
+              </button>
+              <label className={s.xTerms}>
+                <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
+                <span>
+                  By signing up, you agree to the{" "}
+                  <button type="button" className={s.xTermsLink} onClick={() => setTermsOpen(true)}>
+                    Terms &amp; Conditions
                   </button>
-                  <button type="button" className={s.fbBackLink} onClick={() => switchMode("signin")}>
-                    Already have an account? Log in
-                  </button>
-                </form>
-              </>
-            )}
+                  .
+                </span>
+              </label>
+              {error && <p className={s.xError}>{error}</p>}
+            </div>
 
-            <button type="button" className={s.fbDemoHint} onClick={fillDemo}>
-              Demo account: sign in as anna@charlotte.edu
-            </button>
+            <div className={s.xSignInBox}>
+              <p className={s.xSignInLabel}>Already have an account?</p>
+              <button type="button" className={s.xSignInBtn} onClick={() => openForm("signin")}>
+                Sign in
+              </button>
+            </div>
           </div>
-
-          <p className={s.fbUnderCard}>
-            Restricted to current UNC Charlotte students, faculty, and staff with an active @charlotte.edu account.
-          </p>
         </div>
       </div>
 
-      <footer className={s.fbFooter}>
-        <span className={s.fbFooterBrand}>NinerMarket</span>
-        <span>·</span>
-        <span>© 2026</span>
-        <span>·</span>
-        <button type="button" className={s.fbFooterLink} onClick={() => setTermsOpen(true)}>
-          Terms &amp; Conditions
-        </button>
-        <span>·</span>
-        <span>@charlotte.edu only</span>
-      </footer>
+      {/* Sign-in / sign-up modal */}
+      {formOpen && (
+        <>
+          <div className={s.xOverlay} onClick={() => setFormOpen(null)} />
+          <div className={s.xModal} role="dialog" aria-modal="true" aria-label={formOpen === "signup" ? "Create your account" : "Sign in"}>
+            <div className={s.xModalHeader}>
+              <button className={s.xModalClose} onClick={() => setFormOpen(null)} aria-label="Close">
+                <X size={18} />
+              </button>
+              <img className={s.xModalLogo} src={ninerLogo} alt="NinerMarket" />
+              <h2 className={s.xModalTitle}>
+                {formOpen === "signup" ? "Create your account" : "Sign in to NinerMarket"}
+              </h2>
+            </div>
+            <form onSubmit={submit} className={s.xForm}>
+              {formOpen === "signup" && (
+                <input
+                  className={s.xInput}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Full name"
+                />
+              )}
+              <input
+                className={s.xInput}
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="Email address (@charlotte.edu)"
+              />
+              {email && email.includes("@") && !isCharlotteEmail(email) && (
+                <span className={s.xFieldError}>Must be a @charlotte.edu email to access NinerMarket.</span>
+              )}
+              <input
+                className={s.xInput}
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Password"
+              />
+              {formOpen === "signup" && (
+                <>
+                  <div className={s.xFormBlock}>
+                    <span className={s.xFormLabel}>What year are you in?</span>
+                    <select
+                      className={s.xSelect}
+                      value={schoolYear}
+                      onChange={e => setSchoolYear(e.target.value)}
+                    >
+                      <option value="">Select your year</option>
+                      {SCHOOL_YEARS.map(y => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className={s.xFormBlock}>
+                    <span className={s.xFormLabel}>Payment methods you accept</span>
+                    <div className={s.xPayments}>
+                      {PAYMENT_METHODS.map(p => (
+                        <label key={p} className={s.xPay}>
+                          <input
+                            type="checkbox"
+                            checked={payments.includes(p)}
+                            onChange={() =>
+                              setPayments(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])
+                            }
+                          />
+                          <span>{p}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+              {formOpen === "signin" && (
+                <button type="button" className={s.xForgot} onClick={forgotPassword}>
+                  Forgot password?
+                </button>
+              )}
+              <label className={s.xTerms}>
+                <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} />
+                <span>
+                  I agree to the{" "}
+                  <button type="button" className={s.xTermsLink} onClick={() => setTermsOpen(true)}>
+                    Terms &amp; Conditions
+                  </button>
+                  .
+                </span>
+              </label>
+              {error && <p className={s.xError}>{error}</p>}
+              <button type="submit" className={s.xSubmitBtn}>
+                {formOpen === "signup" ? "Sign up" : "Log in"}
+              </button>
+              {formOpen === "signin" && (
+                <button type="button" className={s.xDemoHint} onClick={fillDemo}>
+                  Demo account: anna@charlotte.edu
+                </button>
+              )}
+            </form>
+          </div>
+        </>
+      )}
 
       {googleOpen && (
         <GoogleChooser
@@ -968,7 +1054,80 @@ function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
           onClose={() => setTermsOpen(false)}
         />
       )}
+
+      {helpOpen && (
+        <HelpModal
+          onClose={() => setHelpOpen(false)}
+        />
+      )}
     </div>
+  );
+}
+
+// ─── First-run account setup ─────────────────────────────────────────────────
+
+function AccountSetup({ name, onSave, onSkip }: {
+  name: string;
+  onSave: (year: string, payments: string[]) => void;
+  onSkip: () => void;
+}) {
+  const [year, setYear]     = useState("");
+  const [payments, setPayments] = useState<string[]>([]);
+  const [error, setError]   = useState("");
+
+  const togglePayment = (p: string) =>
+    setPayments(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
+
+  const submit = () => {
+    if (!year) { setError("Please select your school year."); return; }
+    if (payments.length === 0) { setError("Select at least one payment method you accept."); return; }
+    onSave(year, payments);
+  };
+
+  return (
+    <>
+      <div className={s.setupOverlay} />
+      <div className={s.setupModal} role="dialog" aria-modal="true" aria-label="Finish setting up your account">
+        <div className={s.setupHeader}>
+          <img className={s.setupLogo} src={ninerLogo} alt="NinerMarket" />
+          <h2 className={s.setupTitle}>Finish your profile</h2>
+        </div>
+        <p className={s.setupSub}>
+          Welcome to NinerMarket, {name}! Let buyers know your school year and how you like to be paid.
+        </p>
+
+        <label className={s.setupLabel}>What year are you in?</label>
+        <div className={s.setupYears}>
+          {SCHOOL_YEARS.map(y => (
+            <button
+              key={y}
+              type="button"
+              className={`${s.setupPill} ${year === y ? s.setupPillActive : ""}`}
+              onClick={() => setYear(y)}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+
+        <label className={s.setupLabel}>Payment methods you accept</label>
+        <div className={s.setupPayments}>
+          {PAYMENT_METHODS.map(p => (
+            <label key={p} className={s.setupPay}>
+              <input type="checkbox" checked={payments.includes(p)} onChange={() => togglePayment(p)} />
+              <span>{p}</span>
+            </label>
+          ))}
+        </div>
+
+        {error && <p className={s.setupError}>{error}</p>}
+
+        <div className={s.setupActions}>
+          <button type="button" className={s.setupSkip} onClick={onSkip}>Skip for now</button>
+          <button type="button" className={s.setupSave} onClick={submit}>Save</button>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -1026,6 +1185,16 @@ function GoogleChooser({ agreed, onAgree, onClose, onContinue }: {
           <button type="submit" className={`${s.loginSubmit} ${s.btnPrimary}`}>Continue</button>
         </form>
         <button type="button" className={s.googleBack} onClick={onClose}>Cancel</button>
+        <button
+          type="button"
+          className={s.xDemoHint}
+          onClick={() => {
+            onAgree(true);
+            setEmail("anna@charlotte.edu");
+          }}
+        >
+          Demo account: anna@charlotte.edu
+        </button>
       </div>
 
       {termsOpen && (
@@ -1067,6 +1236,36 @@ function TermsModal({ accepted, onAccept, onClose }: {
           <button type="button" className={s.btnPrimary} onClick={onAccept}>
             {accepted ? "Done" : "I Accept"}
           </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Help & support modal ────────────────────────────────────────────────────
+
+function HelpModal({ onClose }: {
+  onClose: () => void;
+}) {
+  return (
+    <>
+      <div className={s.googleOverlay} onClick={onClose} />
+      <div className={`${s.googleModal} ${s.helpModal}`} role="dialog" aria-modal="true" aria-label="Help and support">
+        <div className={s.termsHeader}>
+          <MessageCircle size={20} className={s.termsIcon} />
+          <h2 className={s.googleTitle}>Help &amp; Support</h2>
+        </div>
+        <p className={s.helpIntro}>
+          Need a hand with listings, payments, or your account? Email our support team and we&rsquo;ll get
+          back to you as soon as we can.
+        </p>
+        <div className={s.helpContact}>
+          <p className={s.helpContactLabel}>Support contacts</p>
+          <a className={s.helpContactLink} href="mailto:gmallang@charlotte.edu">gmallang@charlotte.edu</a>
+          <a className={s.helpContactLink} href="mailto:ksaifeld@charlotte.edu">ksaifeld@charlotte.edu</a>
+        </div>
+        <div className={s.termsActions}>
+          <button type="button" className={s.btnPrimary} onClick={onClose}>Done</button>
         </div>
       </div>
     </>
@@ -1133,8 +1332,19 @@ function ListingDetail({ item, saved, onClose, onToggleSave, onMessage }: {
               <div className={s.detailSellerInfo}>
                 <p className={s.detailSellerName}>{item.seller}</p>
                 <p className={s.detailSellerRating}>★ {item.sellerRating.toFixed(1)} rating</p>
+                {item.sellerYear && <p className={s.detailSellerYear}>{item.sellerYear}</p>}
               </div>
             </div>
+            {item.sellerPayments && item.sellerPayments.length > 0 && (
+              <div className={s.detailPayments}>
+                <span className={s.detailPaymentsLabel}>Accepted payment methods</span>
+                <div className={s.detailPaymentsList}>
+                  {item.sellerPayments.map(p => (
+                    <span key={p} className={s.detailPayTag}>{p}</span>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className={s.detailDesc}>
               <h3 className={s.detailDescTitle}>Description</h3>
               <p className={s.detailDescText}>

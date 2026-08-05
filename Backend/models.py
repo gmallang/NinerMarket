@@ -7,6 +7,8 @@ class User(BaseModel):
     id: str
     email: str
     display_name: str
+    school_year: str = ""
+    payment_methods: list[str] = []
     rating_avg: float = 0.0
     rating_count: int = 0
 

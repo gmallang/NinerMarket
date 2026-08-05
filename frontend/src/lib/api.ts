@@ -48,9 +48,24 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  createUser: (data: { id: string; email: string; display_name: string }) =>
+  createUser: (data: {
+    id: string;
+    email: string;
+    display_name: string;
+    school_year?: string;
+    payment_methods?: string[];
+  }) =>
     request<UserDto>("/users", {
       method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateUser: (
+    id: string,
+    data: { display_name?: string; school_year?: string; payment_methods?: string[] }
+  ) =>
+    request<UserDto>(`/users/${id}`, {
+      method: "PATCH",
       body: JSON.stringify(data),
     }),
 

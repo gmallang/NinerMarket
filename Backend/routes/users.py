@@ -35,3 +35,19 @@ def get_user(id: str):
     if id not in users:
         raise HTTPException(status_code=404, detail="User not found")
     return users[id]
+
+
+@router.patch("/users/{id}")
+def update_user(id: str, updates: dict):
+    if db:
+        existing = db.table("users").select("id").eq("id", id).execute()
+        if not existing.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        data = db.table("users").update(updates).eq("id", id).execute()
+        return data.data[0]
+
+    if id not in users:
+        raise HTTPException(status_code=404, detail="User not found")
+    for key, value in updates.items():
+        setattr(users[id], key, value)
+    return users[id]

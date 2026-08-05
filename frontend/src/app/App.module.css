@@ -1,4 +1,4 @@
-/* ─────────────────────────────────────────────
+﻿/* ─────────────────────────────────────────────
    App.module.css — Marketplace layout & cards
    Colors: all via var() from main.css
    ───────────────────────────────────────────── */
@@ -38,14 +38,11 @@
 }
 
 .logoIcon {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-full);
-  background: rgba(255,255,255,0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-fg-inverse);
+  display: block;
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
 .logoText {
@@ -53,7 +50,6 @@
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
   color: var(--color-fg-inverse);
 }
 
@@ -215,7 +211,6 @@
 .sectionLabel {
   font-size: 0.7rem;
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-fg-muted);
   padding: 0 var(--space-2);
@@ -335,7 +330,6 @@
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-fg);
 }
@@ -1214,6 +1208,49 @@
   margin-top: var(--space-3);
 }
 
+/* ── Help & support modal ── */
+.helpModal {
+  width: min(440px, calc(100vw - 32px));
+  text-align: left;
+}
+
+.helpIntro {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-fg-muted);
+  margin: 0 0 var(--space-4);
+}
+
+.helpContact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--color-accent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.helpContactLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-fg-muted);
+  margin: 0 0 var(--space-1);
+}
+
+.helpContactLink {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.helpContactLink:hover {
+  text-decoration: underline;
+}
+
 /* ── Listing detail overlay ── */
 .detailOverlay {
   position: fixed;
@@ -1400,6 +1437,42 @@
   margin-top: 2px;
 }
 
+.detailSellerYear {
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.detailPayments {
+  margin-top: var(--space-4);
+}
+
+.detailPaymentsLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-fg-muted);
+  margin-bottom: var(--space-2);
+}
+
+.detailPaymentsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.detailPayTag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-accent);
+  border: 1px solid var(--color-primary-light);
+  border-radius: var(--radius-full);
+  padding: 3px 10px;
+}
+
 .detailDesc {
   margin-top: var(--space-4);
 }
@@ -1407,7 +1480,6 @@
 .detailDescTitle {
   font-size: 0.75rem;
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-fg-muted);
   margin-bottom: var(--space-1);
@@ -1535,276 +1607,271 @@
   color: var(--color-primary);
 }
 
-/* ── Facebook-style login page ── */
-.fbPage {
+/* ── Login page (matches main light UI) ── */
+.xPage {
   min-height: 100vh;
-  background: #f0f2f5;
+  background:
+    radial-gradient(1100px 600px at 85% -10%, rgba(26, 122, 60, 0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(26, 122, 60, 0.08), transparent 55%),
+    var(--color-bg);
+  color: var(--color-fg);
   display: flex;
   flex-direction: column;
 }
 
-.fbMain {
+.xMain {
   flex: 1;
   width: 100%;
-  max-width: 980px;
-  margin: 0 auto;
-  padding: var(--space-8) var(--space-6) var(--space-10);
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-8);
+  align-items: stretch;
 }
 
-@media (max-width: 900px) {
-  .fbMain {
+@media (max-width: 860px) {
+  .xMain {
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-8);
   }
 }
 
-/* Left brand column */
-.fbLeft {
+/* Left — dark green side with headline, logo, features & footer */
+.xLeft {
   flex: 1;
-  max-width: 520px;
-  padding-bottom: var(--space-8);
+  min-width: 0;
+  background: #0b2418;
+  color: #e7e9ea;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-6);
 }
 
-@media (max-width: 900px) {
-  .fbLeft {
-    max-width: 100%;
-    text-align: center;
-    padding-bottom: 0;
+@media (max-width: 860px) {
+  .xLeft {
+    padding: var(--space-6) var(--space-6) 0;
   }
 }
 
-.fbBrand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  justify-content: flex-start;
-}
-
-@media (max-width: 900px) {
-  .fbBrand { justify-content: center; }
-}
-
-.fbLogoIcon {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
-  color: var(--color-fg-inverse);
+.xLogo {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
-.fbWordmark {
+.xLogoImg {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  height: 280px;
+  object-fit: contain;
+  filter: brightness(0) invert(0.7) sepia(1) saturate(5) hue-rotate(-5deg) brightness(0.95);
+}
+
+@media (max-width: 860px) {
+  .xLogoImg { height: 160px; max-width: 260px; }
+}
+
+/* Right — light side with join panel */
+.xRight {
+  flex: 1;
+  min-width: 0;
+  background: #fff;
+  color: var(--color-fg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10) var(--space-6);
+}
+
+.xHeadline {
   font-family: var(--font-display);
   font-size: 3rem;
   font-weight: 800;
-  letter-spacing: 0.01em;
-  color: var(--color-primary);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: #fff;
+  text-align: center;
 }
 
-@media (max-width: 900px) {
-  .fbWordmark { font-size: 2.5rem; }
+@media (max-width: 860px) {
+  .xHeadline { font-size: 2.25rem; }
 }
 
-.fbTagline {
-  font-size: 1.6rem;
-  font-weight: 500;
-  line-height: 1.3;
-  color: var(--color-fg);
-  margin-top: var(--space-3);
-}
-
-@media (max-width: 900px) {
-  .fbTagline { font-size: 1.25rem; }
-}
-
-/* Right form column */
-.fbRight {
-  width: min(396px, 100%);
-  flex-shrink: 0;
-}
-
-.fbCard {
-  background: var(--color-card);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-  padding: var(--space-5) var(--space-4) var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.fbCardTitle {
-  font-size: 1.125rem;
+.xSubheadline {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
   font-weight: 700;
-  color: var(--color-fg);
-  margin: 0;
+  color: var(--color-primary);
+  margin-top: 0;
+  width: 100%;
+  text-align: center;
 }
 
-.fbForm {
+.xCard {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-8) var(--space-6);
+  box-sizing: border-box;
+}
+
+@media (max-width: 860px) {
+  .xSubheadline { font-size: 1.5rem; margin-top: var(--space-4); }
+}
+
+.xActions {
+  margin-top: var(--space-6);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  max-width: 360px;
 }
 
-.fbInput {
+.xSocialBtn {
   width: 100%;
-  padding: 12px 14px;
-  font-family: var(--font-body);
-  font-size: 0.9375rem;
-  color: var(--color-fg);
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary-fg);
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--duration) var(--ease);
 }
 
-.fbInput:focus {
-  border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 3px rgba(26, 122, 60, 0.15);
+.xSocialBtn:hover {
+  background: var(--color-primary-dark);
 }
 
-.fbInput::placeholder {
-  color: var(--color-fg-subtle);
-}
-
-.fbForgot {
+.xEmailLink {
   align-self: flex-start;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-primary);
-  cursor: pointer;
   background: none;
   border: none;
+  cursor: pointer;
   padding: 0;
 }
 
-.fbForgot:hover {
+.xEmailLink:hover {
   text-decoration: underline;
 }
 
-.fbTerms {
+.xOnlyNote {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-fg-muted);
+  margin: 0;
+}
+
+.xTerms {
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
   color: var(--color-fg-muted);
   cursor: pointer;
 }
 
-.fbTerms input {
+.xTerms input {
   margin-top: 2px;
   accent-color: var(--color-primary);
   flex-shrink: 0;
 }
 
-.fbLoginBtn {
-  width: 100%;
-  padding: 11px 16px;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: var(--color-fg-inverse);
-  background: var(--color-primary);
+.xTermsLink {
+  color: var(--color-primary);
+  background: none;
   border: none;
-  border-radius: var(--radius-md);
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+}
+
+.xTermsLink:hover {
+  text-decoration: underline;
+}
+
+.xError {
+  font-size: 0.8125rem;
+  color: var(--color-danger);
+  margin: 0;
+}
+
+.xSignInBox {
+  margin-top: var(--space-8);
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.xSignInLabel {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-fg);
+}
+
+.xSignInBtn {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
   cursor: pointer;
   transition: background var(--duration) var(--ease);
 }
 
-.fbLoginBtn:hover {
-  background: var(--color-primary-dark);
+.xSignInBtn:hover {
+  background: rgba(26, 122, 60, 0.08);
+  border-color: var(--color-primary);
 }
 
-.fbLoginBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.fbDivider {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  color: var(--color-fg-subtle);
-  font-size: 0.8125rem;
-}
-
-.fbDivider::before,
-.fbDivider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--color-border);
-}
-
-.fbGoogleBtn {
-  width: 100%;
+.xFooter {
+  padding: var(--space-4) var(--space-6) var(--space-6);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  padding: 11px 16px;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--color-fg);
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: #7fa390;
 }
 
-.fbGoogleBtn:hover {
-  background: var(--color-muted);
-  box-shadow: var(--shadow-sm);
-}
-
-.fbCreateBtn {
-  width: 100%;
-  padding: 11px 16px;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--color-fg-inverse);
-  background: #2e9e4f;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  margin-top: var(--space-1);
-  transition: background var(--duration) var(--ease);
-}
-
-.fbCreateBtn:hover {
-  background: var(--color-primary);
-}
-
-.fbBackLink {
-  align-self: center;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-primary);
+.xFooterLink {
+  font-size: 0.75rem;
+  color: #7fa390;
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
 }
 
-.fbBackLink:hover {
+.xFooterLink:hover {
   text-decoration: underline;
+  color: #b3a369;
 }
 
-.fbDemoHint {
+.xDemoHint {
   align-self: center;
   font-size: 0.75rem;
-  color: var(--color-fg-muted);
+  color: var(--color-fg-subtle);
   background: none;
   border: none;
   cursor: pointer;
@@ -1812,48 +1879,373 @@
   padding: var(--space-1) 0 0;
 }
 
-.fbDemoHint:hover {
-  opacity: 0.75;
-}
-
-.fbUnderCard {
-  margin-top: var(--space-4);
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--color-fg-muted);
-  text-align: center;
-}
-
-.fbFooter {
-  padding: var(--space-5) var(--space-6);
-  border-top: 1px solid var(--color-border);
-  background: var(--color-card);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  font-size: 0.75rem;
-  color: var(--color-fg-muted);
-}
-
-.fbFooterBrand {
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.xDemoHint:hover {
   color: var(--color-primary);
 }
 
-.fbFooterLink {
+/* ── Sign-in / sign-up modal ── */
+.xOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 1000;
+}
+
+.xModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+  width: min(400px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-5);
+  animation: fadeUp 180ms var(--ease);
+}
+
+.xModalHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.xModalClose {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-fg);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background var(--duration) var(--ease);
+  flex-shrink: 0;
+}
+
+.xModalClose:hover {
+  background: var(--color-muted);
+}
+
+.xModalLogo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.xModalTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  margin: 0;
+  flex: 1;
+}
+
+.xForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.xInput {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: var(--color-fg);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--duration) var(--ease);
+}
+
+.xInput:focus {
+  border-color: var(--color-primary);
+}
+
+.xInput::placeholder {
+  color: var(--color-fg-subtle);
+}
+
+.xFieldError {
   font-size: 0.75rem;
+  color: var(--color-danger);
+}
+
+.xFormBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.xFormLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-fg-muted);
+}
+
+.xSelect {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: var(--color-fg);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color var(--duration) var(--ease);
+  appearance: none;
+}
+
+.xSelect option {
+  color: var(--color-fg);
+  background: var(--color-card);
+}
+
+.xSelect:focus {
+  border-color: var(--color-primary);
+}
+
+.xPayments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.xPay {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-fg);
+  cursor: pointer;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 6px 12px;
+  transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease);
+}
+
+.xPay:has(input:checked) {
+  border-color: var(--color-primary);
+  background: var(--color-accent);
+}
+
+.xPay input {
+  accent-color: var(--color-primary);
+}
+
+.xForgot {
+  align-self: flex-start;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.xForgot:hover {
+  text-decoration: underline;
+}
+
+.xSubmitBtn {
+  width: 100%;
+  padding: 11px 16px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-primary-fg);
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  margin-top: var(--space-1);
+  transition: background var(--duration) var(--ease);
+}
+
+.xSubmitBtn:hover {
+  background: var(--color-primary-dark);
+}
+
+/* ── First-run account setup modal ── */
+.setupOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 36, 24, 0.7);
+  z-index: 1200;
+}
+
+.setupModal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1201;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-6);
+  animation: fadeUp 180ms var(--ease);
+}
+
+.setupHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.setupLogo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.setupTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  margin: 0;
+}
+
+.setupSub {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-fg-muted);
+  margin: 0 0 var(--space-5);
+}
+
+.setupLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-fg-muted);
+  margin-bottom: var(--space-2);
+}
+
+.setupYears {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.setupPill {
+  padding: 8px 14px;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-fg);
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--duration) var(--ease), border-color var(--duration) var(--ease);
+}
+
+.setupPill:hover {
+  border-color: var(--color-primary);
+}
+
+.setupPillActive,
+.setupPillActive:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.setupPayments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.setupPay {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-fg);
+  cursor: pointer;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 7px 13px;
+  transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease);
+}
+
+.setupPay:has(input:checked) {
+  background: var(--color-accent);
+  border-color: var(--color-primary);
+}
+
+.setupPay input {
+  accent-color: var(--color-primary);
+}
+
+.setupError {
+  font-size: 0.8125rem;
+  color: var(--color-danger, #b45309);
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+
+.setupActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.setupSkip {
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--color-fg-muted);
   background: none;
   border: none;
   cursor: pointer;
-  text-decoration: underline;
+  padding: 8px 12px;
 }
 
-.fbFooterLink:hover {
-  color: var(--color-primary);
+.setupSkip:hover {
+  color: var(--color-fg);
+}
+
+.setupSave {
+  padding: 10px 22px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--duration) var(--ease);
+}
+
+.setupSave:hover {
+  background: var(--color-primary-dark);
 }

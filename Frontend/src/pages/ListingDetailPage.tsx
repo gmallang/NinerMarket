@@ -1,6 +1,7 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ListingDetail } from "@/features/listings/ListingDetail";
 import { useMarketStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import ps from "./page.module.css";
 
 export function ListingDetailPage() {
@@ -28,6 +29,21 @@ export function ListingDetailPage() {
 
   const handleOpenSeller = item.sellerId ? () => navigate(`/user/${item.sellerId}`) : undefined;
 
+  const handleBuy = async () => {
+    const origin = window.location.origin;
+    const result = await api.createCheckout({
+      listing_id: item.id,
+      success_url: `${origin}/checkout/success?id=${item.id}`,
+      cancel_url: `${origin}/checkout/cancel?id=${item.id}`,
+    });
+    if (result.url) {
+      window.location.href = result.url;
+    } else {
+      // mock mode — backend has no Stripe key configured
+      navigate(`/checkout/success?mock=1&id=${item.id}`);
+    }
+  };
+
   return (
     <div className={ps.page}>
       <ListingDetail
@@ -37,7 +53,9 @@ export function ListingDetailPage() {
         onToggleSave={() => toggleSave(item.id)}
         onMessage={handleMessage}
         onOpenSeller={handleOpenSeller}
+        onBuy={handleBuy}
       />
     </div>
   );
 }
+

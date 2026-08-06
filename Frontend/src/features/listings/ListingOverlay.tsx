@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Modal } from "@/components/shared/Modal";
 import { useMarketStore } from "@/lib/store";
+import { api } from "@/lib/api";
 import { ListingDetail } from "./ListingDetail";
 import s from "./detail.module.css";
 
@@ -23,6 +24,23 @@ export function ListingOverlay() {
       }
     : undefined;
 
+  const handleBuy = item
+    ? async () => {
+        const origin = window.location.origin;
+        const result = await api.createCheckout({
+          listing_id: item.id,
+          success_url: `${origin}/checkout/success?id=${item.id}`,
+          cancel_url: `${origin}/checkout/cancel?id=${item.id}`,
+        });
+        closeListingOverlay();
+        if (result.url) {
+          window.location.href = result.url;
+        } else {
+          navigate(`/checkout/success?mock=1&id=${item.id}`);
+        }
+      }
+    : undefined;
+
   return (
     <Modal
       open={listingOverlayId != null}
@@ -40,8 +58,10 @@ export function ListingOverlay() {
           onToggleSave={() => toggleSave(item.id)}
           onMessage={() => openMessageOverlay(item.id)}
           onOpenSeller={handleOpenSeller}
+          onBuy={handleBuy}
         />
       )}
     </Modal>
   );
 }
+

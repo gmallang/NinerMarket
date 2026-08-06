@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, MapPin, MessageCircle, X } from "lucide-react";
+import { Heart, MapPin, MessageCircle, ShoppingCart, X } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
 import { CATEGORIES } from "@/data/categories";
@@ -16,6 +16,7 @@ export function ListingDetail({
   onToggleSave,
   onMessage,
   onOpenSeller,
+  onBuy,
 }: {
   item: Listing;
   saved: boolean;
@@ -23,10 +24,26 @@ export function ListingDetail({
   onToggleSave: () => void;
   onMessage: () => void;
   onOpenSeller?: () => void;
+  onBuy?: () => Promise<void>;
 }) {
   const photos = item.photos?.length ? item.photos : [item.image];
   const [activeImg, setActiveImg] = useState(0);
+  const [buying, setBuying] = useState(false);
+  const [buyError, setBuyError] = useState<string | null>(null);
   const categoryLabel = CATEGORIES.find((x) => x.id === item.category)?.label ?? item.category;
+
+  const handleBuy = async () => {
+    if (!onBuy) return;
+    setBuying(true);
+    setBuyError(null);
+    try {
+      await onBuy();
+    } catch (err) {
+      setBuyError(err instanceof Error ? err.message : "Payment failed. Please try again.");
+    } finally {
+      setBuying(false);
+    }
+  };
 
   return (
     <div className={s.detailModal} role="dialog" aria-modal="true" aria-label={item.title}>
@@ -131,6 +148,15 @@ export function ListingDetail({
           <Heart size={15} fill={saved ? "currentColor" : "none"} />
           {saved ? "Saved" : "Save"}
         </button>
+        {onBuy && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+            <button className={s.buyBtn} onClick={handleBuy} disabled={buying}>
+              <ShoppingCart size={15} />
+              {buying ? "Redirecting…" : "Buy Now"}
+            </button>
+            {buyError && <p className={s.buyError}>{buyError}</p>}
+          </div>
+        )}
         <button className={`${shared.btnPrimary} ${s.detailPrimaryBtn}`} onClick={onMessage}>
           <MessageCircle size={16} />
           Message Seller

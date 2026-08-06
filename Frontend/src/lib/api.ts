@@ -81,4 +81,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  createCheckout: (body: { listing_id: string; success_url: string; cancel_url: string }) =>
+    request<{ url: string | null; mock: boolean; listing_id: string }>("/checkout", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 };

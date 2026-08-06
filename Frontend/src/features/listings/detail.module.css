@@ -298,3 +298,37 @@
   gap: 6px;
   padding: 10px 20px;
 }
+
+.buyBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background var(--duration) var(--ease),
+    opacity var(--duration) var(--ease);
+}
+
+.buyBtn:hover {
+  background: var(--color-primary-dark);
+}
+
+.buyBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.buyError {
+  font-size: 0.8rem;
+  color: var(--color-danger);
+  text-align: right;
+  margin-top: 4px;
+}
+

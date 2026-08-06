@@ -1,4 +1,15 @@
-import { Grid, Home, BookOpen, Sofa, Laptop, Bike, Shirt, Package, Star } from "lucide-react";
+import {
+  Grid,
+  Home,
+  BookOpen,
+  Sofa,
+  Laptop,
+  Bike,
+  Shirt,
+  Package,
+  Star,
+  Building2,
+} from "lucide-react";
 
 export const CATEGORIES = [
   { id: "all", label: "All Categories", icon: Grid },
@@ -10,6 +21,7 @@ export const CATEGORIES = [
   { id: "clothing", label: "Clothing & Greek", icon: Shirt },
   { id: "supplies", label: "School Supplies", icon: Package },
   { id: "services", label: "Student Services", icon: Star },
+  { id: "housing", label: "Housing & Leasing", icon: Building2 },
 ];
 
 export const CONDITIONS = ["Like New", "Excellent", "Good", "Fair", "Service"];

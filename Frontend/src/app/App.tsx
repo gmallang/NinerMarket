@@ -256,6 +256,9 @@ export default function App() {
   const [profileOpen, setProfileOpen]       = useState(false);
   const [setupUser, setSetupUser]           = useState<CurrentUser | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [notifOpen, setNotifOpen]       = useState(false);
+  const [showSaved, setShowSaved]       = useState(false);
+  const [showMine, setShowMine]         = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -314,6 +317,16 @@ export default function App() {
     });
   };
 
+  const selectCategory = (id: string) => {
+    setActiveCategory(id);
+    setShowSaved(false);
+    setShowMine(false);
+  };
+
+  const markRead = (id: number) => {
+    setConvs(prev => prev.map(c => c.id === id ? { ...c, unread: 0 } : c));
+  };
+
   const openMsgForListing = (listingId: string) => {
     const existing = convs.find(c => c.listingId === listingId);
     if (existing) {
@@ -366,7 +379,13 @@ export default function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [convs, activeConvId]);
 
+  if (!user) {
+    return <LoginPage onAuthed={handleAuthed} />;
+  }
+
   const filtered = listings.filter(l => {
+    if (showMine && l.sellerId !== user.id) return false;
+    if (showSaved && !savedItems.has(l.id)) return false;
     const matchCat = activeCategory === "all" || l.category === activeCategory;
     const matchSearch = !searchQuery ||
       l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -378,13 +397,34 @@ export default function App() {
     return 0;
   });
 
+  const sectionTitle = showMine
+    ? "Your Listings"
+    : showSaved
+      ? "Saved Items"
+      : (CATEGORIES.find(c => c.id === activeCategory)?.label ?? "All Listings");
+
+  const mainCountText = showMine
+    ? `${filtered.length} of your listings`
+    : showSaved
+      ? `${filtered.length} saved items`
+      : `${filtered.length} listings near your campus`;
+
   const activeConv   = convs.find(c => c.id === activeConvId) ?? convs[0];
   const activeListing = listings.find(l => l.id === activeConv.listingId);
   const totalUnread  = convs.reduce((n, c) => n + c.unread, 0);
 
-  if (!user) {
-    return <LoginPage onAuthed={handleAuthed} />;
-  }
+  const notifications = convs
+    .filter(c => c.unread > 0)
+    .map(c => {
+      const listing = listings.find(l => l.id === c.listingId);
+      return {
+        id: c.id,
+        text: `New message from ${c.name}`,
+        sub: listing ? listing.title : "",
+        time: c.lastTime,
+      };
+    });
+  const notifCount = notifications.length;
 
   return (
     <div className={s.page}>
@@ -408,10 +448,49 @@ export default function App() {
           </div>
 
           <div className={s.navActions}>
-            <button className={s.iconBtn}>
-              <Bell size={16} />
-              <span className={s.notifDot} />
-            </button>
+            <div className={s.iconWrap}>
+              <button
+                className={`${s.iconBtn} ${notifOpen ? s.iconBtnActive : ""}`}
+                onClick={() => setNotifOpen(v => !v)}
+              >
+                <Bell size={16} />
+                {notifCount > 0 && <span className={s.notifDot} />}
+              </button>
+              {notifOpen && (
+                <>
+                  <div className={s.profileBackdrop} onClick={() => setNotifOpen(false)} />
+                  <div className={s.notifMenu}>
+                    <div className={s.notifMenuHeader}>
+                      <span className={s.notifMenuTitle}>Notifications</span>
+                    </div>
+                    <div className={s.notifScroll}>
+                      {notifications.length === 0 ? (
+                        <p className={s.notifEmpty}>You're all caught up.</p>
+                      ) : (
+                        notifications.map(n => (
+                          <button
+                            key={n.id}
+                            className={s.notifItem}
+                            onClick={() => {
+                              markRead(n.id);
+                              setActiveConvId(n.id);
+                              setNotifOpen(false);
+                              setMsgOpen(true);
+                            }}
+                          >
+                            <div className={s.notifItemBody}>
+                              <p className={s.notifText}>{n.text}</p>
+                              {n.sub && <p className={s.notifSub}>{n.sub}</p>}
+                            </div>
+                            <span className={s.notifTime}>{n.time}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             <button
               className={`${s.iconBtn} ${msgOpen ? s.iconBtnActive : ""}`}
               onClick={() => setMsgOpen(v => !v)}
@@ -467,7 +546,7 @@ export default function App() {
                   <button
                     key={cat.id}
                     className={`${s.catBtn} ${active ? s.catBtnActive : ""}`}
-                    onClick={() => setActiveCategory(cat.id)}
+                    onClick={() => selectCategory(cat.id)}
                   >
                     <Icon size={15} className={active ? s.catIconActive : s.catIcon} />
                     {cat.label}
@@ -480,13 +559,27 @@ export default function App() {
             <hr className={s.activityDivider} />
             <span className={s.sectionLabel}>Your Activity</span>
             <nav className={s.catNav}>
-              <button className={s.catBtn}>
-                <Heart size={15} className={s.catIcon} />
+              <button
+                className={`${s.catBtn} ${showSaved ? s.catBtnActive : ""}`}
+                onClick={() => {
+                  setShowSaved(true);
+                  setShowMine(false);
+                  setActiveCategory("all");
+                }}
+              >
+                <Heart size={15} className={showSaved ? s.catIconActive : s.catIcon} />
                 Saved Items
                 <span className={s.countBadge}>{savedItems.size}</span>
               </button>
-              <button className={s.catBtn}>
-                <ShoppingBag size={15} className={s.catIcon} />
+              <button
+                className={`${s.catBtn} ${showMine ? s.catBtnActive : ""}`}
+                onClick={() => {
+                  setShowMine(true);
+                  setShowSaved(false);
+                  setActiveCategory("all");
+                }}
+              >
+                <ShoppingBag size={15} className={showMine ? s.catIconActive : s.catIcon} />
                 Your Listings
               </button>
             </nav>
@@ -504,9 +597,9 @@ export default function App() {
           <div className={s.mainHeader}>
             <div>
               <h1 className={s.mainTitle}>
-                {CATEGORIES.find(c => c.id === activeCategory)?.label ?? "All Listings"}
+                {sectionTitle}
               </h1>
-              <p className={s.mainCount}>{filtered.length} listings near your campus</p>
+              <p className={s.mainCount}>{mainCountText}</p>
             </div>
             <div className={s.controls}>
               <select
@@ -550,7 +643,7 @@ export default function App() {
               <button
                 key={cat.id}
                 className={`${s.pill} ${activeCategory === cat.id ? s.pillActive : ""}`}
-                onClick={() => setActiveCategory(cat.id)}
+                onClick={() => selectCategory(cat.id)}
               >
                 {cat.label}
               </button>
@@ -566,8 +659,16 @@ export default function App() {
           ) : filtered.length === 0 ? (
             <div className={s.emptyState}>
               <Search size={44} className={s.emptyIcon} />
-              <p className={s.emptyTitle}>No listings found</p>
-              <p className={s.emptyBody}>Try a different search or category</p>
+              <p className={s.emptyTitle}>
+                {showMine ? "You haven't listed anything yet" : showSaved ? "No saved items yet" : "No listings found"}
+              </p>
+              <p className={s.emptyBody}>
+                {showMine
+                  ? "Click Sell to list your first item."
+                  : showSaved
+                    ? "Tap the heart on any listing to save it here."
+                    : "Try a different search or category"}
+              </p>
             </div>
           ) : viewMode === "grid" ? (
             <div className={s.grid}>
@@ -637,7 +738,10 @@ export default function App() {
                     <div
                       key={conv.id}
                       className={`${m.convItem} ${conv.id === activeConvId ? m.convItemActive : ""}`}
-                      onClick={() => setActiveConvId(conv.id)}
+                      onClick={() => {
+                        setActiveConvId(conv.id);
+                        markRead(conv.id);
+                      }}
                     >
                       <div className={m.convAvatarWrap}>
                         <img src={conv.avatar} alt={conv.name} className={m.convAvatar}

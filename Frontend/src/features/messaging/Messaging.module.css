@@ -452,13 +452,14 @@
 
 /* ── Message overlay (dialog) ── */
 .overlayContent {
-  width: min(1240px, calc(100vw - 24px));
-  height: min(92vh, calc(100vh - 24px));
+  width: min(1400px, calc(100vw - 24px)) !important;
+  height: min(92vh, calc(100vh - 24px)) !important;
+  max-height: none !important;
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 0;
-  overflow: hidden;
+  padding: 0 !important;
+  overflow: hidden !important;
 }
 
 .overlayPanel {

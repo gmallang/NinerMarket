@@ -1,4 +1,4 @@
-import type { ListingDto, NewListing, UserDto } from "./types";
+import type { ListingDto, NewListing, NewRating, Rating, UserDto } from "./types";
 
 const BASE_URL: string = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -70,4 +70,15 @@ export const api = {
     }),
 
   getUser: (id: string) => request<UserDto>(`/users/${id}`),
+
+  getUserListings: (id: string, status = "active") =>
+    request<ListingDto[]>(`/users/${id}/listings?status=${status}`),
+
+  getRatings: (rateeId: string) => request<Rating[]>(`/ratings/${rateeId}`),
+
+  createRating: (data: NewRating) =>
+    request<Rating>("/ratings", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };

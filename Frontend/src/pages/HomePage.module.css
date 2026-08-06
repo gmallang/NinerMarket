@@ -1,0 +1,201 @@
+/* ─────────────────────────────────────────────
+   HomePage.module.css — Marketplace listing view
+   Colors: all via var() from main.css
+   ───────────────────────────────────────────── */
+
+.mainHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.mainTitle {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-fg);
+}
+
+.mainCount {
+  font-size: 0.8125rem;
+  color: var(--color-fg-muted);
+  margin-top: 2px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sortSelect {
+  font-size: 0.8125rem;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  color: var(--color-fg);
+  cursor: pointer;
+  outline: none;
+}
+
+.sortSelect:focus {
+  border-color: var(--color-primary);
+}
+
+.viewToggle {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.viewBtn {
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-fg-muted);
+  background: var(--color-card);
+  transition:
+    background var(--duration) var(--ease),
+    color var(--duration) var(--ease);
+}
+
+.viewBtn:hover {
+  background: var(--color-muted);
+}
+
+.viewBtnActive {
+  background: var(--color-primary);
+  color: var(--color-fg-inverse);
+}
+
+.viewBtnActive:hover {
+  background: var(--color-primary);
+}
+
+.demoBanner {
+  margin-bottom: var(--space-3);
+  padding: 8px 12px;
+  border-radius: var(--radius-lg);
+  background: #fff7e6;
+  border: 1px solid #f5d28a;
+  color: #8a5a00;
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.retryBtn {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #8a5a00;
+  background: #fde68a;
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  transition: background var(--duration) var(--ease);
+}
+
+.retryBtn:hover {
+  background: #fcd34d;
+}
+
+/* ── Mobile category pills ── */
+.mobilePills {
+  display: none;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+  scrollbar-width: none;
+}
+
+.mobilePills::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .mobilePills {
+    display: flex;
+  }
+}
+
+.pill {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-fg);
+  transition:
+    background var(--duration) var(--ease),
+    color var(--duration) var(--ease),
+    border-color var(--duration) var(--ease);
+}
+
+.pill:hover {
+  background: var(--color-muted);
+}
+
+.pillActive {
+  background: var(--color-primary);
+  color: var(--color-fg-inverse);
+  border-color: var(--color-primary);
+}
+
+/* ── Empty state ── */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  text-align: center;
+  color: var(--color-fg-muted);
+}
+
+.emptyIcon {
+  margin-bottom: var(--space-4);
+  color: var(--color-fg-subtle);
+}
+
+.emptyTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.emptyBody {
+  font-size: 0.875rem;
+  margin-top: var(--space-1);
+}
+
+/* ── Grid layout ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--space-3);
+}
+
+@media (max-width: 480px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── List layout ── */
+.listView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}

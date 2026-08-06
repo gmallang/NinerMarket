@@ -1,21 +1,3 @@
-export const SCHOOL_YEARS = [
-  "Freshman",
-  "Sophomore",
-  "Junior",
-  "Senior",
-  "Graduate",
-  "Faculty / Staff",
-] as const;
-
-export const PAYMENT_METHODS = [
-  "Cash",
-  "Venmo",
-  "Zelle",
-  "PayPal",
-  "Apple Pay",
-  "Niner Cash",
-] as const;
-
 export interface Seller {
   id: string;
   display_name: string;
@@ -62,10 +44,29 @@ export interface Listing {
   seller: string;
   sellerId?: string;
   sellerRating: number;
+  sellerRatingCount?: number;
   sellerYear?: string;
   sellerPayments?: string[];
   description?: string;
   photos?: string[];
+}
+
+export interface Rating {
+  id: string;
+  rater_id: string;
+  ratee_id: string;
+  listing_id: string;
+  stars: number;
+  comment: string;
+  created_at: string;
+}
+
+export interface NewRating {
+  rater_id: string;
+  ratee_id: string;
+  listing_id: string;
+  stars: number;
+  comment: string;
 }
 
 export interface NewListing {
@@ -85,72 +86,4 @@ export interface CurrentUser {
   display_name: string;
   school_year?: string;
   payment_methods?: string[];
-}
-
-const USER_KEY = "ninermarket-user";
-
-export function loadUser(): CurrentUser | null {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as CurrentUser) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function saveUser(user: CurrentUser): void {
-  try {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-  } catch {
-    // ignore storage errors
-  }
-}
-
-export function clearUser(): void {
-  try {
-    localStorage.removeItem(USER_KEY);
-  } catch {
-    // ignore storage errors
-  }
-}
-
-export function currentUserId(): string {
-  return loadUser()?.id ?? "";
-}
-
-const PLACEHOLDER_IMG =
-  "https://placehold.co/400x400/e8f5e9/1a7a3c?text=NinerMarket";
-
-export function fromDto(d: ListingDto): Listing {
-  return {
-    id: d.id,
-    title: d.name,
-    price: d.price,
-    category: d.category,
-    campus: d.pickup_location,
-    time: formatRelativeTime(d.created_at),
-    condition: d.condition,
-    image: d.photos?.[0] ?? PLACEHOLDER_IMG,
-    seller: d.seller?.display_name ?? "Unknown seller",
-    sellerId: d.seller?.id ?? d.seller_id,
-    sellerRating: d.seller?.rating_avg ?? 0,
-    sellerYear: d.seller?.school_year,
-    sellerPayments: d.seller?.payment_methods,
-    description: d.description,
-    photos: d.photos ?? [],
-  };
-}
-
-export function formatRelativeTime(iso: string): string {
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return "";
-  const diffMs = Date.now() - then;
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString();
 }

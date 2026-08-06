@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 
-from database import db, users
+from database import db, listings, users
 from models import User
+from routes.listings import SELLER_COLUMNS, _with_seller
 
 router = APIRouter()
 
@@ -51,3 +52,25 @@ def update_user(id: str, updates: dict):
     for key, value in updates.items():
         setattr(users[id], key, value)
     return users[id]
+
+
+@router.get("/users/{id}/listings")
+def get_user_listings(id: str, status: str | None = Query(default=None)):
+    if db:
+        query = db.table("listings").select("*").eq("seller_id", id)
+        if status:
+            query = query.eq("status", status)
+        rows = query.execute().data
+
+        seller = None
+        sres = db.table("users").select(SELLER_COLUMNS).eq("id", id).execute()
+        if sres.data:
+            seller = sres.data[0]
+        for row in rows:
+            row["seller"] = seller
+        return rows
+
+    results = [l for l in listings.values() if l.seller_id == id]
+    if status:
+        results = [l for l in results if l.status == status]
+    return [_with_seller(l) for l in results]

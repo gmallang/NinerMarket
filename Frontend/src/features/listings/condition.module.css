@@ -1,0 +1,35 @@
+/* ─────────────────────────────────────────────
+   condition.module.css — Listing condition badges
+   Shared by ListingCard, ListingRow, ListingDetail
+   ───────────────────────────────────────────── */
+
+.condBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.condLikeNew {
+  background: var(--badge-like-new-bg);
+  color: var(--badge-like-new-fg);
+}
+.condExcellent {
+  background: var(--badge-excellent-bg);
+  color: var(--badge-excellent-fg);
+}
+.condGood {
+  background: var(--badge-good-bg);
+  color: var(--badge-good-fg);
+}
+.condFair {
+  background: var(--badge-fair-bg);
+  color: var(--badge-fair-fg);
+}
+.condService {
+  background: var(--badge-service-bg);
+  color: var(--badge-service-fg);
+}

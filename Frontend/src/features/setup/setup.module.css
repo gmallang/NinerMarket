@@ -1,0 +1,170 @@
+/* ─────────────────────────────────────────────
+   setup.module.css — First-run account setup page
+   ───────────────────────────────────────────── */
+
+.setupPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: linear-gradient(160deg, #0b2418 0%, #145c2d 100%);
+}
+
+.setupModal {
+  position: static;
+  width: min(440px, 100%);
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-6);
+}
+
+.setupHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.setupLogo {
+  width: 40px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: brightness(0) invert(72%) sepia(50%) saturate(250%) hue-rotate(4deg) brightness(72%);
+}
+
+.setupTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  margin: 0;
+}
+
+.setupSub {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-fg-muted);
+  margin: 0 0 var(--space-5);
+}
+
+.setupLabel {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-fg-muted);
+  margin-bottom: var(--space-2);
+}
+
+.setupYears {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.setupPill {
+  padding: 8px 14px;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-fg);
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition:
+    background var(--duration) var(--ease),
+    border-color var(--duration) var(--ease);
+}
+
+.setupPill:hover {
+  border-color: var(--color-primary);
+}
+
+.setupPillActive,
+.setupPillActive:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+.setupPayments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.setupPay {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-fg);
+  cursor: pointer;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 7px 13px;
+  transition:
+    border-color var(--duration) var(--ease),
+    background var(--duration) var(--ease);
+}
+
+.setupPay:has(input:checked) {
+  background: var(--color-accent);
+  border-color: var(--color-primary);
+}
+
+.setupPay input {
+  accent-color: var(--color-primary);
+}
+
+.setupError {
+  font-size: 0.8125rem;
+  color: var(--color-danger, #b45309);
+  font-weight: 600;
+  margin: 0 0 var(--space-3);
+}
+
+.setupActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.setupSkip {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-fg-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+}
+
+.setupSkip:hover {
+  color: var(--color-fg);
+}
+
+.setupSave {
+  padding: 10px 22px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--duration) var(--ease);
+}
+
+.setupSave:hover {
+  background: var(--color-primary-dark);
+}

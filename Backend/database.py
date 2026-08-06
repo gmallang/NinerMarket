@@ -17,4 +17,4 @@ if SUPABASE_URL and SUPABASE_KEY:
 else:
     from seed import seed_dev_store
 
-    seed_dev_store(users, listings)
+    seed_dev_store(users, listings, ratings)

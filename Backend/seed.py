@@ -1,9 +1,51 @@
 from datetime import datetime, timedelta, timezone
 
-from models import Listing, User
+from models import Listing, Rating, User
+
+RATING_COMMENTS = [
+    "Smooth transaction, exactly as described.",
+    "Fast and friendly, would buy from again.",
+    "Great communication and fair price.",
+    "Item was in great condition, thank you!",
+    "On time and polite, easy meetup.",
+    "Would definitely recommend this seller.",
+    "Everything went perfectly, no issues.",
+    "Very responsive and helpful.",
+]
 
 
-def seed_dev_store(users: dict, listings: dict) -> None:
+def _make_ratings(
+    seller_id: str,
+    avg: float,
+    count: int,
+    listing_ids: list[str],
+    rater_ids: list[str],
+    now: datetime,
+) -> list[Rating]:
+    if count <= 0:
+        return []
+    base = int(avg)
+    total = round(avg * count)
+    stars_list = [base] * count
+    for i in range(total - base * count):
+        stars_list[i] += 1
+    out = []
+    for i in range(count):
+        out.append(
+            Rating(
+                id=f"r-{seller_id}-{i + 1}",
+                rater_id=rater_ids[i % len(rater_ids)],
+                ratee_id=seller_id,
+                listing_id=listing_ids[i % len(listing_ids)] if listing_ids else "",
+                stars=max(1, min(5, stars_list[i])),
+                comment=RATING_COMMENTS[i % len(RATING_COMMENTS)],
+                created_at=now - timedelta(days=i % 90, hours=(i * 7) % 24),
+            )
+        )
+    return out
+
+
+def seed_dev_store(users: dict, listings: dict, ratings: dict) -> None:
     if users or listings:
         return
 
@@ -60,6 +102,7 @@ def seed_dev_store(users: dict, listings: dict) -> None:
     ]
 
     hours_map = {"h": 1, "d": 24}
+    seller_listing_ids: dict[str, list[str]] = {}
 
     for _, name, price, category, condition, campus, image, seller_id, ago in demo:
         n = int(ago[:-1])
@@ -77,3 +120,17 @@ def seed_dev_store(users: dict, listings: dict) -> None:
             created_at=now - timedelta(hours=n * hours_map[ago[-1]]),
         )
         listings[listing.id] = listing
+        seller_listing_ids.setdefault(seller_id, []).append(listing.id)
+
+    rater_pool = [sid for sid in sellers if sid != "u-anna"] + ["u-anna"]
+    for seller_id, seller in sellers.items():
+        raters = [r for r in rater_pool if r != seller_id]
+        for rating in _make_ratings(
+            seller_id,
+            seller.rating_avg,
+            seller.rating_count,
+            seller_listing_ids.get(seller_id, []),
+            raters,
+            now,
+        ):
+            ratings[rating.id] = rating

@@ -1,0 +1,25 @@
+/* ─────────────────────────────────────────────
+   page.module.css — shared page-level padding
+   ───────────────────────────────────────────── */
+
+.page {
+  padding: var(--space-4) var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: var(--space-3) var(--space-3);
+  }
+}
+
+.notFound {
+  padding: 60px 0;
+  text-align: center;
+  color: var(--color-fg-muted);
+  font-size: 0.9375rem;
+}
+
+.notFound a {
+  color: var(--color-primary);
+  font-weight: 600;
+}

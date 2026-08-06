@@ -794,6 +794,8 @@ function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
   const [schoolYear, setSchoolYear] = useState("");
   const [payments, setPayments]   = useState<string[]>([]);
   const [error, setError]         = useState("");
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
 
   const validate = (requirePassword: boolean): string => {
     if (!isCharlotteEmail(email)) {
@@ -811,6 +813,10 @@ function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const mode = formOpen === "signup" ? "signup" : "signin";
+    const currentEmail = (emailRef.current?.value ?? email).trim();
+    const currentPassword = passwordRef.current?.value ?? password;
+    if (currentEmail !== email) setEmail(currentEmail);
+    if (currentPassword !== password) setPassword(currentPassword);
     if (mode === "signup" && !name.trim()) {
       setError("Please enter your full name.");
       return;
@@ -823,11 +829,21 @@ function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
       setError("Select at least one payment method you accept.");
       return;
     }
-    const err = validate(true);
-    if (err) { setError(err); return; }
+    if (!isCharlotteEmail(currentEmail)) {
+      setError("Access is restricted to the UNC Charlotte community. Use a valid @charlotte.edu email.");
+      return;
+    }
+    if (!currentPassword.trim()) {
+      setError("Please enter your password.");
+      return;
+    }
+    if (!agree) {
+      setError("Please accept the Terms & Conditions to continue.");
+      return;
+    }
     setError("");
     try {
-      const u = await signInOrUp(mode, name, email, schoolYear, payments);
+      const u = await signInOrUp(mode, name, currentEmail, schoolYear, payments);
       onAuthed(u);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -850,16 +866,8 @@ function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
 
   const forgotPassword = () => {
     setError(
-      "Password reset isn't available in this demo. Use the demo account or sign in with Google."
+      "Password reset isn't available. Sign in with Google instead."
     );
-  };
-
-  const fillDemo = () => {
-    setFormOpen("signin");
-    setEmail("anna@charlotte.edu");
-    setPassword("ninermarket-demo");
-    setAgree(true);
-    setError("");
   };
 
   const openForm = (mode: "signin" | "signup") => {
@@ -961,6 +969,7 @@ function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
               <input
                 className={s.xInput}
                 type="email"
+                ref={emailRef}
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="Email address (@charlotte.edu)"
@@ -971,6 +980,7 @@ function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
               <input
                 className={s.xInput}
                 type="password"
+                ref={passwordRef}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="Password"
@@ -1028,11 +1038,6 @@ function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
               <button type="submit" className={s.xSubmitBtn}>
                 {formOpen === "signup" ? "Sign up" : "Log in"}
               </button>
-              {formOpen === "signin" && (
-                <button type="button" className={s.xDemoHint} onClick={fillDemo}>
-                  Demo account: anna@charlotte.edu
-                </button>
-              )}
             </form>
           </div>
         </>
@@ -1185,16 +1190,6 @@ function GoogleChooser({ agreed, onAgree, onClose, onContinue }: {
           <button type="submit" className={`${s.loginSubmit} ${s.btnPrimary}`}>Continue</button>
         </form>
         <button type="button" className={s.googleBack} onClick={onClose}>Cancel</button>
-        <button
-          type="button"
-          className={s.xDemoHint}
-          onClick={() => {
-            onAgree(true);
-            setEmail("anna@charlotte.edu");
-          }}
-        >
-          Demo account: anna@charlotte.edu
-        </button>
       </div>
 
       {termsOpen && (

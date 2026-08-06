@@ -3,7 +3,7 @@ import type { KeyboardEvent, FormEvent, ChangeEvent } from "react";
 import {
   Search, ShoppingBag, BookOpen, Sofa, Laptop, Bike, Shirt,
   ChevronRight, Heart, MapPin, Bell, MessageCircle, Plus,
-  Star, Filter, Grid, List, Home, Package,
+  Star, Filter, Grid, List, Home, Package, Building2,
   X, Send, Paperclip, Smile, LogOut, ImagePlus, ShieldCheck,
 } from "lucide-react";
 import { api } from "../lib/api";
@@ -26,6 +26,7 @@ const CATEGORIES = [
   { id: "clothing",  label: "Clothing & Greek",    icon: Shirt },
   { id: "supplies",  label: "School Supplies",     icon: Package },
   { id: "services",  label: "Student Services",    icon: Star },
+  { id: "housing",   label: "Housing & Leasing",   icon: Building2 },
 ];
 
 const CONDITIONS = ["Like New", "Excellent", "Good", "Fair", "Service"];
@@ -44,6 +45,8 @@ const DEMO_LISTINGS: Listing[] = [
   { id: "10", title: "Peer Tutoring — Orgo & Bio Chem",       price: 20,   category: "services",    campus: "Science Center",   time: "3d ago",  condition: "Service",  image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=400&fit=crop&auto=format",  seller: "Emma Z.",   sellerRating: 5.0, description: "Hourly tutoring sessions for organic and biochemistry, A-range student." },
   { id: "11", title: "Psychology 101 Course Pack Bundle",      price: 22,   category: "textbooks",   campus: "Social Sciences",  time: "7h ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=400&fit=crop&auto=format",  seller: "Lena H.",   sellerRating: 4.7, description: "Textbook plus study guide, all chapters intact." },
   { id: "12", title: "Standing Desk Converter",               price: 48,   category: "furniture",   campus: "Off-Campus Ave",   time: "5d ago",  condition: "Like New", image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=400&h=400&fit=crop&auto=format",  seller: "Felix G.",  sellerRating: 4.6, description: "Clamps onto any desk, easy to move between dorm rooms." },
+  { id: "13", title: "2BR Sublet — Spring Semester",          price: 750,  category: "housing",     campus: "Off-Campus Ave",   time: "1d ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=400&fit=crop&auto=format",  seller: "Daniel R.", sellerRating: 4.7, description: "Furnished 2BR near campus, subletting for the spring semester. Utilities included." },
+  { id: "14", title: "Roommate Wanted — UWalk 2BR",            price: 550,  category: "housing",     campus: "UWalk",           time: "3h ago",  condition: "Good",     image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=400&fit=crop&auto=format",  seller: "Sofia L.",  sellerRating: 4.9, description: "Looking for a roommate in a 2BR at UWalk. Lease through August, gym and pool access." },
 ];
 
 const CONDITION_CLASS: Record<string, string> = {

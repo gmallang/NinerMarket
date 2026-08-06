@@ -40,6 +40,8 @@ def seed_dev_store(users: dict, listings: dict) -> None:
         "seller-10": user("seller-10", "Emma Z.",    5.0, 25, "Faculty / Staff", ["Cash", "PayPal"]),
         "seller-11": user("seller-11", "Lena H.",    4.7, 19, "Sophomore", ["Cash", "Venmo", "Apple Pay"]),
         "seller-12": user("seller-12", "Felix G.",   4.6, 14, "Graduate",  ["Venmo", "Zelle"]),
+        "seller-13": user("seller-13", "Daniel R.",  4.7, 12, "Senior",    ["Venmo", "Zelle", "Bank Transfer"]),
+        "seller-14": user("seller-14", "Sofia L.",   4.9, 16, "Graduate",  ["Venmo", "Zelle"]),
         "u-anna":    user("u-anna",    "Anna C.",    4.8, 21, "Senior",    ["Cash", "Venmo", "Zelle"]),
     }
     users.update(sellers)
@@ -57,6 +59,8 @@ def seed_dev_store(users: dict, listings: dict) -> None:
         (10, "Peer Tutoring — Orgo & Bio Chem", 20, "services", "Service", "Science Center", "photo-1434030216411-0b793f4b4173", "seller-10", "3d"),
         (11, "Psychology 101 Course Pack Bundle", 22, "textbooks", "Good", "Social Sciences", "photo-1456513080510-7bf3a84b82f8", "seller-11", "7h"),
         (12, "Standing Desk Converter", 48, "furniture", "Like New", "Off-Campus Ave", "photo-1593642632559-0c6d3fc62b89", "seller-12", "5d"),
+        (13, "2BR Sublet — Spring Semester", 750, "housing", "Good", "Off-Campus Ave", "photo-1522708323590-d24dbb6b0267", "seller-13", "1d"),
+        (14, "Roommate Wanted — UWalk 2BR", 550, "housing", "Good", "UWalk", "photo-1502672260266-1c1ef2d93688", "seller-14", "3h"),
     ]
 
     hours_map = {"h": 1, "d": 24}

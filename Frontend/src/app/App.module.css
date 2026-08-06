@@ -1666,6 +1666,7 @@
   width: min(300px, 70%);
   height: 240px;
   object-fit: contain;
+  transform: translateX(-16px);
   filter: brightness(0) invert(72%) sepia(50%) saturate(250%) hue-rotate(4deg) brightness(72%);
 }
 

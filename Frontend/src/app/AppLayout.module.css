@@ -39,9 +39,8 @@
 
 .logoIcon {
   display: block;
-  width: 32px;
-  height: 26px;
-  object-fit: contain;
+  height: 28px;
+  width: auto;
   flex-shrink: 0;
   filter: brightness(0) invert(1);
 }

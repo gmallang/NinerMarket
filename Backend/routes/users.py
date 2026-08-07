@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, HTTPException, Query
 
 from auth import (
@@ -39,13 +41,53 @@ def _find_by_email(email: str) -> User | None:
     return next((u for u in users.values() if u.email == email), None)
 
 
+def _row_to_user(row: dict) -> User:
+    expires = row.get("verification_expires")
+    if isinstance(expires, str):
+        expires = datetime.fromisoformat(expires.replace("Z", "+00:00"))
+    return User(
+        id=row["id"],
+        email=row.get("email", ""),
+        display_name=row.get("display_name", ""),
+        school_year=row.get("school_year", ""),
+        payment_methods=row.get("payment_methods") or [],
+        rating_avg=row.get("rating_avg", 0.0),
+        rating_count=row.get("rating_count", 0),
+        password_hash=row.get("password_hash", ""),
+        email_verified=row.get("email_verified", False),
+        verification_code=row.get("verification_code", ""),
+        verification_expires=expires,
+    )
+
+
+def _find_user(email: str) -> User | None:
+    email = email.strip().lower()
+    if db:
+        res = db.table("users").select("*").eq("email", email).execute()
+        return _row_to_user(res.data[0]) if res.data else None
+    return _find_by_email(email)
+
+
+def _save_user(user: User) -> User:
+    if db:
+        db.table("users").upsert(user.model_dump(mode="json")).execute()
+    else:
+        users[user.id] = user
+    return user
+
+
 @router.post("/users")
 def create_user(body: UserCreate):
     email = body.email.strip().lower()
     if not email.endswith("@charlotte.edu"):
         raise HTTPException(status_code=400, detail="Must use a .charlotte.edu email")
 
-    if body.id in users or _find_by_email(email):
+    if db:
+        by_email = db.table("users").select("id").eq("email", email).execute()
+        by_id = db.table("users").select("id").eq("id", body.id).execute()
+        if by_email.data or by_id.data:
+            raise HTTPException(status_code=409, detail="User already exists")
+    elif body.id in users or _find_by_email(email):
         raise HTTPException(status_code=409, detail="User already exists")
 
     code = generate_code()
@@ -60,7 +102,7 @@ def create_user(body: UserCreate):
         verification_code=code,
         verification_expires=code_expiry(),
     )
-    users[user.id] = user
+    _save_user(user)
 
     dev_code = "" if send_verification_email(email, code) else code
     return {"user": _to_public(user), "dev_code": dev_code}
@@ -69,7 +111,7 @@ def create_user(body: UserCreate):
 @router.post("/users/verify")
 def verify_user(body: VerifyRequest):
     email = body.email.strip().lower()
-    user = _find_by_email(email)
+    user = _find_user(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.email_verified:
@@ -79,13 +121,14 @@ def verify_user(body: VerifyRequest):
     user.email_verified = True
     user.verification_code = ""
     user.verification_expires = None
+    _save_user(user)
     return _to_public(user)
 
 
 @router.post("/users/resend")
 def resend_code(body: ResendRequest):
     email = body.email.strip().lower()
-    user = _find_by_email(email)
+    user = _find_user(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.email_verified:
@@ -94,6 +137,7 @@ def resend_code(body: ResendRequest):
     code = generate_code()
     user.verification_code = code
     user.verification_expires = code_expiry()
+    _save_user(user)
     dev_code = "" if send_verification_email(email, code) else code
     return {"user": _to_public(user), "dev_code": dev_code}
 
@@ -101,7 +145,7 @@ def resend_code(body: ResendRequest):
 @router.post("/users/login")
 def login(body: LoginRequest):
     email = body.email.strip().lower()
-    user = _find_by_email(email)
+    user = _find_user(email)
     if not user or not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Wrong email or password")
     if not user.email_verified:
@@ -115,7 +159,7 @@ def get_user(id: str):
         data = db.table("users").select("*").eq("id", id).execute()
         if not data.data:
             raise HTTPException(status_code=404, detail="User not found")
-        return data.data[0]
+        return _to_public(_row_to_user(data.data[0]))
 
     if id not in users:
         raise HTTPException(status_code=404, detail="User not found")
@@ -131,8 +175,9 @@ def update_user(id: str, updates: dict):
         existing = db.table("users").select("id").eq("id", id).execute()
         if not existing.data:
             raise HTTPException(status_code=404, detail="User not found")
-        data = db.table("users").update(clean).eq("id", id).execute()
-        return data.data[0]
+        db.table("users").update(clean).eq("id", id).execute()
+        updated = db.table("users").select("*").eq("id", id).execute().data[0]
+        return _to_public(_row_to_user(updated))
 
     if id not in users:
         raise HTTPException(status_code=404, detail="User not found")

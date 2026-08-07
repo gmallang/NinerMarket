@@ -21,6 +21,11 @@ if SUPABASE_URL and SUPABASE_KEY:
 
     db = create_client(SUPABASE_URL, SUPABASE_KEY)
 else:
+    if os.getenv("VERCEL"):
+        raise RuntimeError(
+            "SUPABASE_URL and SUPABASE_KEY are not set. Add them to the "
+            "Vercel backend project's Environment Variables."
+        )
     from seed import seed_dev_store
 
     seed_dev_store(users, listings, ratings, threads, notifications)

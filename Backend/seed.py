@@ -262,3 +262,36 @@ def _seed_demo_notifications(notifications: dict, now: datetime) -> None:
             "read": True,
         },
     ]
+
+
+def seed_supabase_store(db) -> None:
+    """Insert the demo data into a real Supabase database (idempotent).
+
+    No-op if the users table already has any rows, so it is safe to re-run.
+    """
+    users, listings, ratings, threads, notifications = {}, {}, {}, {}, {}
+    seed_dev_store(users, listings, ratings, threads, notifications)
+
+    if not users:
+        return
+
+    existing = db.table("users").select("id").limit(1).execute()
+    if existing.data:
+        return
+
+    db.table("users").insert([u.model_dump(mode="json") for u in users.values()]).execute()
+    db.table("listings").insert([l.model_dump(mode="json") for l in listings.values()]).execute()
+    db.table("ratings").insert([r.model_dump(mode="json") for r in ratings.values()]).execute()
+
+    for t in threads.values():
+        messages = t.pop("messages", [])
+        row = dict(t)
+        row["id"] = str(row["id"])
+        db.table("threads").insert(row).execute()
+        if messages:
+            db.table("messages").insert(
+                [{**m, "thread_id": str(t["id"])} for m in messages]
+            ).execute()
+
+    for uid, items in notifications.items():
+        db.table("notifications").insert(items).execute()

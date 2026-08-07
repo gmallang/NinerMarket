@@ -98,7 +98,7 @@ def open_thread(user_id: str, body: OpenThreadRequest):
         seller_id = res.data[0]["seller_id"]
         sres = db.table("users").select("display_name").eq("id", seller_id).execute()
         name = sres.data[0]["display_name"] if sres.data else "Unknown seller"
-        tid = str(_next_id())
+        tid = str(int(datetime.now(timezone.utc).timestamp() * 1000))
         thread = {
             "id": tid,
             "user_id": user_id,

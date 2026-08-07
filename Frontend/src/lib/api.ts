@@ -8,7 +8,7 @@ import type {
 } from "./types";
 import type { Conversation } from "@/data/conversations";
 
-const BASE_URL: string = import.meta.env.VITE_API_URL ?? "/api";
+const BASE_URL: string = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/+$/, "");
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {

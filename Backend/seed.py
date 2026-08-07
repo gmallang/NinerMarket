@@ -45,7 +45,9 @@ def _make_ratings(
     return out
 
 
-def seed_dev_store(users: dict, listings: dict, ratings: dict) -> None:
+def seed_dev_store(
+    users: dict, listings: dict, ratings: dict, threads: dict, notifications: dict
+) -> None:
     if users or listings:
         return
 
@@ -89,20 +91,20 @@ def seed_dev_store(users: dict, listings: dict, ratings: dict) -> None:
     users.update(sellers)
 
     demo = [
-        (1,  "Organic Chemistry (Clayden) 2nd Ed.", 45,   "textbooks",  "Good",     "North Campus",      200, "seller-1",  "2h"),
-        (2,  "IKEA KALLAX Shelf Unit (White)",       35,   "furniture",  "Like New", "West Dorms",        201, "seller-2",  "5h"),
-        (3,  "Twin XL Mattress Topper",              28,   "movein",     "Good",     "East Side",         202, "seller-3",  "1d"),
-        (4,  'MacBook Pro 14" M2 (2023)',            1100, "electronics","Excellent","Main Quad",          203, "seller-4",  "3h"),
-        (5,  "Trek 7.2 FX City Bike",                280,  "bikes",      "Good",     "South Gate",        204, "seller-5",  "6h"),
-        (6,  "Calculus: Early Transcendentals 8e",   30,   "textbooks",  "Fair",     "Engineering Hall",  205, "seller-6",  "12h"),
-        (7,  "Mini Fridge (Galanz 3.1 cu ft)",       65,   "movein",     "Good",     "Res Life Complex",  206, "seller-7",  "2d"),
-        (8,  "Desk Lamp + USB Charging Hub",         18,   "movein",     "Like New", "North Campus",      207, "seller-8",  "4h"),
-        (9,  "Sigma Chi Formal Suit (38R)",           55,   "clothing",   "Good",     "Greek Row",         208, "seller-9",  "1d"),
-        (10, "Peer Tutoring — Orgo & Bio Chem",      20,   "services",   "Service",  "Science Center",    209, "seller-10", "3d"),
-        (11, "Psychology 101 Course Pack Bundle",    22,   "textbooks",  "Good",     "Social Sciences",   210, "seller-11", "7h"),
-        (12, "Standing Desk Converter",              48,   "furniture",  "Like New", "Off-Campus Ave",    211, "seller-12", "5d"),
-        (13, "2BR Sublet — Spring Semester",         750,  "housing",    "Good",     "Off-Campus Ave",    212, "seller-13", "1d"),
-        (14, "Roommate Wanted — UWalk 2BR",          550,  "housing",    "Good",     "UWalk",             213, "seller-14", "3h"),
+        (1,  "Organic Chemistry (Clayden) 2nd Ed.", 45,   "textbooks",  "Good",     "North Campus",      "photo-1544716278-ca5e3f4abd8c", "seller-1",  "2h"),
+        (2,  "IKEA KALLAX Shelf Unit (White)",       35,   "furniture",  "Like New", "West Dorms",        "photo-1555041469-a586c61ea9bc", "seller-2",  "5h"),
+        (3,  "Twin XL Mattress Topper",              28,   "movein",     "Good",     "East Side",         "photo-1631049307264-da0ec9d70304", "seller-3",  "1d"),
+        (4,  'MacBook Pro 14" M2 (2023)',            1100, "electronics","Excellent","Main Quad",          "photo-1517336714731-489689fd1ca8", "seller-4",  "3h"),
+        (5,  "Trek 7.2 FX City Bike",                280,  "bikes",      "Good",     "South Gate",        "photo-1485965120184-e220f721d03e", "seller-5",  "6h"),
+        (6,  "Calculus: Early Transcendentals 8e",   30,   "textbooks",  "Fair",     "Engineering Hall",  "photo-1509228468518-180dd4864904", "seller-6",  "12h"),
+        (7,  "Mini Fridge (Galanz 3.1 cu ft)",       65,   "movein",     "Good",     "Res Life Complex",  "photo-1584568694244-14fbdf83bd30", "seller-7",  "2d"),
+        (8,  "Desk Lamp + USB Charging Hub",         18,   "movein",     "Like New", "North Campus",      "photo-1507473885765-e6ed057f782c", "seller-8",  "4h"),
+        (9,  "Sigma Chi Formal Suit (38R)",           55,   "clothing",   "Good",     "Greek Row",         "photo-1594938298603-c8148c4dae35", "seller-9",  "1d"),
+        (10, "Peer Tutoring — Orgo & Bio Chem",      20,   "services",   "Service",  "Science Center",    "photo-1434030216411-0b793f4b4173", "seller-10", "3d"),
+        (11, "Psychology 101 Course Pack Bundle",    22,   "textbooks",  "Good",     "Social Sciences",   "photo-1456513080510-7bf3a84b82f8", "seller-11", "7h"),
+        (12, "Standing Desk Converter",              48,   "furniture",  "Like New", "Off-Campus Ave",    "photo-1593642632559-0c6d3fc62b89", "seller-12", "5d"),
+        (13, "2BR Sublet — Spring Semester",         750,  "housing",    "Good",     "Off-Campus Ave",    "photo-1522708323590-d24dbb6b0267", "seller-13", "1d"),
+        (14, "Roommate Wanted — UWalk 2BR",          550,  "housing",    "Good",     "UWalk",             "photo-1502672260266-1c1ef2d93688", "seller-14", "3h"),
     ]
 
 
@@ -120,7 +122,7 @@ def seed_dev_store(users: dict, listings: dict, ratings: dict) -> None:
             condition=condition,
             description=name,
             status="active",
-            photos=[f"https://picsum.photos/seed/{image}/400/400"],
+            photos=[f"https://images.unsplash.com/{image}?w=400&h=400&fit=crop&auto=format"],
             pickup_location=campus,
             created_at=now - timedelta(hours=n * hours_map[ago[-1]]),
         )
@@ -139,3 +141,118 @@ def seed_dev_store(users: dict, listings: dict, ratings: dict) -> None:
             now,
         ):
             ratings[rating.id] = rating
+
+    _seed_demo_threads(threads, now)
+    _seed_demo_notifications(notifications, now)
+
+
+def _seed_demo_threads(threads: dict, now: datetime) -> None:
+    def minutes_ago(n: int) -> str:
+        return (now - timedelta(minutes=n)).isoformat()
+
+    def hours_ago(n: int) -> str:
+        return minutes_ago(n * 60)
+
+    def days_ago(n: int) -> str:
+        return minutes_ago(n * 1440)
+
+    seed = [
+        {
+            "id": 1,
+            "user_id": "u-anna",
+            "listingId": "4",
+            "name": "Chris L.",
+            "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format",
+            "online": True,
+            "unread": 2,
+            "lastMsg": "Is it still available?",
+            "lastTimestamp": hours_ago(3),
+            "messages": [
+                {"id": 1, "text": "Hey! Is the MacBook still available?", "sent": False, "timestamp": hours_ago(8)},
+                {"id": 2, "text": "Yes it is! Just listed it yesterday.", "sent": True, "timestamp": minutes_ago(8 * 60 - 2)},
+                {"id": 3, "text": "What's the lowest you'd go?", "sent": False, "timestamp": minutes_ago(8 * 60 - 3)},
+                {"id": 4, "text": "I could do $1,050 if you pick up today.", "sent": True, "timestamp": hours_ago(7)},
+                {"id": 5, "text": "Is it still available?", "sent": False, "timestamp": hours_ago(3)},
+            ],
+        },
+        {
+            "id": 2,
+            "user_id": "u-anna",
+            "listingId": "1",
+            "name": "Maya T.",
+            "avatar": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&auto=format",
+            "online": False,
+            "unread": 0,
+            "lastMsg": "Can you hold it til Friday?",
+            "lastTimestamp": days_ago(1),
+            "messages": [
+                {"id": 1, "text": "Hi! Is the Organic Chem book in good shape?", "sent": False, "timestamp": hours_ago(26)},
+                {"id": 2, "text": "Yep, no highlighting, all pages intact.", "sent": True, "timestamp": minutes_ago(26 * 60 - 5)},
+                {"id": 3, "text": "Can you hold it til Friday?", "sent": False, "timestamp": minutes_ago(26 * 60 - 10)},
+            ],
+        },
+        {
+            "id": 3,
+            "user_id": "u-anna",
+            "listingId": "5",
+            "name": "Sam R.",
+            "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&auto=format",
+            "online": True,
+            "unread": 0,
+            "lastMsg": "Meet at the bike rack?",
+            "lastTimestamp": hours_ago(6),
+            "messages": [
+                {"id": 1, "text": "Does the bike come with a lock?", "sent": False, "timestamp": hours_ago(7)},
+                {"id": 2, "text": "No lock, but I can throw in the pump.", "sent": True, "timestamp": minutes_ago(7 * 60 - 2)},
+                {"id": 3, "text": "Deal! Meet at the bike rack?", "sent": False, "timestamp": hours_ago(6)},
+            ],
+        },
+        {
+            "id": 4,
+            "user_id": "u-anna",
+            "listingId": "7",
+            "name": "Olivia M.",
+            "avatar": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop&auto=format",
+            "online": False,
+            "unread": 1,
+            "lastMsg": "Does the fridge smell?",
+            "lastTimestamp": days_ago(2),
+            "messages": [
+                {"id": 1, "text": "Does the fridge smell?", "sent": False, "timestamp": days_ago(2)},
+            ],
+        },
+    ]
+    for t in seed:
+        threads[t["id"]] = t
+
+
+def _seed_demo_notifications(notifications: dict, now: datetime) -> None:
+    def hours_ago(n: int) -> str:
+        return (now - timedelta(hours=n)).isoformat()
+
+    notifications["u-anna"] = [
+        {
+            "id": "n-1",
+            "user_id": "u-anna",
+            "text": "Chris L. sent you a message about MacBook Pro 14\" M2 (2023).",
+            "listing_id": "4",
+            "created_at": hours_ago(3),
+            "read": False,
+        },
+        {
+            "id": "n-2",
+            "user_id": "u-anna",
+            "text": "New listing in Housing & Leasing: 2BR Sublet — Spring Semester.",
+            "listing_id": "13",
+            "created_at": hours_ago(8),
+            "read": False,
+        },
+        {
+            "id": "n-3",
+            "user_id": "u-anna",
+            "text": "Welcome to NinerMarket! Complete your profile to get started.",
+            "listing_id": "",
+            "created_at": hours_ago(30),
+            "read": True,
+        },
+    ]

@@ -1,4 +1,12 @@
-import type { ListingDto, NewListing, NewRating, Rating, UserDto } from "./types";
+import type {
+  ListingDto,
+  NewListing,
+  NewRating,
+  NotificationDto,
+  Rating,
+  UserDto,
+} from "./types";
+import type { Conversation } from "@/data/conversations";
 
 const BASE_URL: string = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -86,5 +94,32 @@ export const api = {
     request<{ url: string | null; mock: boolean; listing_id: string }>("/checkout", {
       method: "POST",
       body: JSON.stringify(body),
+    }),
+
+  getNotifications: (userId: string) =>
+    request<NotificationDto[]>(`/users/${userId}/notifications`),
+
+  markNotificationRead: (userId: string, notificationId: string) =>
+    request<NotificationDto>(`/users/${userId}/notifications/${notificationId}`, {
+      method: "PATCH",
+    }),
+
+  getThreads: (userId: string) => request<Conversation[]>(`/users/${userId}/threads`),
+
+  openThread: (userId: string, listingId: string) =>
+    request<Conversation>(`/users/${userId}/threads`, {
+      method: "POST",
+      body: JSON.stringify({ listing_id: listingId }),
+    }),
+
+  sendThreadMessage: (userId: string, threadId: number, text: string) =>
+    request<Conversation>(`/users/${userId}/threads/${threadId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    }),
+
+  markThreadRead: (userId: string, threadId: number) =>
+    request<Conversation>(`/users/${userId}/threads/${threadId}/read`, {
+      method: "PATCH",
     }),
 };

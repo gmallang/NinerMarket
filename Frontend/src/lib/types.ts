@@ -87,3 +87,12 @@ export interface CurrentUser {
   school_year?: string;
   payment_methods?: string[];
 }
+
+export interface NotificationDto {
+  id: string;
+  user_id: string;
+  text: string;
+  listing_id?: string;
+  created_at: string;
+  read: boolean;
+}

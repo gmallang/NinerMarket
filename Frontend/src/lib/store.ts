@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { avatarUrl } from "@/lib/avatar";
 import { fromDto } from "@/lib/listings";
 import { clearUser, loadUser, saveUser } from "@/lib/user";
-import type { CurrentUser, Listing } from "@/lib/types";
+import type { CurrentUser, Listing, NotificationDto } from "@/lib/types";
 
 const SAVED_KEY = "ninermarket-saved";
 
@@ -35,6 +35,7 @@ interface MarketState {
   convs: Conversation[];
   activeConvId: number;
   inputText: string;
+  notifications: NotificationDto[];
 
   signIn: (user: CurrentUser) => void;
   logout: () => void;
@@ -47,6 +48,10 @@ interface MarketState {
   setInputText: (text: string) => void;
   sendMessage: () => void;
   openConversationForListing: (listingId: string) => void;
+  loadThreads: () => Promise<void>;
+  loadNotifications: () => Promise<void>;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
   messagesOpen: boolean;
   openMessagesOverlay: () => void;
   openMessageOverlay: (listingId: string) => void;
@@ -66,10 +71,15 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   convs: CONVS,
   activeConvId: 1,
   inputText: "",
+  notifications: [],
   messagesOpen: false,
   listingOverlayId: null,
 
-  signIn: (user) => set({ user }),
+  signIn: (user) => {
+    set({ user });
+    void get().loadNotifications();
+    void get().loadThreads();
+  },
   logout: () => {
     clearUser();
     set({ user: null });
@@ -108,11 +118,19 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   isSaved: (id) => get().savedItems.has(id),
 
-  setActiveConvId: (activeConvId) => set({ activeConvId }),
+  setActiveConvId: (id) => {
+    const user = get().user;
+    set((state) => ({
+      activeConvId: id,
+      convs: state.convs.map((c) => (c.id === id ? { ...c, unread: 0 } : c)),
+    }));
+    if (user) void api.markThreadRead(user.id, id).catch(() => {});
+  },
+
   setInputText: (inputText) => set({ inputText }),
 
   sendMessage: () => {
-    const { inputText, activeConvId } = get();
+    const { inputText, activeConvId, user } = get();
     const text = inputText.trim();
     if (!text) return;
     const newMsg = { id: Date.now(), text, sent: true, timestamp: new Date().toISOString() };
@@ -130,13 +148,24 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       ),
       inputText: "",
     }));
+    if (user) {
+      void api
+        .sendThreadMessage(user.id, activeConvId, text)
+        .then((thread) =>
+          set((state) => ({
+            convs: state.convs.map((c) => (c.id === thread.id ? thread : c)),
+          }))
+        )
+        .catch(() => {});
+    }
   },
 
   openConversationForListing: (listingId) => {
-    const { convs, listings } = get();
+    const { convs, listings, user } = get();
     const existing = convs.find((c) => c.listingId === listingId);
     if (existing) {
       set({ activeConvId: existing.id });
+      if (user) void api.markThreadRead(user.id, existing.id).catch(() => {});
       return;
     }
     const listing = listings.find((l) => l.id === listingId);
@@ -153,6 +182,58 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       messages: [],
     };
     set((state) => ({ convs: [newConv, ...state.convs], activeConvId: newConv.id }));
+    if (user) {
+      void api
+        .openThread(user.id, listingId)
+        .then((thread) =>
+          set((state) => ({
+            convs: state.convs.map((c) => (c.id === newConv.id ? thread : c)),
+            activeConvId: state.activeConvId === newConv.id ? thread.id : state.activeConvId,
+          }))
+        )
+        .catch(() => {});
+    }
+  },
+
+  loadThreads: async () => {
+    const user = get().user;
+    if (!user) return;
+    try {
+      const list = await api.getThreads(user.id);
+      if (list.length > 0) set({ convs: list });
+    } catch {
+      // Keep the seeded local conversations when the backend is unavailable.
+    }
+  },
+
+  loadNotifications: async () => {
+    const user = get().user;
+    if (!user) return;
+    try {
+      const list = await api.getNotifications(user.id);
+      set({ notifications: list });
+    } catch {
+      // Keep whatever is already shown when the backend is unavailable.
+    }
+  },
+
+  markNotificationRead: (id) => {
+    const user = get().user;
+    set((state) => ({
+      notifications: state.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    }));
+    if (user) void api.markNotificationRead(user.id, id).catch(() => {});
+  },
+
+  markAllNotificationsRead: () => {
+    const user = get().user;
+    const ids = get().notifications.map((n) => n.id);
+    set((state) => ({
+      notifications: state.notifications.map((n) => ({ ...n, read: true })),
+    }));
+    if (user) {
+      for (const id of ids) void api.markNotificationRead(user.id, id).catch(() => {});
+    }
   },
 
   openMessageOverlay: (listingId) => {
@@ -186,7 +267,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         lastTimestamp: new Date().toISOString(),
         messages: [],
       };
-      set((state) => ({ convs: [existing, ...state.convs] }));
+      set((state) => ({ convs: [existing!, ...state.convs] }));
     }
     
     // Add the automated message

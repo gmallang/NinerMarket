@@ -41,3 +41,16 @@ class CheckoutRequest(BaseModel):
     listing_id: str
     success_url: str
     cancel_url: str
+
+
+class NotificationCreate(BaseModel):
+    text: str
+    listing_id: str = ""
+
+
+class OpenThreadRequest(BaseModel):
+    listing_id: str
+
+
+class SendMessageRequest(BaseModel):
+    text: str

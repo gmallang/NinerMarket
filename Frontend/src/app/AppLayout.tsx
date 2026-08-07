@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Heart,
   ShoppingBag,
+  Bell,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import ninerLogo from "@/assets/NinerMarket.png";
@@ -19,6 +20,7 @@ import { Modal } from "@/components/shared/Modal";
 import { SellForm } from "@/features/sell/SellForm";
 import { MessagesOverlay } from "@/features/messaging/MessagesOverlay";
 import { ListingOverlay } from "@/features/listings/ListingOverlay";
+import { formatRelativeTime } from "@/lib/format";
 import s from "./AppLayout.module.css";
 
 export function AppLayout() {
@@ -29,6 +31,12 @@ export function AppLayout() {
   const user = useMarketStore((s) => s.user);
   const convs = useMarketStore((s) => s.convs);
   const savedCount = useMarketStore((s) => s.savedItems.size);
+  const notifications = useMarketStore((s) => s.notifications);
+  const loadNotifications = useMarketStore((s) => s.loadNotifications);
+  const loadThreads = useMarketStore((s) => s.loadThreads);
+  const markNotificationRead = useMarketStore((s) => s.markNotificationRead);
+  const markAllNotificationsRead = useMarketStore((s) => s.markAllNotificationsRead);
+  const openListingOverlay = useMarketStore((s) => s.openListingOverlay);
   const logout = useMarketStore((s) => s.logout);
   const loadListings = useMarketStore((s) => s.loadListings);
   const addListing = useMarketStore((s) => s.addListing);
@@ -39,6 +47,7 @@ export function AppLayout() {
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [sellOpen, setSellOpen] = useState(false);
   const totalUnread = convs.reduce((n, c) => n + c.unread, 0);
+  const unreadNotifs = notifications.filter((n) => !n.read).length;
 
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
@@ -48,6 +57,13 @@ export function AppLayout() {
   useEffect(() => {
     void loadListings();
   }, [loadListings]);
+
+  useEffect(() => {
+    if (user) {
+      void loadNotifications();
+      void loadThreads();
+    }
+  }, [user, loadNotifications, loadThreads]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -101,6 +117,53 @@ export function AppLayout() {
               <MessageCircle size={16} />
               {totalUnread > 0 && <span className={s.notifDot} style={{ background: "#f87171" }} />}
             </button>
+
+            {user && (
+              <DropdownMenu.Root onOpenChange={(open) => open && loadNotifications()}>
+                <DropdownMenu.Trigger asChild>
+                  <button className={s.iconBtn} aria-label="Notifications">
+                    <Bell size={16} />
+                    {unreadNotifs > 0 && <span className={s.notifDot} />}
+                  </button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content className={s.notifMenu} align="end" sideOffset={8}>
+                    <div className={s.notifMenuHeader}>
+                      <span>Notifications</span>
+                      {unreadNotifs > 0 && <span className={s.notifCount}>{unreadNotifs}</span>}
+                    </div>
+                    {notifications.length === 0 ? (
+                      <p className={s.notifEmpty}>You're all caught up.</p>
+                    ) : (
+                      notifications.slice(0, 10).map((n) => (
+                        <DropdownMenu.Item
+                          key={n.id}
+                          className={`${s.notifItem} ${n.read ? "" : s.notifItemUnread}`}
+                          onSelect={() => {
+                            markNotificationRead(n.id);
+                            if (n.listing_id) openListingOverlay(n.listing_id);
+                          }}
+                        >
+                          <span className={s.notifText}>{n.text}</span>
+                          <span className={s.notifTime}>
+                            {formatRelativeTime(n.created_at)}
+                          </span>
+                        </DropdownMenu.Item>
+                      ))
+                    )}
+                    {unreadNotifs > 0 && (
+                      <DropdownMenu.Item
+                        className={s.notifClear}
+                        onSelect={markAllNotificationsRead}
+                      >
+                        Mark all as read
+                      </DropdownMenu.Item>
+                    )}
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+            )}
+
             <button className={s.sellBtn} onClick={() => setSellOpen(true)}>
               <Plus size={14} />
               <span className={s.sellBtnLabel}>Sell</span>

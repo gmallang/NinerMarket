@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from database import db, listings
 from models import CheckoutRequest, Listing
+from routes.notifications import create_notification
 
 router = APIRouter()
 
@@ -44,6 +45,11 @@ def create_checkout(body: CheckoutRequest):
         # No Stripe credentials configured — run in mock mode so the flow
         # works end-to-end without real charges.
         _mark_listing_sold(body.listing_id)
+        create_notification(
+            listing.get("seller_id", ""),
+            f"Someone purchased your listing \"{listing.get('name', '')}\".",
+            body.listing_id,
+        )
         return {"url": None, "mock": True, "listing_id": body.listing_id}
 
     try:

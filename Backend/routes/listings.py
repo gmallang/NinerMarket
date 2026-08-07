@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from database import db, listings, users
 from models import Listing
+from routes.notifications import create_notification
 
 router = APIRouter()
 
@@ -86,10 +87,17 @@ def create_listing(listing: Listing):
     listing.id = listing.id or generate_id()
     if db:
         data = db.table("listings").insert(listing.model_dump(mode="json")).execute()
-        return _with_seller(data.data[0])
+        result = _with_seller(data.data[0])
+    else:
+        listings[listing.id] = listing
+        result = _with_seller(listing)
 
-    listings[listing.id] = listing
-    return _with_seller(listing)
+    create_notification(
+        listing.seller_id,
+        f"Your listing \"{listing.name}\" is now live.",
+        listing.id,
+    )
+    return result
 
 
 @router.get("/listings/{id}")

@@ -9,6 +9,7 @@ import {
   Package,
   Star,
   Building2,
+  MoreHorizontal,
 } from "lucide-react";
 
 export const CATEGORIES = [
@@ -22,6 +23,7 @@ export const CATEGORIES = [
   { id: "supplies", label: "School Supplies", icon: Package },
   { id: "services", label: "Student Services", icon: Star },
   { id: "housing", label: "Housing & Leasing", icon: Building2 },
+  { id: "other", label: "Other", icon: MoreHorizontal },
 ];
 
 export const CONDITIONS = ["Like New", "Excellent", "Good", "Fair", "Service"];

@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import Fuse from "fuse.js";
 import { Search, Grid, List } from "lucide-react";
 import { useMarketStore } from "@/lib/store";
 import { CATEGORIES } from "@/data/categories";
@@ -18,6 +19,10 @@ export function HomePage() {
   const sortBy = params.get("sort") ?? "recent";
   const viewSaved = params.get("saved") === "1";
   const viewMine = params.get("mine") === "1";
+  const minPrice = params.get("minPrice");
+  const maxPrice = params.get("maxPrice");
+  const locationFilter = params.get("location");
+  const activeConditions = (params.get("condition") ?? "").split(",").filter(Boolean);
 
   const listings = useMarketStore((s) => s.listings);
   const loading = useMarketStore((s) => s.loading);
@@ -46,20 +51,46 @@ export function HomePage() {
     setParams(next, { replace: true });
   };
 
+  const fuse = useMemo(
+    () =>
+      new Fuse(listings, {
+        keys: [
+          { name: "title", weight: 0.6 },
+          { name: "campus", weight: 0.25 },
+          { name: "description", weight: 0.15 },
+        ],
+        threshold: 0.4,
+        ignoreLocation: true,
+      }),
+    [listings]
+  );
+
+  const searchMatches = useMemo(
+    () => (searchQuery.trim() ? fuse.search(searchQuery.trim()) : null),
+    [fuse, searchQuery]
+  );
+  const matchedIds = searchMatches && new Set(searchMatches.map((r) => r.item.id));
+  const relevanceRank =
+    searchMatches && new Map(searchMatches.map((r, i) => [r.item.id, i]));
+
   const filtered = listings
     .filter((l) => {
       if (viewMine) return !!user && l.sellerId === user.id;
       if (viewSaved) return savedItems.has(l.id);
       const matchCat = activeCategory === "all" || l.category === activeCategory;
-      const matchSearch =
-        !searchQuery ||
-        l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        l.campus.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchCat && matchSearch;
+      const matchSearch = !matchedIds || matchedIds.has(l.id);
+      const matchMin = !minPrice || l.price >= Number(minPrice);
+      const matchMax = !maxPrice || l.price <= Number(maxPrice);
+      const matchLocation =
+        !locationFilter || l.campus.toLowerCase().includes(locationFilter.toLowerCase());
+      const matchCondition =
+        activeConditions.length === 0 || activeConditions.includes(l.condition);
+      return matchCat && matchSearch && matchMin && matchMax && matchLocation && matchCondition;
     })
     .sort((a, b) => {
       if (sortBy === "price-asc") return a.price - b.price;
       if (sortBy === "price-desc") return b.price - a.price;
+      if (relevanceRank) return (relevanceRank.get(a.id) ?? 0) - (relevanceRank.get(b.id) ?? 0);
       return 0;
     });
 
@@ -81,15 +112,6 @@ export function HomePage() {
           </p>
         </div>
         <div className={s.controls}>
-          <select
-            className={s.sortSelect}
-            value={sortBy}
-            onChange={(e) => setParam("sort", e.target.value)}
-          >
-            <option value="recent">Most Recent</option>
-            <option value="price-asc">Price: Low → High</option>
-            <option value="price-desc">Price: High → Low</option>
-          </select>
           <div className={s.viewToggle}>
             <button
               className={`${s.viewBtn} ${viewMode === "grid" ? s.viewBtnActive : ""}`}

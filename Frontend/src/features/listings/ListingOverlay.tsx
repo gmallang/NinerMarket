@@ -1,7 +1,10 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "@/components/shared/Modal";
 import { useMarketStore } from "@/lib/store";
 import { api } from "@/lib/api";
+import { fromDto } from "@/lib/listings";
+import type { Listing } from "@/lib/types";
 import { ListingDetail } from "./ListingDetail";
 import s from "./detail.module.css";
 
@@ -15,7 +18,24 @@ export function ListingOverlay() {
   const toggleSave = useMarketStore((s) => s.toggleSave);
   const openMessageOverlay = useMarketStore((s) => s.openMessageOverlay);
 
-  const item = listings.find((l) => l.id === listingOverlayId);
+  const cached = listings.find((l) => l.id === listingOverlayId);
+  const [result, setResult] = useState<{ id: string; listing: Listing | null } | null>(null);
+
+  useEffect(() => {
+    if (!listingOverlayId || cached) return;
+    let alive = true;
+    api
+      .getListing(listingOverlayId)
+      .then((dto) => alive && setResult({ id: listingOverlayId, listing: fromDto(dto) }))
+      .catch(() => alive && setResult({ id: listingOverlayId, listing: null }));
+    return () => {
+      alive = false;
+    };
+  }, [listingOverlayId, cached]);
+
+  const fetched = result?.id === listingOverlayId ? result.listing : undefined;
+  const fetchFailed = fetched === null;
+  const item = cached ?? fetched ?? undefined;
 
   const handleOpenSeller = item?.sellerId
     ? () => {
@@ -50,7 +70,7 @@ export function ListingOverlay() {
       ariaLabel={item?.title ?? "Listing"}
       className={s.overlayContent}
     >
-      {item && (
+      {item ? (
         <ListingDetail
           item={item}
           saved={savedItems.has(item.id)}
@@ -60,6 +80,12 @@ export function ListingOverlay() {
           onOpenSeller={handleOpenSeller}
           onBuy={handleBuy}
         />
+      ) : (
+        listingOverlayId != null && (
+          <p className={s.overlayStatus} role="status">
+            {fetchFailed ? "This listing couldn't be found." : "Loading listing…"}
+          </p>
+        )
       )}
     </Modal>
   );

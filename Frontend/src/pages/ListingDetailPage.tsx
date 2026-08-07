@@ -1,7 +1,10 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ListingDetail } from "@/features/listings/ListingDetail";
 import { useMarketStore } from "@/lib/store";
 import { api } from "@/lib/api";
+import { fromDto } from "@/lib/listings";
+import type { Listing } from "@/lib/types";
 import ps from "./page.module.css";
 
 export function ListingDetailPage() {
@@ -13,9 +16,37 @@ export function ListingDetailPage() {
   const toggleSave = useMarketStore((s) => s.toggleSave);
   const openMessageOverlay = useMarketStore((s) => s.openMessageOverlay);
 
-  const item = listings.find((l) => l.id === id);
+  const cached = listings.find((l) => l.id === id);
+  const [fetchState, setFetchState] = useState<{ id: string; listing: Listing | null } | null>(
+    null
+  );
+
+  useEffect(() => {
+    if (!id || cached) return;
+    let alive = true;
+    api
+      .getListing(id)
+      .then((dto) => alive && setFetchState({ id, listing: fromDto(dto) }))
+      .catch(() => alive && setFetchState({ id, listing: null }));
+    return () => {
+      alive = false;
+    };
+  }, [id, cached]);
+
+  const fetched = fetchState && fetchState.id === id ? fetchState.listing : undefined;
+  const fetchFailed = fetched === null;
+  const item = cached ?? fetched ?? undefined;
 
   if (!item) {
+    if (!fetchFailed) {
+      return (
+        <div className={ps.page}>
+          <p className={ps.notFound} role="status">
+            Loading listing&hellip;
+          </p>
+        </div>
+      );
+    }
     return (
       <div className={ps.page}>
         <p className={ps.notFound}>

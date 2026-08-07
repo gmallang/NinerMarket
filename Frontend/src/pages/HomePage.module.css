@@ -32,21 +32,6 @@
   gap: var(--space-2);
 }
 
-.sortSelect {
-  font-size: 0.8125rem;
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 6px 10px;
-  color: var(--color-fg);
-  cursor: pointer;
-  outline: none;
-}
-
-.sortSelect:focus {
-  border-color: var(--color-primary);
-}
-
 .viewToggle {
   display: flex;
   border: 1px solid var(--color-border);

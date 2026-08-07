@@ -1,0 +1,53 @@
+export const LOCATION_GROUPS = [
+  {
+    label: "Residence Halls",
+    options: [
+      "Belk Hall",
+      "Elm Hall",
+      "Hickory Hall",
+      "Holshouser Hall",
+      "Hunt Hall",
+      "Levine Hall",
+      "Louise Hall",
+      "Loy Hall",
+      "Miltimore Hall",
+      "Moore Hall",
+      "Oak Hall",
+      "Sanford Hall",
+      "Scott Hall",
+      "Wallis Hall",
+      "Witherspoon Hall",
+    ],
+  },
+  {
+    label: "Campus Buildings & Landmarks",
+    options: [
+      "Belk Plaza",
+      "Popp Martin Student Union",
+      "Atkins Library",
+      "Barnhardt Student Activity Center",
+      "Fretwell Building",
+      "Woodward Hall",
+      "Colvard Building",
+      "Cato College of Education",
+      "PORTAL Building",
+      "EPIC Building",
+      "Halton Arena",
+      "Jerry Richardson Stadium",
+    ],
+  },
+  {
+    label: "Parking Decks",
+    options: ["East Deck", "West Deck", "North Deck", "Union Deck", "South Village Deck"],
+  },
+  {
+    label: "Off-Campus Housing",
+    options: [
+      "University Walk (UWalk)",
+      "The Grove at Sardis",
+      "Cambridge at Southpoint",
+      "Lodge at Crown Point",
+      "Off-Campus (Other)",
+    ],
+  },
+];

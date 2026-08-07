@@ -7,6 +7,7 @@ import {
   LogOut,
   UserRound,
   ChevronRight,
+  ChevronDown,
   Heart,
   ShoppingBag,
   Bell,
@@ -15,7 +16,8 @@ import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import ninerLogo from "@/assets/NinerMarket.png";
 import { avatarUrl } from "@/lib/avatar";
 import { useMarketStore } from "@/lib/store";
-import { CATEGORIES } from "@/data/categories";
+import { CATEGORIES, CONDITIONS } from "@/data/categories";
+import { LOCATION_GROUPS } from "@/data/locations";
 import { Modal } from "@/components/shared/Modal";
 import { SellForm } from "@/features/sell/SellForm";
 import { MessagesOverlay } from "@/features/messaging/MessagesOverlay";
@@ -46,8 +48,12 @@ export function AppLayout() {
   const [q, setQ] = useState(params.get("q") ?? "");
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [sellOpen, setSellOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [minPriceInput, setMinPriceInput] = useState(params.get("minPrice") ?? "");
+  const [maxPriceInput, setMaxPriceInput] = useState(params.get("maxPrice") ?? "");
   const totalUnread = convs.reduce((n, c) => n + c.unread, 0);
   const unreadNotifs = notifications.filter((n) => !n.read).length;
+  const activeConditions = (params.get("condition") ?? "").split(",").filter(Boolean);
 
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
@@ -76,6 +82,20 @@ export function AppLayout() {
     if (q.trim()) next.set("q", q.trim());
     else next.delete("q");
     navigate(`/?${next.toString()}`);
+  };
+
+  const applyFilter = (key: string, value: string) => {
+    const next = new URLSearchParams(pathname === "/" ? params : undefined);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    navigate(`/?${next.toString()}`);
+  };
+
+  const toggleCondition = (condition: string) => {
+    const next = new Set(activeConditions);
+    if (next.has(condition)) next.delete(condition);
+    else next.add(condition);
+    applyFilter("condition", Array.from(next).join(","));
   };
 
   const handleLogout = () => {
@@ -189,6 +209,19 @@ export function AppLayout() {
                       >
                         <UserRound size={14} /> View profile
                       </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className={s.profileMenuItem}
+                        onSelect={() => navigate("/?saved=1")}
+                      >
+                        <Heart size={14} /> Saved Items
+                        {savedCount > 0 && <span className={s.countBadge}>{savedCount}</span>}
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className={s.profileMenuItem}
+                        onSelect={() => navigate("/?mine=1")}
+                      >
+                        <ShoppingBag size={14} /> Your Listings
+                      </DropdownMenu.Item>
                       <DropdownMenu.Item className={s.profileMenuItem} onSelect={handleLogout}>
                         <LogOut size={14} /> Sign out
                       </DropdownMenu.Item>
@@ -204,7 +237,107 @@ export function AppLayout() {
       <div className={s.body}>
         <aside className={s.sidebar}>
           <div className={s.sidebarInner}>
-            <span className={s.sectionLabel}>Browse by Category</span>
+            <div className={s.filtersSection}>
+              <button
+                type="button"
+                className={s.filtersHeader}
+                onClick={() => setFiltersOpen((open) => !open)}
+                aria-expanded={filtersOpen}
+              >
+                <h3 className={s.filtersTitle}>Filters</h3>
+                <ChevronDown
+                  size={16}
+                  className={`${s.filtersChevron} ${filtersOpen ? s.filtersChevronOpen : ""}`}
+                />
+              </button>
+
+              {filtersOpen && (
+                <>
+                  <div className={s.filterGroup}>
+                    <label className={s.filterLabel}>Sort by</label>
+                    <select
+                      className={s.filterSelect}
+                      value={params.get("sort") ?? "recent"}
+                      onChange={(e) => applyFilter("sort", e.target.value)}
+                    >
+                      <option value="recent">Most Recent</option>
+                      <option value="price-asc">Price: Low to High</option>
+                      <option value="price-desc">Price: High to Low</option>
+                    </select>
+                  </div>
+
+                  <div className={s.filterGroup}>
+                    <label className={s.filterLabel}>Location</label>
+                    <select
+                      className={s.filterSelect}
+                      value={params.get("location") ?? ""}
+                      onChange={(e) => applyFilter("location", e.target.value)}
+                    >
+                      <option value="">All Locations</option>
+                      {LOCATION_GROUPS.map((group) => (
+                        <optgroup key={group.label} label={group.label}>
+                          {group.options.map((place) => (
+                            <option key={place} value={place}>
+                              {place}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className={s.filterGroup}>
+                    <label className={s.filterLabel}>Price Range</label>
+                    <div className={s.priceRow}>
+                      <input
+                        className={s.filterInputSmall}
+                        type="number"
+                        min={0}
+                        placeholder="Min"
+                        value={minPriceInput}
+                        onChange={(e) => setMinPriceInput(e.target.value)}
+                        onBlur={() => applyFilter("minPrice", minPriceInput.trim())}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") applyFilter("minPrice", minPriceInput.trim());
+                        }}
+                      />
+                      <span className={s.priceSep}>–</span>
+                      <input
+                        className={s.filterInputSmall}
+                        type="number"
+                        min={0}
+                        placeholder="Max"
+                        value={maxPriceInput}
+                        onChange={(e) => setMaxPriceInput(e.target.value)}
+                        onBlur={() => applyFilter("maxPrice", maxPriceInput.trim())}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") applyFilter("maxPrice", maxPriceInput.trim());
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={s.filterGroup}>
+                    <label className={s.filterLabel}>Condition</label>
+                    <div className={s.checkboxList}>
+                      {CONDITIONS.map((condition) => (
+                        <label key={condition} className={s.checkboxRow}>
+                          <input
+                            type="checkbox"
+                            checked={activeConditions.includes(condition)}
+                            onChange={() => toggleCondition(condition)}
+                          />
+                          {condition}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <hr className={s.filtersDivider} />
+
             <nav className={s.catNav}>
               {CATEGORIES.map((cat) => {
                 const Icon = cat.icon;
@@ -215,40 +348,13 @@ export function AppLayout() {
                     to={cat.id === "all" ? "/" : `/?category=${cat.id}`}
                     className={`${s.catBtn} ${active ? s.catBtnActive : ""}`}
                   >
-                    <Icon size={15} className={active ? s.catIconActive : s.catIcon} />
+                    <Icon size={20} className={active ? s.catIconActive : s.catIcon} />
                     {cat.label}
                     {active && <ChevronRight size={13} className={s.catChevron} />}
                   </Link>
                 );
               })}
             </nav>
-
-            <hr className={s.activityDivider} />
-            <span className={s.sectionLabel}>Your Activity</span>
-            <nav className={s.catNav}>
-              <Link
-                to="/?saved=1"
-                className={`${s.catBtn} ${params.get("saved") === "1" ? s.catBtnActive : ""}`}
-              >
-                <Heart size={15} className={s.catIcon} />
-                Saved Items
-                <span className={s.countBadge}>{savedCount}</span>
-              </Link>
-              <Link
-                to="/?mine=1"
-                className={`${s.catBtn} ${params.get("mine") === "1" ? s.catBtnActive : ""}`}
-              >
-                <ShoppingBag size={15} className={s.catIcon} />
-                Your Listings
-              </Link>
-            </nav>
-
-            <div className={s.promoBox}>
-              <p className={s.promoTitle}>Move-In Season!</p>
-              <p className={s.promoText}>
-                Hundreds of dorm essentials listed this week. Check daily for new drops.
-              </p>
-            </div>
           </div>
         </aside>
 

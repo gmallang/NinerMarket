@@ -20,13 +20,12 @@
 }
 
 .navInner {
-  max-width: 1280px;
-  margin: 0 auto;
   height: 100%;
   padding: 0 var(--space-4);
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .logo {
@@ -34,6 +33,7 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+  justify-self: start;
   text-decoration: none;
 }
 
@@ -62,10 +62,22 @@
 }
 
 .searchWrap {
-  flex: 1;
-  max-width: 520px;
-  margin: 0 auto;
+  width: 420px;
+  max-width: 100%;
+  justify-self: center;
   position: relative;
+}
+
+@media (max-width: 860px) {
+  .searchWrap {
+    width: 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .searchWrap {
+    width: 140px;
+  }
 }
 
 .searchIcon {
@@ -87,6 +99,8 @@
   color: var(--color-fg);
   font-size: 0.875rem;
   outline: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: box-shadow var(--duration) var(--ease);
 }
 
@@ -102,7 +116,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  margin-left: auto;
+  justify-self: end;
   flex-shrink: 0;
 }
 
@@ -363,8 +377,6 @@
 
 /* ── Body layout ── */
 .body {
-  max-width: 1280px;
-  margin: 0 auto;
   display: flex;
 }
 
@@ -372,7 +384,8 @@
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
-  position: sticky;
+  position: fixed;
+  left: 0;
   top: var(--nav-h);
   height: calc(100vh - var(--nav-h));
   overflow-y: auto;
@@ -386,38 +399,29 @@
   }
 }
 
+@media (min-width: 1025px) {
+  .content {
+    margin-left: var(--sidebar-w);
+  }
+}
+
 .sidebarInner {
-  padding: var(--space-4);
-}
-
-.sectionLabel {
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--color-fg-muted);
-  padding: 0 var(--space-2);
-  margin-bottom: var(--space-2);
-  margin-top: var(--space-4);
-  display: block;
-}
-
-.sectionLabel:first-child {
-  margin-top: 0;
+  padding: var(--space-3);
 }
 
 .catNav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .catBtn {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 10px var(--space-3);
+  padding: 14px var(--space-3);
   border-radius: var(--radius-md);
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--color-fg);
   text-decoration: none;
@@ -455,12 +459,6 @@
   color: var(--color-primary);
 }
 
-.activityDivider {
-  border: none;
-  border-top: 1px solid var(--color-border);
-  margin: var(--space-5) 0 var(--space-4);
-}
-
 .countBadge {
   margin-left: auto;
   font-size: 0.7rem;
@@ -471,24 +469,128 @@
   padding: 1px 8px;
 }
 
-.promoBox {
-  margin-top: var(--space-5);
-  background: var(--color-accent);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
+/* ── Sidebar filters (Facebook Marketplace style) ── */
+.filtersDivider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-4) 0;
 }
 
-.promoTitle {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--color-primary);
+.filtersSection {
+  padding-bottom: var(--space-2);
+}
+
+.filtersHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
   margin-bottom: var(--space-1);
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--color-fg);
 }
 
-.promoText {
-  font-size: 0.75rem;
+.filtersHeader:hover {
+  background: var(--color-muted);
+}
+
+.filtersChevron {
   color: var(--color-fg-muted);
-  line-height: 1.5;
+  transition: transform var(--duration) var(--ease);
+}
+
+.filtersChevronOpen {
+  transform: rotate(180deg);
+}
+
+.filtersTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  margin: 0;
+}
+
+.filterGroup {
+  padding: 0 var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.filterLabel {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-fg-muted);
+  margin-bottom: var(--space-2);
+}
+
+.filterInput,
+.filterSelect {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  color: var(--color-fg);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.filterInput:focus,
+.filterSelect:focus {
+  border-color: var(--color-primary);
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filterInputSmall {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  color: var(--color-fg);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.filterInputSmall:focus {
+  border-color: var(--color-primary);
+}
+
+.priceSep {
+  color: var(--color-fg-muted);
+  flex-shrink: 0;
+}
+
+.checkboxList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.875rem;
+  color: var(--color-fg);
+  cursor: pointer;
+}
+
+.checkboxRow input {
+  accent-color: var(--color-primary);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
 }
 
 /* ── Main content (pages handle their own padding) ── */

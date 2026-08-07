@@ -4,7 +4,15 @@ import { ShieldCheck, ShoppingBag, MapPin, X } from "lucide-react";
 import ninerLogo from "@/assets/NinerMarket.png";
 import { PAYMENT_METHODS, SCHOOL_YEARS } from "@/lib/user";
 import type { CurrentUser } from "@/lib/types";
-import { isCharlotteEmail, signInOrUp } from "@/lib/auth";
+import {
+  isCharlotteEmail,
+  localSignIn,
+  signInWithGoogle,
+  signin,
+  signup,
+  verifyEmail,
+} from "@/lib/auth";
+import { api } from "@/lib/api";
 import { GoogleChooser, GoogleG, TermsModal, HelpModal } from "./AuthModals";
 import { Modal } from "@/components/shared/Modal";
 import s from "./login.module.css";
@@ -23,6 +31,10 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   const [schoolYear, setSchoolYear] = useState("");
   const [payments, setPayments] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verifyEmailAddress, setVerifyEmailAddress] = useState("");
+  const [code, setCode] = useState("");
+  const [devCode, setDevCode] = useState("");
 
   const validate = (requirePassword: boolean): string => {
     if (!isCharlotteEmail(email)) {
@@ -35,6 +47,20 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       return "Please accept the Terms & Conditions to continue.";
     }
     return "";
+  };
+
+  const startVerify = async (targetEmail: string) => {
+    setVerifyEmailAddress(targetEmail.trim().toLowerCase());
+    setCode("");
+    setDevCode("");
+    setVerifying(true);
+    setError("");
+    try {
+      const res = await api.resendCode(targetEmail.trim().toLowerCase());
+      setDevCode(res.dev_code ?? "");
+    } catch {
+      // the code from signup is still usable; verify step will surface errors
+    }
   };
 
   const submit = async (e: FormEvent) => {
@@ -52,6 +78,10 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       setError("Select at least one payment method you accept.");
       return;
     }
+    if (mode === "signup" && password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
     const err = validate(true);
     if (err) {
       setError(err);
@@ -59,10 +89,56 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
     }
     setError("");
     try {
-      const u = await signInOrUp(mode, name, email, schoolYear, payments);
+      if (mode === "signup") {
+        const res = await signup(name, email, password, schoolYear, payments);
+        if (res.needsVerification) {
+          setVerifyEmailAddress(email.trim().toLowerCase());
+          setCode("");
+          setDevCode(res.devCode ?? "");
+          setVerifying(true);
+          return;
+        }
+        onAuthed(res.user);
+      } else {
+        const u = await signin(email, password);
+        onAuthed(u);
+      }
+    } catch (e) {
+      if (e instanceof TypeError) {
+        onAuthed(localSignIn(email, email.split("@")[0]));
+        return;
+      }
+      const message = e instanceof Error ? e.message : "";
+      if (message.includes("not verified")) {
+        await startVerify(email);
+        return;
+      }
+      setError(message || "Something went wrong. Please try again.");
+    }
+  };
+
+  const verifySubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (code.trim().length !== 6) {
+      setError("Enter the 6-digit code from your email.");
+      return;
+    }
+    setError("");
+    try {
+      const u = await verifyEmail(verifyEmailAddress, code);
       onAuthed(u);
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Invalid or expired code.");
+    }
+  };
+
+  const resend = async () => {
+    setError("");
+    try {
+      const res = await api.resendCode(verifyEmailAddress);
+      setDevCode(res.dev_code ?? "");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't resend the code.");
     }
   };
 
@@ -77,7 +153,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
     setGoogleOpen(false);
     setError("");
     try {
-      const u = await signInOrUp("signin", name, googleEmail);
+      const u = await signInWithGoogle(googleEmail);
       onAuthed(u);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -100,7 +176,18 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
 
   const openForm = (mode: "signin" | "signup") => {
     setError("");
+    setVerifying(false);
+    setCode("");
+    setDevCode("");
     setFormOpen(mode);
+  };
+
+  const closeForm = () => {
+    setFormOpen(null);
+    setVerifying(false);
+    setCode("");
+    setDevCode("");
+    setError("");
   };
 
   return (
@@ -189,20 +276,57 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       <Modal
         open={!!formOpen}
         onOpenChange={(open) => {
-          if (!open) setFormOpen(null);
+          if (!open) closeForm();
         }}
-        ariaLabel={formOpen === "signup" ? "Create your account" : "Sign in"}
+        ariaLabel={verifying ? "Verify your email" : formOpen === "signup" ? "Create your account" : "Sign in"}
       >
         <div className={s.xModalHeader}>
-          <button className={s.xModalClose} onClick={() => setFormOpen(null)} aria-label="Close">
+          <button className={s.xModalClose} onClick={closeForm} aria-label="Close">
             <X size={18} />
           </button>
           <img className={s.xModalLogo} src={ninerLogo} alt="NinerMarket" />
           <h2 className={s.xModalTitle}>
-            {formOpen === "signup" ? "Create your account" : "Sign in to NinerMarket"}
+            {verifying
+              ? "Verify your email"
+              : formOpen === "signup"
+                ? "Create your account"
+                : "Sign in to NinerMarket"}
           </h2>
         </div>
-        <form onSubmit={submit} className={s.xForm}>
+        {verifying ? (
+          <form onSubmit={verifySubmit} className={s.xForm}>
+            <p className={s.xVerifyNote}>
+              We emailed a 6-digit code to{" "}
+              <strong>{verifyEmailAddress}</strong>. Enter it below to verify your account.
+            </p>
+            {devCode && (
+              <p className={s.xDevCode}>
+                DEV MODE — no email key set, use code: <strong>{devCode}</strong>
+              </p>
+            )}
+            <input
+              className={s.xInput}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              placeholder="6-digit code"
+              autoFocus
+            />
+            {error && <p className={s.xError}>{error}</p>}
+            <button type="submit" className={s.xSubmitBtn}>
+              Verify email
+            </button>
+            <button type="button" className={s.xDemoHint} onClick={resend}>
+              Resend code
+            </button>
+            <button type="button" className={s.xDemoHint} onClick={() => setVerifying(false)}>
+              Back to sign in
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={submit} className={s.xForm}>
           {formOpen === "signup" && (
             <input
               className={s.xInput}
@@ -292,7 +416,8 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
               Demo account: anna@charlotte.edu
             </button>
           )}
-        </form>
+          </form>
+        )}
       </Modal>
 
       {googleOpen && (

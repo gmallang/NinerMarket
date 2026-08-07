@@ -11,6 +11,44 @@ class User(BaseModel):
     payment_methods: list[str] = []
     rating_avg: float = 0.0
     rating_count: int = 0
+    password_hash: str = ""
+    email_verified: bool = False
+    verification_code: str = ""
+    verification_expires: datetime | None = None
+
+
+class UserCreate(BaseModel):
+    id: str
+    email: str
+    display_name: str
+    password: str
+    school_year: str = ""
+    payment_methods: list[str] = []
+
+
+class UserPublic(BaseModel):
+    id: str
+    email: str
+    display_name: str
+    school_year: str = ""
+    payment_methods: list[str] = []
+    rating_avg: float = 0.0
+    rating_count: int = 0
+    email_verified: bool = False
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class VerifyRequest(BaseModel):
+    email: str
+    code: str
+
+
+class ResendRequest(BaseModel):
+    email: str
 
 
 class Listing(BaseModel):

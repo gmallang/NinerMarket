@@ -60,12 +60,31 @@ export const api = {
     id: string;
     email: string;
     display_name: string;
+    password: string;
     school_year?: string;
     payment_methods?: string[];
   }) =>
-    request<UserDto>("/users", {
+    request<{ user: UserDto; dev_code?: string }>("/users", {
       method: "POST",
       body: JSON.stringify(data),
+    }),
+
+  verifyEmail: (email: string, code: string) =>
+    request<UserDto>("/users/verify", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    }),
+
+  resendCode: (email: string) =>
+    request<{ user: UserDto; dev_code?: string }>("/users/resend", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  login: (email: string, password: string) =>
+    request<UserDto>("/users/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
     }),
 
   updateUser: (

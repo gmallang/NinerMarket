@@ -15,6 +15,7 @@ export interface UserDto {
   payment_methods?: string[];
   rating_avg: number;
   rating_count: number;
+  email_verified?: boolean;
 }
 
 export interface ListingDto {
@@ -86,6 +87,7 @@ export interface CurrentUser {
   display_name: string;
   school_year?: string;
   payment_methods?: string[];
+  email_verified?: boolean;
 }
 
 export interface NotificationDto {

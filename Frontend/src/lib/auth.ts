@@ -17,40 +17,75 @@ export function makeUserId(email: string): string {
   );
 }
 
-export async function signInOrUp(
-  mode: "signin" | "signup",
+export interface SignupResult {
+  user: CurrentUser;
+  devCode?: string;
+  needsVerification: boolean;
+}
+
+export async function signup(
   name: string,
   email: string,
-  schoolYear = "",
-  payments: string[] = []
-): Promise<CurrentUser> {
+  password: string,
+  schoolYear: string,
+  payments: string[]
+): Promise<SignupResult> {
   const id = makeUserId(email);
   const normalized = email.trim().toLowerCase();
-  const display_name = mode === "signup" ? name.trim() : normalized.split("@")[0];
+  const res = await api.createUser({
+    id,
+    email: normalized,
+    display_name: name.trim(),
+    password,
+    school_year: schoolYear,
+    payment_methods: payments,
+  });
+  return {
+    user: res.user,
+    devCode: res.dev_code,
+    needsVerification: !res.user.email_verified,
+  };
+}
 
-  const profile: Partial<CurrentUser> = {};
+export async function verifyEmail(email: string, code: string): Promise<CurrentUser> {
+  const user = await api.verifyEmail(email.trim().toLowerCase(), code);
+  saveUser(user);
+  return user;
+}
 
+export async function signin(email: string, password: string): Promise<CurrentUser> {
+  const user = await api.login(email.trim().toLowerCase(), password);
+  saveUser(user);
+  return user;
+}
+
+export async function signInWithGoogle(email: string): Promise<CurrentUser> {
+  const id = makeUserId(email);
+  const normalized = email.trim().toLowerCase();
   try {
-    if (mode === "signup") {
-      await api.createUser({
-        id,
-        email: normalized,
-        display_name,
-        school_year: schoolYear,
-        payment_methods: payments,
-      });
-      profile.school_year = schoolYear;
-      profile.payment_methods = payments;
-    } else {
-      const u = await api.getUser(id);
-      profile.school_year = u.school_year;
-      profile.payment_methods = u.payment_methods;
-    }
+    const u = await api.getUser(id);
+    const user: CurrentUser = {
+      id,
+      email: normalized,
+      display_name: u.display_name,
+      school_year: u.school_year,
+      payment_methods: u.payment_methods,
+      email_verified: u.email_verified ?? true,
+    };
+    saveUser(user);
+    return user;
   } catch {
-    // Sign-in stays local if the backend is unavailable; listings load from the API separately.
+    return localSignIn(normalized, normalized.split("@")[0]);
   }
+}
 
-  const user: CurrentUser = { id, email: normalized, display_name, ...profile };
+export function localSignIn(email: string, displayName: string): CurrentUser {
+  const user: CurrentUser = {
+    id: makeUserId(email),
+    email: email.trim().toLowerCase(),
+    display_name: displayName,
+    email_verified: true,
+  };
   saveUser(user);
   return user;
 }

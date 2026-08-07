@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta, timezone
 
+from auth import hash_password
 from models import Listing, Rating, User
+
+SEED_PASSWORD = "ninermarket-demo"
 
 RATING_COMMENTS = [
     "Smooth transaction, exactly as described.",
@@ -60,15 +63,18 @@ def seed_dev_store(
         rating_count: int,
         school_year: str = "Junior",
         payment_methods: list[str] | None = None,
+        email: str | None = None,
     ) -> User:
         return User(
             id=user_id,
-            email=f"{user_id}@charlotte.edu",
+            email=email or f"{user_id}@charlotte.edu",
             display_name=name,
             school_year=school_year,
             payment_methods=payment_methods or ["Cash", "Venmo"],
             rating_avg=rating_avg,
             rating_count=rating_count,
+            password_hash=hash_password(SEED_PASSWORD),
+            email_verified=True,
         )
 
     sellers = {
@@ -86,7 +92,7 @@ def seed_dev_store(
         "seller-12": user("seller-12", "Felix G.",   4.6, 14, "Graduate",  ["Venmo", "Zelle"]),
         "seller-13": user("seller-13", "Daniel R.",  4.7, 12, "Senior",    ["Venmo", "Zelle", "Bank Transfer"]),
         "seller-14": user("seller-14", "Sofia L.",   4.9, 16, "Graduate",  ["Venmo", "Zelle"]),
-        "u-anna":    user("u-anna",    "Anna C.",    4.8, 21, "Senior",    ["Cash", "Venmo", "Zelle"]),
+        "u-anna":    user("u-anna",    "Anna C.",    4.8, 21, "Senior",    ["Cash", "Venmo", "Zelle"], email="anna@charlotte.edu"),
     }
     users.update(sellers)
 

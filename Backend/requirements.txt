@@ -3,4 +3,3 @@ uvicorn
 pydantic>=2
 supabase
 python-dotenv
-stripe

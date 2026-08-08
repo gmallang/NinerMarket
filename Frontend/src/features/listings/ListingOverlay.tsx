@@ -17,6 +17,8 @@ export function ListingOverlay() {
   const savedItems = useMarketStore((s) => s.savedItems);
   const toggleSave = useMarketStore((s) => s.toggleSave);
   const openMessageOverlay = useMarketStore((s) => s.openMessageOverlay);
+  const markListingSold = useMarketStore((s) => s.markListingSold);
+  const user = useMarketStore((s) => s.user);
 
   const cached = listings.find((l) => l.id === listingOverlayId);
   const [result, setResult] = useState<{ id: string; listing: Listing | null } | null>(null);
@@ -44,22 +46,7 @@ export function ListingOverlay() {
       }
     : undefined;
 
-  const handleBuy = item
-    ? async () => {
-        const origin = window.location.origin;
-        const result = await api.createCheckout({
-          listing_id: item.id,
-          success_url: `${origin}/checkout/success?id=${item.id}`,
-          cancel_url: `${origin}/checkout/cancel?id=${item.id}`,
-        });
-        closeListingOverlay();
-        if (result.url) {
-          window.location.href = result.url;
-        } else {
-          navigate(`/checkout/success?mock=1&id=${item.id}`);
-        }
-      }
-    : undefined;
+  const isOwner = !!item && !!user && user.id === item.sellerId;
 
   return (
     <Modal
@@ -74,11 +61,12 @@ export function ListingOverlay() {
         <ListingDetail
           item={item}
           saved={savedItems.has(item.id)}
+          isOwner={isOwner}
           onClose={closeListingOverlay}
           onToggleSave={() => toggleSave(item.id)}
           onMessage={() => openMessageOverlay(item.id)}
           onOpenSeller={handleOpenSeller}
-          onBuy={handleBuy}
+          onMarkSold={() => markListingSold(item.id)}
         />
       ) : (
         listingOverlayId != null && (

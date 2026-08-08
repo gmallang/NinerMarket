@@ -31,6 +31,7 @@ const LISTING: Listing = {
   seller: "Maya T.",
   sellerId: "u-1",
   sellerRating: 4.9,
+  status: "active",
 };
 
 describe("MessagesOverlay", () => {

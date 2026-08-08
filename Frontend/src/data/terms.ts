@@ -17,7 +17,11 @@ export const TERMS_SECTIONS: { title: string; body: string }[] = [
   },
   {
     title: "Transactions & payment disputes",
-    body: "NinerMarket is a platform only and is not a party to any sale. Payment arrangements, refunds, delivery, and meetups are strictly between the buyer and the seller. Disputes about payment are not our fault and will not be handled by NinerMarket.",
+    body: "NinerMarket is a platform only and is not a party to any sale. Payment is arranged directly between buyer and seller (cash, Venmo, Zelle, or whatever the seller lists as their accepted payment methods) at the time of pickup — NinerMarket never collects, holds, or transmits any money. Disputes about payment, refunds, or the exchange itself are strictly between the buyer and the seller and are not handled by NinerMarket.",
+  },
+  {
+    title: "Taxes",
+    body: "Sellers are solely responsible for determining whether tax applies to their sales and for paying anything owed. NinerMarket does not collect, remit, or report on any transaction, since payment never passes through the platform.",
   },
   {
     title: "Meetups & personal safety",

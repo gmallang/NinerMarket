@@ -1,11 +1,4 @@
-import type {
-  ListingDto,
-  NewListing,
-  NewRating,
-  NotificationDto,
-  Rating,
-  UserDto,
-} from "./types";
+import type { ListingDto, NewListing, NewRating, NotificationDto, Rating, UserDto } from "./types";
 import type { Conversation } from "@/data/conversations";
 
 const BASE_URL: string = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/+$/, "");
@@ -109,10 +102,10 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  createCheckout: (body: { listing_id: string; success_url: string; cancel_url: string }) =>
-    request<{ url: string | null; mock: boolean; listing_id: string }>("/checkout", {
-      method: "POST",
-      body: JSON.stringify(body),
+  markListingSold: (id: string) =>
+    request<ListingDto>(`/listings/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: "sold" }),
     }),
 
   getNotifications: (userId: string) =>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, MapPin, MessageCircle, ShoppingCart, X } from "lucide-react";
+import { CheckCircle2, Heart, MapPin, MessageCircle, X } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
 import { CATEGORIES } from "@/data/categories";
@@ -12,36 +12,39 @@ import s from "./detail.module.css";
 export function ListingDetail({
   item,
   saved,
+  isOwner = false,
   onClose,
   onToggleSave,
   onMessage,
   onOpenSeller,
-  onBuy,
+  onMarkSold,
 }: {
   item: Listing;
   saved: boolean;
+  isOwner?: boolean;
   onClose: () => void;
   onToggleSave: () => void;
   onMessage: () => void;
   onOpenSeller?: () => void;
-  onBuy?: () => Promise<void>;
+  onMarkSold?: () => Promise<void>;
 }) {
   const photos = item.photos?.length ? item.photos : [item.image];
   const [activeImg, setActiveImg] = useState(0);
-  const [buying, setBuying] = useState(false);
-  const [buyError, setBuyError] = useState<string | null>(null);
+  const [markingSold, setMarkingSold] = useState(false);
+  const [markSoldError, setMarkSoldError] = useState<string | null>(null);
   const categoryLabel = CATEGORIES.find((x) => x.id === item.category)?.label ?? item.category;
+  const isSold = item.status === "sold";
 
-  const handleBuy = async () => {
-    if (!onBuy) return;
-    setBuying(true);
-    setBuyError(null);
+  const handleMarkSold = async () => {
+    if (!onMarkSold) return;
+    setMarkingSold(true);
+    setMarkSoldError(null);
     try {
-      await onBuy();
+      await onMarkSold();
     } catch (err) {
-      setBuyError(err instanceof Error ? err.message : "Payment failed. Please try again.");
+      setMarkSoldError(err instanceof Error ? err.message : "Couldn't update listing.");
     } finally {
-      setBuying(false);
+      setMarkingSold(false);
     }
   };
 
@@ -144,23 +147,34 @@ export function ListingDetail({
         </div>
       </div>
       <div className={s.detailFooter}>
-        <button className={`${shared.btnGhost} ${s.detailGhostBtn}`} onClick={onToggleSave}>
-          <Heart size={15} fill={saved ? "currentColor" : "none"} />
-          {saved ? "Saved" : "Save"}
-        </button>
-        {onBuy && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-            <button className={s.buyBtn} onClick={handleBuy} disabled={buying}>
-              <ShoppingCart size={15} />
-              {buying ? "Redirecting…" : "Buy Now"}
-            </button>
-            {buyError && <p className={s.buyError}>{buyError}</p>}
+        {isOwner ? (
+          <div className={s.detailOwnerActions}>
+            {isSold ? (
+              <span className={s.soldBadge}>
+                <CheckCircle2 size={15} /> Sold
+              </span>
+            ) : (
+              <>
+                <button className={s.soldBtn} onClick={() => void handleMarkSold()} disabled={markingSold}>
+                  <CheckCircle2 size={15} />
+                  {markingSold ? "Updating…" : "Mark as Sold"}
+                </button>
+                {markSoldError && <p className={s.soldError}>{markSoldError}</p>}
+              </>
+            )}
           </div>
+        ) : (
+          <>
+            <button className={`${shared.btnGhost} ${s.detailGhostBtn}`} onClick={onToggleSave}>
+              <Heart size={15} fill={saved ? "currentColor" : "none"} />
+              {saved ? "Saved" : "Save"}
+            </button>
+            <button className={`${shared.btnPrimary} ${s.detailPrimaryBtn}`} onClick={onMessage}>
+              <MessageCircle size={16} />
+              Message Seller
+            </button>
+          </>
         )}
-        <button className={`${shared.btnPrimary} ${s.detailPrimaryBtn}`} onClick={onMessage}>
-          <MessageCircle size={16} />
-          Message Seller
-        </button>
       </div>
     </div>
   );

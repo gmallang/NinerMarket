@@ -153,17 +153,21 @@ def login(body: LoginRequest):
     return _to_public(user)
 
 
-@router.get("/users/{id}")
-def get_user(id: str):
+def get_user_by_id(id: str) -> User | None:
+    """Internal lookup returning the full User model. Never expose this directly
+    to the client — use _to_public()."""
     if db:
         data = db.table("users").select("*").eq("id", id).execute()
-        if not data.data:
-            raise HTTPException(status_code=404, detail="User not found")
-        return _to_public(_row_to_user(data.data[0]))
+        return _row_to_user(data.data[0]) if data.data else None
+    return users.get(id)
 
-    if id not in users:
+
+@router.get("/users/{id}")
+def get_user(id: str):
+    user = get_user_by_id(id)
+    if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return _to_public(users[id])
+    return _to_public(user)
 
 
 @router.patch("/users/{id}")

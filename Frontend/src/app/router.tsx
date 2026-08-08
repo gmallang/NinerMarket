@@ -14,12 +14,6 @@ const SetupPage = lazy(() => import("@/pages/SetupPage").then((m) => ({ default:
 const UserProfilePage = lazy(() =>
   import("@/pages/UserProfilePage").then((m) => ({ default: m.UserProfilePage }))
 );
-const CheckoutSuccessPage = lazy(() =>
-  import("@/pages/CheckoutSuccessPage").then((m) => ({ default: m.CheckoutSuccessPage }))
-);
-const CheckoutCancelPage = lazy(() =>
-  import("@/pages/CheckoutCancelPage").then((m) => ({ default: m.CheckoutCancelPage }))
-);
 
 const fallback = (
   <div
@@ -40,14 +34,6 @@ export const router = createBrowserRouter([
         <LoginPage />
       </PublicOnly>
     ),
-  },
-  {
-    path: "/checkout/success",
-    element: withSuspense(<CheckoutSuccessPage />),
-  },
-  {
-    path: "/checkout/cancel",
-    element: withSuspense(<CheckoutCancelPage />),
   },
   {
     element: <RequireAuth />,

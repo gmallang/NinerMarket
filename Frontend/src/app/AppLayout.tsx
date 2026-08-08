@@ -11,6 +11,8 @@ import {
   Heart,
   ShoppingBag,
   Bell,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import ninerLogo from "@/assets/NinerMarket.png";
@@ -19,6 +21,7 @@ import { useMarketStore } from "@/lib/store";
 import { CATEGORIES, CONDITIONS } from "@/data/categories";
 import { LOCATION_GROUPS } from "@/data/locations";
 import { Modal } from "@/components/shared/Modal";
+import shared from "@/components/shared/shared.module.css";
 import { SellForm } from "@/features/sell/SellForm";
 import { MessagesOverlay } from "@/features/messaging/MessagesOverlay";
 import { ListingOverlay } from "@/features/listings/ListingOverlay";
@@ -49,6 +52,7 @@ export function AppLayout() {
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [sellOpen, setSellOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(true);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [minPriceInput, setMinPriceInput] = useState(params.get("minPrice") ?? "");
   const [maxPriceInput, setMaxPriceInput] = useState(params.get("maxPrice") ?? "");
   const totalUnread = convs.reduce((n, c) => n + c.unread, 0);
@@ -102,6 +106,90 @@ export function AppLayout() {
     logout();
     navigate("/login");
   };
+
+  const filterFields = (
+    <>
+      <div className={s.filterGroup}>
+        <label className={s.filterLabel}>Sort by</label>
+        <select
+          className={s.filterSelect}
+          value={params.get("sort") ?? "recent"}
+          onChange={(e) => applyFilter("sort", e.target.value)}
+        >
+          <option value="recent">Most Recent</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+        </select>
+      </div>
+
+      <div className={s.filterGroup}>
+        <label className={s.filterLabel}>Location</label>
+        <select
+          className={s.filterSelect}
+          value={params.get("location") ?? ""}
+          onChange={(e) => applyFilter("location", e.target.value)}
+        >
+          <option value="">All Locations</option>
+          {LOCATION_GROUPS.map((group) => (
+            <optgroup key={group.label} label={group.label}>
+              {group.options.map((place) => (
+                <option key={place} value={place}>
+                  {place}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+
+      <div className={s.filterGroup}>
+        <label className={s.filterLabel}>Price Range</label>
+        <div className={s.priceRow}>
+          <input
+            className={s.filterInputSmall}
+            type="number"
+            min={0}
+            placeholder="Min"
+            value={minPriceInput}
+            onChange={(e) => setMinPriceInput(e.target.value)}
+            onBlur={() => applyFilter("minPrice", minPriceInput.trim())}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") applyFilter("minPrice", minPriceInput.trim());
+            }}
+          />
+          <span className={s.priceSep}>–</span>
+          <input
+            className={s.filterInputSmall}
+            type="number"
+            min={0}
+            placeholder="Max"
+            value={maxPriceInput}
+            onChange={(e) => setMaxPriceInput(e.target.value)}
+            onBlur={() => applyFilter("maxPrice", maxPriceInput.trim())}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") applyFilter("maxPrice", maxPriceInput.trim());
+            }}
+          />
+        </div>
+      </div>
+
+      <div className={s.filterGroup}>
+        <label className={s.filterLabel}>Condition</label>
+        <div className={s.checkboxList}>
+          {CONDITIONS.map((condition) => (
+            <label key={condition} className={s.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={activeConditions.includes(condition)}
+                onChange={() => toggleCondition(condition)}
+              />
+              {condition}
+            </label>
+          ))}
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <div className={s.page}>
@@ -251,89 +339,7 @@ export function AppLayout() {
                 />
               </button>
 
-              {filtersOpen && (
-                <>
-                  <div className={s.filterGroup}>
-                    <label className={s.filterLabel}>Sort by</label>
-                    <select
-                      className={s.filterSelect}
-                      value={params.get("sort") ?? "recent"}
-                      onChange={(e) => applyFilter("sort", e.target.value)}
-                    >
-                      <option value="recent">Most Recent</option>
-                      <option value="price-asc">Price: Low to High</option>
-                      <option value="price-desc">Price: High to Low</option>
-                    </select>
-                  </div>
-
-                  <div className={s.filterGroup}>
-                    <label className={s.filterLabel}>Location</label>
-                    <select
-                      className={s.filterSelect}
-                      value={params.get("location") ?? ""}
-                      onChange={(e) => applyFilter("location", e.target.value)}
-                    >
-                      <option value="">All Locations</option>
-                      {LOCATION_GROUPS.map((group) => (
-                        <optgroup key={group.label} label={group.label}>
-                          {group.options.map((place) => (
-                            <option key={place} value={place}>
-                              {place}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className={s.filterGroup}>
-                    <label className={s.filterLabel}>Price Range</label>
-                    <div className={s.priceRow}>
-                      <input
-                        className={s.filterInputSmall}
-                        type="number"
-                        min={0}
-                        placeholder="Min"
-                        value={minPriceInput}
-                        onChange={(e) => setMinPriceInput(e.target.value)}
-                        onBlur={() => applyFilter("minPrice", minPriceInput.trim())}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") applyFilter("minPrice", minPriceInput.trim());
-                        }}
-                      />
-                      <span className={s.priceSep}>–</span>
-                      <input
-                        className={s.filterInputSmall}
-                        type="number"
-                        min={0}
-                        placeholder="Max"
-                        value={maxPriceInput}
-                        onChange={(e) => setMaxPriceInput(e.target.value)}
-                        onBlur={() => applyFilter("maxPrice", maxPriceInput.trim())}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") applyFilter("maxPrice", maxPriceInput.trim());
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className={s.filterGroup}>
-                    <label className={s.filterLabel}>Condition</label>
-                    <div className={s.checkboxList}>
-                      {CONDITIONS.map((condition) => (
-                        <label key={condition} className={s.checkboxRow}>
-                          <input
-                            type="checkbox"
-                            checked={activeConditions.includes(condition)}
-                            onChange={() => toggleCondition(condition)}
-                          />
-                          {condition}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
+              {filtersOpen && filterFields}
             </div>
 
             <hr className={s.filtersDivider} />
@@ -359,9 +365,46 @@ export function AppLayout() {
         </aside>
 
         <main className={s.content}>
+          <div className={s.mobileFilterBar}>
+            <button
+              type="button"
+              className={s.mobileFilterBtn}
+              onClick={() => setMobileFiltersOpen(true)}
+            >
+              <SlidersHorizontal size={15} />
+              Filters
+            </button>
+          </div>
           <Outlet />
         </main>
       </div>
+
+      <Modal
+        open={mobileFiltersOpen}
+        onOpenChange={setMobileFiltersOpen}
+        ariaLabel="Filters"
+        className={s.mobileFiltersDialog}
+      >
+        <div className={s.mobileFiltersHeader}>
+          <h2 className={s.filtersTitle}>Filters</h2>
+          <button
+            type="button"
+            className={shared.modalClose}
+            onClick={() => setMobileFiltersOpen(false)}
+            aria-label="Close"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        {filterFields}
+        <button
+          type="button"
+          className={s.mobileFiltersApplyBtn}
+          onClick={() => setMobileFiltersOpen(false)}
+        >
+          Show Results
+        </button>
+      </Modal>
 
       <Modal
         open={sellOpen}

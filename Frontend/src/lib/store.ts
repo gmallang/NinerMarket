@@ -59,7 +59,7 @@ interface MarketState {
   listingOverlayId: string | null;
   openListingOverlay: (listingId: string) => void;
   closeListingOverlay: () => void;
-  notifySellerPurchased: (listingId: string) => void;
+  markListingSold: (listingId: string) => Promise<void>;
 }
 
 export const useMarketStore = create<MarketState>((set, get) => ({
@@ -249,48 +249,10 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   closeListingOverlay: () => set({ listingOverlayId: null }),
 
-  notifySellerPurchased: (listingId) => {
-    const { convs, listings } = get();
-    const listing = listings.find((l) => l.id === listingId);
-    if (!listing) return;
-
-    let existing = convs.find((c) => c.listingId === listingId);
-    if (!existing) {
-      existing = {
-        id: convs.length + 10,
-        listingId,
-        name: listing.seller,
-        avatar: avatarUrl(listing.seller, 80),
-        online: true,
-        unread: 0,
-        lastMsg: "",
-        lastTimestamp: new Date().toISOString(),
-        messages: [],
-      };
-      set((state) => ({ convs: [existing!, ...state.convs] }));
-    }
-    
-    // Add the automated message
-    const autoMsg = {
-      id: Date.now(),
-      text: `🎉 Hi ${listing.seller.split(' ')[0]}, I've purchased "${listing.title}"! Let me know when and where we can meet for pickup.`,
-      sent: true,
-      timestamp: new Date().toISOString()
-    };
-
+  markListingSold: async (listingId) => {
+    await api.markListingSold(listingId);
     set((state) => ({
-      convs: state.convs.map((c) =>
-        c.listingId === listingId
-          ? {
-              ...c,
-              messages: [...c.messages, autoMsg],
-              lastMsg: autoMsg.text,
-              lastTimestamp: autoMsg.timestamp,
-              unread: 0,
-            }
-          : c
-      ),
-      activeConvId: existing!.id
+      listings: state.listings.map((l) => (l.id === listingId ? { ...l, status: "sold" } : l)),
     }));
   },
 }));

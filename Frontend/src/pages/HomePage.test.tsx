@@ -18,6 +18,7 @@ const LISTINGS: Listing[] = [
     seller: "Maya T.",
     sellerId: "u1",
     sellerRating: 4.9,
+    status: "active",
   },
   {
     id: "2",
@@ -31,6 +32,7 @@ const LISTINGS: Listing[] = [
     seller: "Jordan K.",
     sellerId: "u2",
     sellerRating: 5,
+    status: "active",
   },
   {
     id: "4",
@@ -44,6 +46,7 @@ const LISTINGS: Listing[] = [
     seller: "Chris L.",
     sellerId: "u4",
     sellerRating: 4.8,
+    status: "active",
   },
 ];
 

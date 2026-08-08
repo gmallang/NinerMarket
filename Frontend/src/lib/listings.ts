@@ -21,5 +21,6 @@ export function fromDto(d: ListingDto): Listing {
     sellerPayments: d.seller?.payment_methods,
     description: d.description,
     photos: d.photos ?? [],
+    status: d.status,
   };
 }

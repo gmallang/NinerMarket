@@ -50,6 +50,7 @@ export interface Listing {
   sellerPayments?: string[];
   description?: string;
   photos?: string[];
+  status: string;
 }
 
 export interface Rating {

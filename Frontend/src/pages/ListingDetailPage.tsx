@@ -15,6 +15,8 @@ export function ListingDetailPage() {
   const savedItems = useMarketStore((s) => s.savedItems);
   const toggleSave = useMarketStore((s) => s.toggleSave);
   const openMessageOverlay = useMarketStore((s) => s.openMessageOverlay);
+  const markListingSold = useMarketStore((s) => s.markListingSold);
+  const user = useMarketStore((s) => s.user);
 
   const cached = listings.find((l) => l.id === id);
   const [fetchState, setFetchState] = useState<{ id: string; listing: Listing | null } | null>(
@@ -60,31 +62,19 @@ export function ListingDetailPage() {
 
   const handleOpenSeller = item.sellerId ? () => navigate(`/user/${item.sellerId}`) : undefined;
 
-  const handleBuy = async () => {
-    const origin = window.location.origin;
-    const result = await api.createCheckout({
-      listing_id: item.id,
-      success_url: `${origin}/checkout/success?id=${item.id}`,
-      cancel_url: `${origin}/checkout/cancel?id=${item.id}`,
-    });
-    if (result.url) {
-      window.location.href = result.url;
-    } else {
-      // mock mode — backend has no Stripe key configured
-      navigate(`/checkout/success?mock=1&id=${item.id}`);
-    }
-  };
+  const isOwner = !!user && user.id === item.sellerId;
 
   return (
     <div className={ps.page}>
       <ListingDetail
         item={item}
         saved={savedItems.has(item.id)}
+        isOwner={isOwner}
         onClose={() => navigate("/")}
         onToggleSave={() => toggleSave(item.id)}
         onMessage={handleMessage}
         onOpenSeller={handleOpenSeller}
-        onBuy={handleBuy}
+        onMarkSold={() => markListingSold(item.id)}
       />
     </div>
   );

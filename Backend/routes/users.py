@@ -189,6 +189,12 @@ def google_login(body: GoogleLoginRequest, request: Request):
     except ValueError as exc:
         logger.warning("google_login: token rejected: %s", exc)
         raise HTTPException(status_code=401, detail="Invalid or expired Google session")
+    except Exception as exc:
+        logger.exception("google_login: unexpected failure")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Google verification failed ({type(exc).__name__}): {exc}",
+        )
 
     email = (info.get("email") or "").strip().lower()
     if not email.endswith("@charlotte.edu"):
@@ -226,6 +232,14 @@ def set_password(body: SetPasswordRequest):
 
         logging.getLogger("uvicorn.error").warning("set_password: token rejected: %s", exc)
         raise HTTPException(status_code=401, detail="Invalid or expired Google session")
+    except Exception as exc:
+        import logging
+
+        logging.getLogger("uvicorn.error").exception("set_password: unexpected failure")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Google verification failed ({type(exc).__name__}): {exc}",
+        )
 
     email = (info.get("email") or "").strip().lower()
     if not email.endswith("@charlotte.edu"):

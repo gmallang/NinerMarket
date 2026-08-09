@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { CONVS } from "@/data/conversations";
 import type { Conversation } from "@/data/conversations";
 import { api, clearToken } from "@/lib/api";
 import { avatarUrl } from "@/lib/avatar";
@@ -74,7 +73,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   loading: true,
   listingsError: null,
   savedItems: loadSaved(),
-  convs: CONVS,
+  convs: [],
   activeConvId: 1,
   inputText: "",
   notifications: [],
@@ -243,9 +242,9 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     if (!user) return;
     try {
       const list = await api.getThreads(user.id);
-      if (list.length > 0) set({ convs: list });
+      set({ convs: list });
     } catch {
-      // Keep the seeded local conversations when the backend is unavailable.
+      // Keep whatever's already shown when the backend is unavailable.
     }
   },
 

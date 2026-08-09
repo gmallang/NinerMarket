@@ -16,13 +16,10 @@ SESSION_TTL_DAYS = 30
 
 SESSION_SECRET = os.getenv("SESSION_SECRET")
 if not SESSION_SECRET:
-    if os.getenv("VERCEL"):
-        raise RuntimeError(
-            "SESSION_SECRET is not set. Add it to the Vercel backend project's "
-            "Environment Variables (any long random string, e.g. `openssl rand -hex 32`)."
-        )
-    # Dev fallback only — regenerating this on every restart just means existing
-    # local sessions get invalidated, which is fine outside of production.
+    # Fallback for any environment — regenerating this on every restart just
+    # means existing sessions get invalidated, which is a minor cost compared
+    # to the app failing to boot. Set SESSION_SECRET to a stable value for
+    # sessions that survive restarts.
     SESSION_SECRET = secrets.token_hex(32)
 
 

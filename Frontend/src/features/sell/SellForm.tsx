@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { ImagePlus, X } from "lucide-react";
 import { api } from "@/lib/api";
+import { compressImage } from "@/lib/image";
 import { fromDto } from "@/lib/listings";
 import { currentUserId } from "@/lib/user";
 import type { Listing } from "@/lib/types";
@@ -38,11 +39,13 @@ export function SellForm({
       if (photos.length >= 6) return;
       if (!file.type.startsWith("image/")) return;
       if (file.size > 5 * 1024 * 1024) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPhotos((prev) => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
+      compressImage(file)
+        .then((dataUrl) => setPhotos((prev) => [...prev, dataUrl]))
+        .catch(() => {
+          const reader = new FileReader();
+          reader.onload = () => setPhotos((prev) => [...prev, reader.result as string]);
+          reader.readAsDataURL(file);
+        });
     });
   };
 

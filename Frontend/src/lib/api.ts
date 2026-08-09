@@ -86,6 +86,18 @@ export const api = {
       body: JSON.stringify({ email, password }),
     }),
 
+  googleLogin: (idToken: string) =>
+    request<UserDto>("/users/google", {
+      method: "POST",
+      body: JSON.stringify({ id_token: idToken }),
+    }),
+
+  setPassword: (idToken: string, password: string) =>
+    request<UserDto>("/users/password", {
+      method: "POST",
+      body: JSON.stringify({ id_token: idToken, password }),
+    }),
+
   updateUser: (
     id: string,
     data: { display_name?: string; school_year?: string; payment_methods?: string[] }

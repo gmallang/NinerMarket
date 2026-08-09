@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { ShieldCheck, ShoppingBag, MapPin, X, ChevronDown, Eye, EyeOff } from "lucide-react";
@@ -10,6 +10,7 @@ import {
   localSignIn,
   nameFromEmail,
   signInWithGoogle,
+  signInWithGoogleToken,
   signin,
   signup,
   verifyEmail,
@@ -37,6 +38,88 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   const [verifyEmailAddress, setVerifyEmailAddress] = useState("");
   const [code, setCode] = useState("");
   const [devCode, setDevCode] = useState("");
+  const [setPwdOpen, setSetPwdOpen] = useState(false);
+  const [pendingToken, setPendingToken] = useState("");
+  const [pendingUser, setPendingUser] = useState<CurrentUser | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwdError, setPwdError] = useState("");
+  const [pwdSaving, setPwdSaving] = useState(false);
+
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const agreeRef = useRef(agree);
+  const authedRef = useRef(onAuthed);
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    agreeRef.current = agree;
+  }, [agree]);
+
+  useEffect(() => {
+    authedRef.current = onAuthed;
+  }, [onAuthed]);
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+    let cancelled = false;
+
+    const mount = () => {
+      const gid = window.google?.accounts?.id;
+      if (!gid || cancelled || !googleButtonRef.current) return;
+      gid.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        hd: "charlotte.edu",
+        callback: async (resp) => {
+          if (!resp.credential) return;
+          if (!agreeRef.current) {
+            setError("Please accept the Terms & Conditions to continue.");
+            return;
+          }
+          setError("");
+          try {
+            const u = await signInWithGoogleToken(resp.credential);
+            if (!u.has_password) {
+              setPendingToken(resp.credential);
+              setPendingUser(u);
+              setNewPassword("");
+              setConfirmPassword("");
+              setPwdError("");
+              setSetPwdOpen(true);
+            } else {
+              authedRef.current(u);
+            }
+          } catch (e) {
+            setError(e instanceof Error ? e.message : "Google sign-in failed. Please try again.");
+          }
+        },
+      });
+      gid.renderButton(googleButtonRef.current, {
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        shape: "rectangular",
+        width: 360,
+      });
+    };
+
+    if (window.google?.accounts?.id) {
+      mount();
+    } else {
+      const tick = () => {
+        if (cancelled) return;
+        if (window.google?.accounts?.id) {
+          mount();
+        } else {
+          window.setTimeout(tick, 100);
+        }
+      };
+      tick();
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [GOOGLE_CLIENT_ID]);
 
   const validate = (requirePassword: boolean): string => {
     if (!isCharlotteEmail(email)) {
@@ -164,6 +247,34 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
     );
   };
 
+  const setPwdSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 8) {
+      setPwdError("Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwdError("Passwords do not match.");
+      return;
+    }
+    setPwdError("");
+    setPwdSaving(true);
+    try {
+      const u = await api.setPassword(pendingToken, newPassword);
+      setSetPwdOpen(false);
+      authedRef.current(u);
+    } catch (err) {
+      setPwdError(err instanceof Error ? err.message : "Couldn't set the password.");
+    } finally {
+      setPwdSaving(false);
+    }
+  };
+
+  const skipSetPwd = () => {
+    setSetPwdOpen(false);
+    if (pendingUser) authedRef.current(pendingUser);
+  };
+
   const fillDemo = () => {
     setFormOpen("signin");
     setEmail("anna@charlotte.edu");
@@ -217,20 +328,24 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
             <h2 className={s.xSubheadline}>Shop &amp; sell on campus</h2>
 
             <div className={s.xActions}>
-              <button
-                type="button"
-                className={s.xSocialBtn}
-                onClick={() => {
-                  if (!agree) {
-                    setError("Please accept the Terms & Conditions to continue.");
-                    return;
-                  }
-                  setGoogleOpen(true);
-                }}
-              >
-                <GoogleG />
-                Continue with Google
-              </button>
+              {GOOGLE_CLIENT_ID ? (
+                <div ref={googleButtonRef} className={s.xGoogleBtn} />
+              ) : (
+                <button
+                  type="button"
+                  className={s.xSocialBtn}
+                  onClick={() => {
+                    if (!agree) {
+                      setError("Please accept the Terms & Conditions to continue.");
+                      return;
+                    }
+                    setGoogleOpen(true);
+                  }}
+                >
+                  <GoogleG />
+                  Continue with Google
+                </button>
+              )}
               <p className={s.xOnlyNote}>
                 NinerMarket is for UNC Charlotte students, faculty &amp; staff only. Sign in with
                 your @charlotte.edu Google account.
@@ -429,6 +544,50 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
           )}
           </form>
         )}
+      </Modal>
+
+      <Modal
+        open={setPwdOpen}
+        onOpenChange={(open) => {
+          if (!open) skipSetPwd();
+        }}
+        ariaLabel="Set a password"
+      >
+        <div className={s.xModalHeader}>
+          <h2 className={s.xModalTitle}>Set a password</h2>
+        </div>
+        <form onSubmit={setPwdSubmit} className={s.xForm}>
+          <p className={s.xVerifyNote}>
+            Signed in with Google as <strong>{pendingUser?.email}</strong>. Set a password to also
+            sign in with your email in the future.
+          </p>
+          <div className={s.xPasswordWrap}>
+            <input
+              className={s.xInput}
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="New password (min 8 characters)"
+              autoFocus
+            />
+          </div>
+          <div className={s.xPasswordWrap}>
+            <input
+              className={s.xInput}
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm password"
+            />
+          </div>
+          {pwdError && <p className={s.xError}>{pwdError}</p>}
+          <button type="submit" className={s.xSubmitBtn} disabled={pwdSaving}>
+            {pwdSaving ? "Saving…" : "Set password"}
+          </button>
+          <button type="button" className={s.xDemoHint} onClick={skipSetPwd}>
+            Skip for now
+          </button>
+        </form>
       </Modal>
 
       {googleOpen && (

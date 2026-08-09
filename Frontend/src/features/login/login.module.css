@@ -197,6 +197,13 @@
   max-width: 360px;
 }
 
+.xGoogleBtn {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
 .xSocialBtn {
   width: 100%;
   display: flex;

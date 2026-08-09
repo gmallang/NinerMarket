@@ -69,6 +69,12 @@ export async function signin(email: string, password: string): Promise<CurrentUs
   return user;
 }
 
+export async function signInWithGoogleToken(idToken: string): Promise<CurrentUser> {
+  const user = await api.googleLogin(idToken);
+  saveUser(user);
+  return user;
+}
+
 export async function signInWithGoogle(email: string): Promise<CurrentUser> {
   const id = makeUserId(email);
   const normalized = email.trim().toLowerCase();

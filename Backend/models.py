@@ -35,11 +35,21 @@ class UserPublic(BaseModel):
     rating_avg: float = 0.0
     rating_count: int = 0
     email_verified: bool = False
+    has_password: bool = False
 
 
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+
+class GoogleLoginRequest(BaseModel):
+    id_token: str
+
+
+class SetPasswordRequest(BaseModel):
+    id_token: str
+    password: str = Field(min_length=8)
 
 
 class VerifyRequest(BaseModel):

@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -7,13 +8,17 @@ from auth import (
     code_is_valid,
     generate_code,
     hash_password,
+    make_user_id,
     send_verification_email,
+    verify_google_id_token,
     verify_password,
 )
 from database import db, listings, users
 from models import (
+    GoogleLoginRequest,
     LoginRequest,
     ResendRequest,
+    SetPasswordRequest,
     User,
     UserCreate,
     UserPublic,
@@ -34,6 +39,7 @@ def _to_public(user: User) -> UserPublic:
         rating_avg=user.rating_avg,
         rating_count=user.rating_count,
         email_verified=user.email_verified,
+        has_password=bool(user.password_hash),
     )
 
 
@@ -150,6 +156,76 @@ def login(body: LoginRequest):
         raise HTTPException(status_code=401, detail="Wrong email or password")
     if not user.email_verified:
         raise HTTPException(status_code=403, detail="Email not verified")
+    return _to_public(user)
+
+
+@router.post("/users/google")
+def google_login(body: GoogleLoginRequest):
+    """Signs in with a Google ID token. The token must be cryptographically
+    signed by Google and belong to a verified @charlotte.edu account."""
+    import logging
+
+    logger = logging.getLogger("uvicorn.error")
+    logger.info(
+        "google_login: client_id=%s token_len=%s",
+        os.getenv("GOOGLE_CLIENT_ID", "")[:12] or "(unset)",
+        len(body.id_token),
+    )
+    try:
+        info = verify_google_id_token(body.id_token)
+    except ValueError as exc:
+        logger.warning("google_login: token rejected: %s", exc)
+        raise HTTPException(status_code=401, detail="Invalid or expired Google session")
+
+    email = (info.get("email") or "").strip().lower()
+    if not email.endswith("@charlotte.edu"):
+        raise HTTPException(
+            status_code=403, detail="NinerMarket is for @charlotte.edu accounts only"
+        )
+    if not info.get("email_verified"):
+        raise HTTPException(status_code=403, detail="Your Google email is not verified")
+
+    user = _find_user(email)
+    if user:
+        user.email_verified = True
+        user.display_name = user.display_name or (info.get("name") or email.split("@")[0])
+        _save_user(user)
+        return _to_public(user)
+
+    created = User(
+        id=make_user_id(email),
+        email=email,
+        display_name=(info.get("name") or email.split("@")[0]).strip(),
+        email_verified=True,
+    )
+    _save_user(created)
+    return _to_public(created)
+
+
+@router.post("/users/password")
+def set_password(body: SetPasswordRequest):
+    """Sets a password on an existing account so the user can also sign in with
+    email + password. Requires a fresh, valid Google ID token for that account."""
+    try:
+        info = verify_google_id_token(body.id_token)
+    except ValueError as exc:
+        import logging
+
+        logging.getLogger("uvicorn.error").warning("set_password: token rejected: %s", exc)
+        raise HTTPException(status_code=401, detail="Invalid or expired Google session")
+
+    email = (info.get("email") or "").strip().lower()
+    if not email.endswith("@charlotte.edu"):
+        raise HTTPException(
+            status_code=403, detail="NinerMarket is for @charlotte.edu accounts only"
+        )
+
+    user = _find_user(email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.password_hash = hash_password(body.password)
+    _save_user(user)
     return _to_public(user)
 
 

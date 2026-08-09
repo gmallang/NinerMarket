@@ -3,6 +3,7 @@ import hmac
 import json
 import os
 import random
+import re
 import secrets
 from datetime import datetime, timedelta, timezone
 from urllib.request import Request, urlopen
@@ -85,3 +86,32 @@ def send_verification_email(to: str, code: str) -> bool:
             return 200 <= resp.status < 300
     except Exception:
         return False
+
+
+def make_user_id(email: str) -> str:
+    """Derives a stable user id from an email, matching the frontend helper."""
+    local = email.split("@")[0].lower()
+    parts = [p for p in re.split(r"[^a-z0-9]+", local) if p]
+    slug = "-".join(parts).strip("-")
+    return f"u-{slug}"
+
+
+def verify_google_id_token(id_token: str) -> dict:
+    """Verifies a Google ID token and returns its claims.
+
+    Raises ValueError when the token is invalid, expired, or signed for a
+    different audience. Certificates are fetched and cached by google-auth.
+    """
+    from google.auth.transport import requests as google_requests
+    from google.oauth2 import id_token as google_id_token
+
+    client_id = os.getenv("GOOGLE_CLIENT_ID", "")
+    if not client_id:
+        raise ValueError("GOOGLE_CLIENT_ID is not configured")
+
+    info = google_id_token.verify_oauth2_token(
+        id_token, google_requests.Request(), client_id
+    )
+    if info.get("iss") not in ("accounts.google.com", "https://accounts.google.com"):
+        raise ValueError("Invalid token issuer")
+    return info

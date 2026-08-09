@@ -16,6 +16,7 @@ export interface UserDto {
   rating_avg: number;
   rating_count: number;
   email_verified?: boolean;
+  has_password?: boolean;
 }
 
 export interface ListingDto {
@@ -89,6 +90,7 @@ export interface CurrentUser {
   school_year?: string;
   payment_methods?: string[];
   email_verified?: boolean;
+  has_password?: boolean;
 }
 
 export interface NotificationDto {

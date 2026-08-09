@@ -5,6 +5,7 @@ interface GoogleIdConfiguration {
   callback: (response: { credential?: string }) => void;
   auto_select?: boolean;
   hd?: string;
+  ux_mode?: "popup" | "redirect";
 }
 
 interface GoogleIdButtonOptions {

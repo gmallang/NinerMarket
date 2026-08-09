@@ -22,6 +22,12 @@ import s from "./login.module.css";
 
 // ─── Login page ─────────────────────────────────────────────────────────────
 
+const IS_MOBILE =
+  typeof window !== "undefined" &&
+  (window.matchMedia?.("(pointer: coarse)").matches ||
+    navigator.maxTouchPoints > 0 ||
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+
 export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
   const [formOpen, setFormOpen] = useState<"signin" | "signup" | null>(null);
   const [name, setName] = useState("");
@@ -84,6 +90,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       gid.initialize({
         client_id: GOOGLE_CLIENT_ID,
         hd: "charlotte.edu",
+        ux_mode: IS_MOBILE ? "redirect" : "popup",
         callback: async (resp) => {
           if (!resp.credential) return;
           if (!agreeRef.current) {

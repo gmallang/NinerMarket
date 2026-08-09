@@ -5,3 +5,4 @@ supabase
 python-dotenv
 google-auth
 requests
+python-multipart

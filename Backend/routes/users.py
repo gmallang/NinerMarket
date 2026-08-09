@@ -1,7 +1,10 @@
 from datetime import datetime
+import logging
 import os
+from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
+from fastapi.responses import RedirectResponse
 
 from auth import (
     code_expiry,
@@ -14,6 +17,7 @@ from auth import (
     send_verification_email,
     verify_google_id_token,
     verify_password,
+    verify_session_token,
 )
 from database import db, listings, users
 from models import (
@@ -48,6 +52,10 @@ def _to_public(user: User) -> UserPublic:
 
 def _find_by_email(email: str) -> User | None:
     return next((u for u in users.values() if u.email == email), None)
+
+
+def _frontend_url() -> str:
+    return os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 
 def _row_to_user(row: dict) -> User:
@@ -221,31 +229,87 @@ def google_login(body: GoogleLoginRequest, request: Request):
     return {"user": _to_public(created), "token": create_session_token(created.id)}
 
 
-@router.post("/users/password")
-def set_password(body: SetPasswordRequest):
-    """Sets a password on an existing account so the user can also sign in with
-    email + password. Requires a fresh, valid Google ID token for that account."""
+@router.post("/users/google/callback")
+async def google_callback(request: Request):
+    """Handles Google's redirect-mode login_uri POST. Google sends the ID token
+    as application/x-www-form-urlencoded (field `credential`); we verify it,
+    sign the user in, and bounce the browser back to the frontend with a fresh
+    session token in the URL fragment. The fragment never travels to a server."""
+    logger = logging.getLogger("uvicorn.error")
+    rate_limit(f"google:{client_ip(request)}", max_attempts=30, window_seconds=15 * 60)
+    form = await request.form()
+    credential = (form.get("credential") or "").strip()
+
+    def _back(suffix: str) -> RedirectResponse:
+        return RedirectResponse(f"{_frontend_url()}/login#{suffix}", status_code=302)
+
+    if not credential:
+        return _back("nm_error=missing_credential")
+
     try:
-        info = verify_google_id_token(body.id_token)
-    except ValueError as exc:
-        import logging
-
-        logging.getLogger("uvicorn.error").warning("set_password: token rejected: %s", exc)
-        raise HTTPException(status_code=401, detail="Invalid or expired Google session")
+        info = verify_google_id_token(credential)
     except Exception as exc:
-        import logging
-
-        logging.getLogger("uvicorn.error").exception("set_password: unexpected failure")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Google verification failed ({type(exc).__name__}): {exc}",
-        )
+        logger.warning("google_callback: token rejected: %s", exc)
+        return _back(f"nm_error={quote(str(exc))}")
 
     email = (info.get("email") or "").strip().lower()
     if not email.endswith("@charlotte.edu"):
-        raise HTTPException(
-            status_code=403, detail="NinerMarket is for @charlotte.edu accounts only"
+        return _back("nm_error=not-a-charlotte-email")
+    if not info.get("email_verified"):
+        return _back("nm_error=email-not-verified")
+
+    user = _find_user(email)
+    if user:
+        user.email_verified = True
+        user.display_name = user.display_name or (info.get("name") or email.split("@")[0])
+        _save_user(user)
+    else:
+        user = User(
+            id=make_user_id(email),
+            email=email,
+            display_name=(info.get("name") or email.split("@")[0]).strip(),
+            email_verified=True,
         )
+        _save_user(user)
+
+    return _back(f"nm_token={create_session_token(user.id)}")
+
+
+@router.post("/users/password")
+def set_password(body: SetPasswordRequest, authorization: str | None = Header(default=None)):
+    """Sets a password on an existing account so the user can also sign in with
+    email + password. Authenticates via a fresh Google ID token (popup flow) or
+    an active session token (redirect flow)."""
+    logger = logging.getLogger("uvicorn.error")
+    if body.id_token:
+        try:
+            info = verify_google_id_token(body.id_token)
+        except ValueError as exc:
+            logger.warning("set_password: token rejected: %s", exc)
+            raise HTTPException(status_code=401, detail="Invalid or expired Google session")
+        except Exception as exc:
+            logger.exception("set_password: unexpected failure")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Google verification failed ({type(exc).__name__}): {exc}",
+            )
+
+        email = (info.get("email") or "").strip().lower()
+        if not email.endswith("@charlotte.edu"):
+            raise HTTPException(
+                status_code=403, detail="NinerMarket is for @charlotte.edu accounts only"
+            )
+    else:
+        user_id = None
+        if authorization and authorization.startswith("Bearer "):
+            user_id = verify_session_token(authorization.removeprefix("Bearer ").strip())
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+
+        user = get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        email = user.email
 
     user = _find_user(email)
     if not user:
@@ -263,6 +327,14 @@ def get_user_by_id(id: str) -> User | None:
         data = db.table("users").select("*").eq("id", id).execute()
         return _row_to_user(data.data[0]) if data.data else None
     return users.get(id)
+
+
+@router.get("/users/me")
+def me(user_id: str = Depends(require_user)):
+    user = get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return _to_public(user)
 
 
 @router.get("/users/{id}")

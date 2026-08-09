@@ -9,7 +9,10 @@ import type {
 } from "./types";
 import type { Conversation } from "@/data/conversations";
 
-const BASE_URL: string = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/+$/, "");
+export const API_BASE_URL: string = (import.meta.env.VITE_API_URL ?? "/api").replace(
+  /\/+$/,
+  ""
+);
 const TOKEN_KEY = "ninermarket-token";
 
 export function getToken(): string | null {
@@ -38,7 +41,7 @@ export function clearToken(): void {
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getToken();
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -135,11 +138,13 @@ export const api = {
       body: JSON.stringify({ id_token: idToken }),
     }),
 
-  setPassword: (idToken: string, password: string) =>
+  setPassword: (password: string, idToken?: string) =>
     request<UserDto>("/users/password", {
       method: "POST",
-      body: JSON.stringify({ id_token: idToken, password }),
+      body: JSON.stringify({ password, ...(idToken ? { id_token: idToken } : {}) }),
     }),
+
+  getMe: () => request<UserDto>("/users/me"),
 
   updateUser: (
     id: string,

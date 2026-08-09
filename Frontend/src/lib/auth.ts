@@ -78,6 +78,12 @@ export async function signInWithGoogleToken(idToken: string): Promise<CurrentUse
   return res.user;
 }
 
+export async function loadSessionUser(): Promise<CurrentUser> {
+  const user = await api.getMe();
+  saveUser(user);
+  return user;
+}
+
 export async function signInWithGoogle(email: string): Promise<CurrentUser> {
   const id = makeUserId(email);
   const normalized = email.trim().toLowerCase();

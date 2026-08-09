@@ -48,7 +48,7 @@ class GoogleLoginRequest(BaseModel):
 
 
 class SetPasswordRequest(BaseModel):
-    id_token: str
+    id_token: str | None = None
     password: str = Field(min_length=8)
 
 

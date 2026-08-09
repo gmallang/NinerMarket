@@ -7,6 +7,7 @@ import { SCHOOL_YEARS } from "@/lib/user";
 import type { CurrentUser } from "@/lib/types";
 import {
   isCharlotteEmail,
+  loadSessionUser,
   localSignIn,
   nameFromEmail,
   signInWithGoogle,
@@ -15,7 +16,7 @@ import {
   signup,
   verifyEmail,
 } from "@/lib/auth";
-import { api } from "@/lib/api";
+import { API_BASE_URL, api, setToken } from "@/lib/api";
 import { GoogleChooser, GoogleG, TermsModal, HelpModal } from "./AuthModals";
 import { Modal } from "@/components/shared/Modal";
 import s from "./login.module.css";
@@ -91,6 +92,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
         client_id: GOOGLE_CLIENT_ID,
         hd: "charlotte.edu",
         ux_mode: IS_MOBILE ? "redirect" : "popup",
+        login_uri: IS_MOBILE ? `${API_BASE_URL}/users/google/callback` : undefined,
         callback: async (resp) => {
           if (!resp.credential) return;
           if (!agreeRef.current) {
@@ -142,6 +144,43 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       cancelled = true;
     };
   }, [GOOGLE_CLIENT_ID]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const token = params.get("nm_token");
+    const error = params.get("nm_error");
+    if (!token && !error) return;
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    let cancelled = false;
+    (async () => {
+      if (error) {
+        setError("Google sign-in failed. Please try again.");
+        return;
+      }
+      try {
+        setToken(token ?? "");
+        const u = await loadSessionUser();
+        if (cancelled) return;
+        if (!u.has_password) {
+          setPendingToken("");
+          setPendingUser(u);
+          setNewPassword("");
+          setConfirmPassword("");
+          setPwdError("");
+          setSetPwdOpen(true);
+        } else {
+          authedRef.current(u);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Google sign-in failed. Please try again.");
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const validate = (requirePassword: boolean): string => {
     if (!isCharlotteEmail(email)) {
@@ -282,7 +321,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
     setPwdError("");
     setPwdSaving(true);
     try {
-      const u = await api.setPassword(pendingToken, newPassword);
+      const u = await api.setPassword(newPassword, pendingToken || undefined);
       setSetPwdOpen(false);
       authedRef.current(u);
     } catch (err) {

@@ -1,0 +1,132 @@
+/* ─────────────────────────────────────────────
+   PrivacyPage.module.css — public Privacy Policy page
+   ───────────────────────────────────────────── */
+
+.pPage {
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  display: flex;
+  flex-direction: column;
+}
+
+.pHero {
+  background:
+    radial-gradient(1100px 600px at 85% -10%, rgba(34, 160, 80, 0.18), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(34, 160, 80, 0.1), transparent 55%),
+    #0b2418;
+  color: #e7e9ea;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-10) var(--space-6) 48px;
+  gap: var(--space-3);
+}
+
+.pHeroLogo {
+  width: min(140px, 35%);
+  height: 98px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.pHeroName {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
+  transform: translateX(8px);
+}
+
+.pHeroTitle {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.pHeroSub {
+  color: #bcd3c3;
+  font-size: 1rem;
+  max-width: 480px;
+}
+
+.pSection {
+  max-width: 720px;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--space-10) var(--space-6);
+  flex: 1;
+}
+
+.pBlock {
+  padding-bottom: var(--space-6);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pBlock:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.pBlockTitle {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.pBlockBody {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--color-fg-muted);
+}
+
+.pFooter {
+  margin-top: auto;
+  width: 100%;
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: #7fa390;
+  background: #0b2418;
+}
+
+.pFooterLink {
+  font-size: 0.75rem;
+  color: #7fa390;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.pFooterLink:link,
+.pFooterLink:visited {
+  color: #7fa390;
+  text-decoration: none;
+}
+
+.pFooterLink:hover {
+  text-decoration: underline;
+  color: #b3a369;
+}
+
+@media (max-width: 860px) {
+  .pHero {
+    padding: var(--space-8) var(--space-5) 40px;
+  }
+
+  .pSection {
+    padding: var(--space-8) var(--space-5);
+  }
+}

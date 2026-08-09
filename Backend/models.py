@@ -90,6 +90,10 @@ class NotificationCreate(BaseModel):
     listing_id: str = ""
 
 
+class PhotoUploadRequest(BaseModel):
+    data_url: str
+
+
 class OpenThreadRequest(BaseModel):
     listing_id: str
 

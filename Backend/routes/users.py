@@ -1,14 +1,16 @@
 from datetime import datetime
 import os
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from auth import (
     code_expiry,
     code_is_valid,
+    create_session_token,
     generate_code,
     hash_password,
     make_user_id,
+    require_user,
     send_verification_email,
     verify_google_id_token,
     verify_password,
@@ -24,6 +26,7 @@ from models import (
     UserPublic,
     VerifyRequest,
 )
+from ratelimit import client_ip, rate_limit
 from routes.listings import SELLER_COLUMNS, _with_seller
 
 router = APIRouter()
@@ -115,25 +118,31 @@ def create_user(body: UserCreate):
 
 
 @router.post("/users/verify")
-def verify_user(body: VerifyRequest):
+def verify_user(body: VerifyRequest, request: Request):
     email = body.email.strip().lower()
+    rate_limit(f"verify:{client_ip(request)}", max_attempts=15, window_seconds=15 * 60)
+    rate_limit(f"verify:{email}", max_attempts=8, window_seconds=15 * 60)
+
     user = _find_user(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.email_verified:
-        return _to_public(user)
+        return {"user": _to_public(user), "token": create_session_token(user.id)}
     if not code_is_valid(body.code, user.verification_code, user.verification_expires):
         raise HTTPException(status_code=400, detail="Invalid or expired code")
     user.email_verified = True
     user.verification_code = ""
     user.verification_expires = None
     _save_user(user)
-    return _to_public(user)
+    return {"user": _to_public(user), "token": create_session_token(user.id)}
 
 
 @router.post("/users/resend")
-def resend_code(body: ResendRequest):
+def resend_code(body: ResendRequest, request: Request):
     email = body.email.strip().lower()
+    rate_limit(f"resend:{client_ip(request)}", max_attempts=10, window_seconds=15 * 60)
+    rate_limit(f"resend:{email}", max_attempts=3, window_seconds=15 * 60)
+
     user = _find_user(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -149,23 +158,27 @@ def resend_code(body: ResendRequest):
 
 
 @router.post("/users/login")
-def login(body: LoginRequest):
+def login(body: LoginRequest, request: Request):
     email = body.email.strip().lower()
+    rate_limit(f"login:{client_ip(request)}", max_attempts=20, window_seconds=15 * 60)
+    rate_limit(f"login:{email}", max_attempts=6, window_seconds=15 * 60)
+
     user = _find_user(email)
     if not user or not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Wrong email or password")
     if not user.email_verified:
         raise HTTPException(status_code=403, detail="Email not verified")
-    return _to_public(user)
+    return {"user": _to_public(user), "token": create_session_token(user.id)}
 
 
 @router.post("/users/google")
-def google_login(body: GoogleLoginRequest):
+def google_login(body: GoogleLoginRequest, request: Request):
     """Signs in with a Google ID token. The token must be cryptographically
     signed by Google and belong to a verified @charlotte.edu account."""
     import logging
 
     logger = logging.getLogger("uvicorn.error")
+    rate_limit(f"google:{client_ip(request)}", max_attempts=30, window_seconds=15 * 60)
     logger.info(
         "google_login: client_id=%s token_len=%s",
         os.getenv("GOOGLE_CLIENT_ID", "")[:12] or "(unset)",
@@ -190,7 +203,7 @@ def google_login(body: GoogleLoginRequest):
         user.email_verified = True
         user.display_name = user.display_name or (info.get("name") or email.split("@")[0])
         _save_user(user)
-        return _to_public(user)
+        return {"user": _to_public(user), "token": create_session_token(user.id)}
 
     created = User(
         id=make_user_id(email),
@@ -199,7 +212,7 @@ def google_login(body: GoogleLoginRequest):
         email_verified=True,
     )
     _save_user(created)
-    return _to_public(created)
+    return {"user": _to_public(created), "token": create_session_token(created.id)}
 
 
 @router.post("/users/password")
@@ -247,8 +260,11 @@ def get_user(id: str):
 
 
 @router.patch("/users/{id}")
-def update_user(id: str, updates: dict):
-    allowed = {"display_name", "school_year", "payment_methods", "email_verified"}
+def update_user(id: str, updates: dict, caller_id: str = Depends(require_user)):
+    if caller_id != id:
+        raise HTTPException(status_code=403, detail="You can only edit your own profile")
+
+    allowed = {"display_name", "school_year", "payment_methods"}
     clean = {k: v for k, v in updates.items() if k in allowed}
 
     if db:

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { CONVS } from "@/data/conversations";
 import type { Conversation } from "@/data/conversations";
-import { api } from "@/lib/api";
+import { api, clearToken } from "@/lib/api";
 import { avatarUrl } from "@/lib/avatar";
 import { fromDto } from "@/lib/listings";
 import { clearUser, loadUser, saveUser } from "@/lib/user";
@@ -89,6 +89,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   },
   logout: () => {
     clearUser();
+    clearToken();
     set({ user: null });
   },
 

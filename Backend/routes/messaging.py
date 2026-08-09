@@ -1,11 +1,17 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from auth import require_user
 from database import db, listings, threads, users
 from models import OpenThreadRequest, SendMessageRequest
 
 router = APIRouter()
+
+
+def _check_caller(user_id: str, caller_id: str) -> None:
+    if caller_id != user_id:
+        raise HTTPException(status_code=403, detail="You can only access your own messages")
 
 
 def _avatar_url(name: str, size: int = 80) -> str:
@@ -42,7 +48,8 @@ def _next_id() -> int:
 
 
 @router.get("/users/{user_id}/threads")
-def list_threads(user_id: str):
+def list_threads(user_id: str, caller_id: str = Depends(require_user)):
+    _check_caller(user_id, caller_id)
     if db:
         rows = (
             db.table("threads")
@@ -70,7 +77,8 @@ def list_threads(user_id: str):
 
 
 @router.post("/users/{user_id}/threads")
-def open_thread(user_id: str, body: OpenThreadRequest):
+def open_thread(user_id: str, body: OpenThreadRequest, caller_id: str = Depends(require_user)):
+    _check_caller(user_id, caller_id)
     if db:
         existing = (
             db.table("threads")
@@ -129,7 +137,13 @@ def open_thread(user_id: str, body: OpenThreadRequest):
 
 
 @router.post("/users/{user_id}/threads/{thread_id}/messages")
-def send_thread_message(user_id: str, thread_id: int, body: SendMessageRequest):
+def send_thread_message(
+    user_id: str,
+    thread_id: int,
+    body: SendMessageRequest,
+    caller_id: str = Depends(require_user),
+):
+    _check_caller(user_id, caller_id)
     if not body.text.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
@@ -180,7 +194,8 @@ def send_thread_message(user_id: str, thread_id: int, body: SendMessageRequest):
 
 
 @router.patch("/users/{user_id}/threads/{thread_id}/read")
-def mark_thread_read(user_id: str, thread_id: int):
+def mark_thread_read(user_id: str, thread_id: int, caller_id: str = Depends(require_user)):
+    _check_caller(user_id, caller_id)
     if db:
         existing = (
             db.table("threads").select("*").eq("id", str(thread_id)).eq("user_id", user_id).execute()

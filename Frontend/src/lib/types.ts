@@ -19,6 +19,11 @@ export interface UserDto {
   has_password?: boolean;
 }
 
+export interface AuthResponse {
+  user: UserDto;
+  token: string;
+}
+
 export interface ListingDto {
   id: string;
   seller_id: string;

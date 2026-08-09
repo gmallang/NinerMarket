@@ -8,8 +8,22 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from urllib.request import Request, urlopen
 
+from fastapi import Header, HTTPException
+
 PBKDF2_ITERATIONS = 600_000
 CODE_TTL_MINUTES = 15
+SESSION_TTL_DAYS = 30
+
+SESSION_SECRET = os.getenv("SESSION_SECRET")
+if not SESSION_SECRET:
+    if os.getenv("VERCEL"):
+        raise RuntimeError(
+            "SESSION_SECRET is not set. Add it to the Vercel backend project's "
+            "Environment Variables (any long random string, e.g. `openssl rand -hex 32`)."
+        )
+    # Dev fallback only — regenerating this on every restart just means existing
+    # local sessions get invalidated, which is fine outside of production.
+    SESSION_SECRET = secrets.token_hex(32)
 
 
 def hash_password(password: str) -> str:
@@ -31,6 +45,47 @@ def verify_password(password: str, stored: str) -> bool:
         return hmac.compare_digest(candidate, digest)
     except (ValueError, AttributeError):
         return False
+
+
+def create_session_token(user_id: str) -> str:
+    """Issues a signed, stateless session token for user_id. Callers present this
+    as `Authorization: Bearer <token>` on every subsequent request; verify_session_token
+    is what actually authenticates them — nothing else does."""
+    expires_at = int((datetime.now(timezone.utc) + timedelta(days=SESSION_TTL_DAYS)).timestamp())
+    payload = f"{user_id}.{expires_at}"
+    signature = hmac.new(SESSION_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    return f"{payload}.{signature}"
+
+
+def verify_session_token(token: str) -> str | None:
+    """Returns the user_id embedded in a valid, unexpired token, or None."""
+    try:
+        user_id, expires_at, signature = token.rsplit(".", 2)
+    except ValueError:
+        return None
+    payload = f"{user_id}.{expires_at}"
+    expected = hmac.new(SESSION_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        return None
+    try:
+        if int(expires_at) < int(datetime.now(timezone.utc).timestamp()):
+            return None
+    except ValueError:
+        return None
+    return user_id
+
+
+def require_user(authorization: str | None = Header(default=None)) -> str:
+    """FastAPI dependency: extracts and verifies the bearer session token,
+    returning the authenticated user's id. Routes that mutate a specific user's
+    data must depend on this and check the returned id against the resource
+    they're touching — this only proves who's calling, not what they're allowed to touch."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+    user_id = verify_session_token(authorization.removeprefix("Bearer ").strip())
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid or expired session")
+    return user_id
 
 
 def generate_code() -> str:
@@ -57,7 +112,7 @@ def send_verification_email(to: str, code: str) -> bool:
 
     payload = json.dumps(
         {
-            "from": "NinerMarket <onboarding@resend.dev>",
+            "from": os.getenv("EMAIL_FROM", "NinerMarket <onboarding@resend.dev>"),
             "to": [to],
             "subject": "Your NinerMarket verification code",
             "html": (

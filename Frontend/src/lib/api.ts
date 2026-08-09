@@ -1,11 +1,48 @@
-import type { ListingDto, NewListing, NewRating, NotificationDto, Rating, UserDto } from "./types";
+import type {
+  AuthResponse,
+  ListingDto,
+  NewListing,
+  NewRating,
+  NotificationDto,
+  Rating,
+  UserDto,
+} from "./types";
 import type { Conversation } from "@/data/conversations";
 
 const BASE_URL: string = (import.meta.env.VITE_API_URL ?? "/api").replace(/\/+$/, "");
+const TOKEN_KEY = "ninermarket-token";
+
+export function getToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setToken(token: string): void {
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+  } catch {
+    // ignore storage errors
+  }
+}
+
+export function clearToken(): void {
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // ignore storage errors
+  }
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getToken();
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     ...init,
   });
   if (!res.ok) {
@@ -55,6 +92,12 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  uploadPhoto: (dataUrl: string) =>
+    request<{ url: string }>("/photos", {
+      method: "POST",
+      body: JSON.stringify({ data_url: dataUrl }),
+    }).then((r) => r.url),
+
   createUser: (data: {
     id: string;
     email: string;
@@ -69,7 +112,7 @@ export const api = {
     }),
 
   verifyEmail: (email: string, code: string) =>
-    request<UserDto>("/users/verify", {
+    request<AuthResponse>("/users/verify", {
       method: "POST",
       body: JSON.stringify({ email, code }),
     }),
@@ -81,13 +124,13 @@ export const api = {
     }),
 
   login: (email: string, password: string) =>
-    request<UserDto>("/users/login", {
+    request<AuthResponse>("/users/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
 
   googleLogin: (idToken: string) =>
-    request<UserDto>("/users/google", {
+    request<AuthResponse>("/users/google", {
       method: "POST",
       body: JSON.stringify({ id_token: idToken }),
     }),

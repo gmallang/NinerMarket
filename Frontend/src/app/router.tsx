@@ -8,6 +8,9 @@ import { HomePage } from "@/pages/HomePage";
 
 const LoginPage = lazy(() => import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
 const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage })));
+const PrivacyPage = lazy(() =>
+  import("@/pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage }))
+);
 const ListingDetailPage = lazy(() =>
   import("@/pages/ListingDetailPage").then((m) => ({ default: m.ListingDetailPage }))
 );
@@ -39,6 +42,10 @@ export const router = createBrowserRouter([
   {
     path: "/about",
     element: withSuspense(<AboutPage />),
+  },
+  {
+    path: "/privacy",
+    element: withSuspense(<PrivacyPage />),
   },
   {
     element: <RequireAuth />,

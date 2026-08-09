@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api, setToken } from "@/lib/api";
 import { saveUser } from "@/lib/user";
 import type { CurrentUser } from "@/lib/types";
 
@@ -58,21 +58,24 @@ export async function signup(
 }
 
 export async function verifyEmail(email: string, code: string): Promise<CurrentUser> {
-  const user = await api.verifyEmail(email.trim().toLowerCase(), code);
-  saveUser(user);
-  return user;
+  const res = await api.verifyEmail(email.trim().toLowerCase(), code);
+  setToken(res.token);
+  saveUser(res.user);
+  return res.user;
 }
 
 export async function signin(email: string, password: string): Promise<CurrentUser> {
-  const user = await api.login(email.trim().toLowerCase(), password);
-  saveUser(user);
-  return user;
+  const res = await api.login(email.trim().toLowerCase(), password);
+  setToken(res.token);
+  saveUser(res.user);
+  return res.user;
 }
 
 export async function signInWithGoogleToken(idToken: string): Promise<CurrentUser> {
-  const user = await api.googleLogin(idToken);
-  saveUser(user);
-  return user;
+  const res = await api.googleLogin(idToken);
+  setToken(res.token);
+  saveUser(res.user);
+  return res.user;
 }
 
 export async function signInWithGoogle(email: string): Promise<CurrentUser> {

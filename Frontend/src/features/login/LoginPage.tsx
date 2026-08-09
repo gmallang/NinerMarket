@@ -390,6 +390,10 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
           About
         </Link>
         <span>·</span>
+        <Link to="/privacy" className={s.xFooterLink}>
+          Privacy
+        </Link>
+        <span>·</span>
         <button type="button" className={s.xFooterLink} onClick={() => setHelpOpen(true)}>
           Help
         </button>

@@ -60,6 +60,9 @@ export function SellForm({
     setError("");
     setSubmitting(true);
     try {
+      const uploadedPhotos = await Promise.all(
+        photos.map((p) => (p.startsWith("data:") ? api.uploadPhoto(p) : p))
+      );
       const dto = listing
         ? await api.updateListing(listing.id, {
             name,
@@ -68,7 +71,7 @@ export function SellForm({
             condition,
             description,
             pickup_location: location,
-            photos,
+            photos: uploadedPhotos,
           })
         : await api.createListing({
             seller_id: currentUserId(),
@@ -78,7 +81,7 @@ export function SellForm({
             condition,
             description,
             pickup_location: location,
-            photos,
+            photos: uploadedPhotos,
           });
       onSaved(fromDto(dto));
     } catch (err) {

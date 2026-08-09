@@ -1,7 +1,8 @@
 import uuid
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from auth import require_user
 from database import db, listings, users
 from models import Listing
 from routes.notifications import create_notification
@@ -83,8 +84,9 @@ def list_listings(
 
 
 @router.post("/listings")
-def create_listing(listing: Listing):
+def create_listing(listing: Listing, user_id: str = Depends(require_user)):
     listing.id = listing.id or generate_id()
+    listing.seller_id = user_id
     if db:
         data = db.table("listings").insert(listing.model_dump(mode="json")).execute()
         result = _with_seller(data.data[0])
@@ -114,31 +116,41 @@ def get_listing(id: str):
 
 
 @router.patch("/listings/{id}")
-def update_listing(id: str, updates: dict):
+def update_listing(id: str, updates: dict, user_id: str = Depends(require_user)):
+    updates = {k: v for k, v in updates.items() if k != "seller_id"}
+
     if db:
         existing = db.table("listings").select("*").eq("id", id).execute()
         if not existing.data:
             raise HTTPException(status_code=404, detail="Listing not found")
+        if existing.data[0]["seller_id"] != user_id:
+            raise HTTPException(status_code=403, detail="You can only edit your own listings")
         data = db.table("listings").update(updates).eq("id", id).execute()
         return _with_seller(data.data[0])
 
     if id not in listings:
         raise HTTPException(status_code=404, detail="Listing not found")
+    if listings[id].seller_id != user_id:
+        raise HTTPException(status_code=403, detail="You can only edit your own listings")
     for key, value in updates.items():
         setattr(listings[id], key, value)
     return _with_seller(listings[id])
 
 
 @router.delete("/listings/{id}")
-def delete_listing(id: str):
+def delete_listing(id: str, user_id: str = Depends(require_user)):
     if db:
-        existing = db.table("listings").select("id").eq("id", id).execute()
+        existing = db.table("listings").select("seller_id").eq("id", id).execute()
         if not existing.data:
             raise HTTPException(status_code=404, detail="Listing not found")
+        if existing.data[0]["seller_id"] != user_id:
+            raise HTTPException(status_code=403, detail="You can only delete your own listings")
         db.table("listings").delete().eq("id", id).execute()
         return {"deleted": id}
 
     if id not in listings:
         raise HTTPException(status_code=404, detail="Listing not found")
+    if listings[id].seller_id != user_id:
+        raise HTTPException(status_code=403, detail="You can only delete your own listings")
     del listings[id]
     return {"deleted": id}

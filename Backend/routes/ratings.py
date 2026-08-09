@@ -1,7 +1,8 @@
 import uuid
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from auth import require_user
 from database import db, ratings
 from models import Rating
 
@@ -9,7 +10,8 @@ router = APIRouter()
 
 
 @router.post("/ratings")
-def create_rating(rating: Rating):
+def create_rating(rating: Rating, user_id: str = Depends(require_user)):
+    rating.rater_id = user_id
     if rating.rater_id == rating.ratee_id:
         raise HTTPException(status_code=400, detail="Cannot rate yourself")
 

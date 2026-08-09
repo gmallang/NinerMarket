@@ -1,13 +1,17 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import users, listings, ratings, notifications, messaging
+from routes import users, listings, ratings, notifications, messaging, photos
 
 app = FastAPI(title="NinerMarket API")
 
+_allowed = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed or ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -17,3 +21,4 @@ app.include_router(listings.router)
 app.include_router(ratings.router)
 app.include_router(notifications.router)
 app.include_router(messaging.router)
+app.include_router(photos.router)

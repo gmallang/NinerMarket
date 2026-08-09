@@ -62,6 +62,10 @@ export function AboutPage() {
           About
         </Link>
         <span>·</span>
+        <Link to="/privacy" className={s.aFooterLink}>
+          Privacy
+        </Link>
+        <span>·</span>
         <Link to="/login" className={s.aFooterLink}>
           Help
         </Link>

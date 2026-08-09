@@ -6,6 +6,16 @@ export function isCharlotteEmail(email: string): boolean {
   return /^[^\s@]+@charlotte\.edu$/.test(email.trim().toLowerCase());
 }
 
+export function nameFromEmail(email: string): string {
+  const local = email.split("@")[0];
+  const pretty = local
+    .split(/[^a-z0-9]+/i)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+  return pretty || local;
+}
+
 export function makeUserId(email: string): string {
   return (
     "u-" +
@@ -75,7 +85,7 @@ export async function signInWithGoogle(email: string): Promise<CurrentUser> {
     saveUser(user);
     return user;
   } catch {
-    return localSignIn(normalized, normalized.split("@")[0]);
+    return localSignIn(normalized, nameFromEmail(normalized));
   }
 }
 

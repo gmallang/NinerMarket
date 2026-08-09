@@ -3,12 +3,12 @@
    All other CSS files pull from these variables.
    ───────────────────────────────────────────── */
 
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
 
 :root {
   /* Fonts */
-  --font-body: "IBM Plex Sans", system-ui, sans-serif;
-  --font-display: "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
 
   /* Brand greens */
   --color-primary: #1a7a3c;
@@ -37,15 +37,20 @@
   --color-warn: #d97706;
   --color-success: #16a34a;
 
-  /* Condition badge colours */
-  --badge-like-new-bg: #d1fae5;
-  --badge-like-new-fg: #065f46;
+  /* Condition badge colours — fixed hierarchy, one hue per condition:
+     Like New  → saturated green (best condition)
+     Excellent → pale green
+     Good      → yellow
+     Fair      → orange  (most used/worn)
+     Service   → purple  (not a condition — a service category) */
+  --badge-like-new-bg: #bbf7d0;
+  --badge-like-new-fg: #15803d;
   --badge-excellent-bg: #dcfce7;
-  --badge-excellent-fg: #14532d;
+  --badge-excellent-fg: #166534;
   --badge-good-bg: #fef9c3;
   --badge-good-fg: #713f12;
   --badge-fair-bg: #ffedd5;
-  --badge-fair-fg: #7c2d12;
+  --badge-fair-fg: #9a3412;
   --badge-service-bg: #ede9fe;
   --badge-service-fg: #4c1d95;
 

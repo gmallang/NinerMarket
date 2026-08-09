@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { ShieldCheck, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { isCharlotteEmail } from "@/lib/auth";
 import { TERMS_SECTIONS } from "@/data/terms";
 import { Modal } from "@/components/shared/Modal";
@@ -151,8 +151,7 @@ export function TermsModal({
       ariaLabel="Terms and conditions"
     >
       <div className={s.termsHeader}>
-        <ShieldCheck size={20} className={s.termsIcon} />
-        <h2 className={s.googleTitle}>NinerMarket Terms &amp; Conditions</h2>
+        <h2 className={s.googleTitle}>Terms &amp; Conditions</h2>
       </div>
       <div className={s.termsScroll}>
         {TERMS_SECTIONS.map((t, i) => (

@@ -11,7 +11,7 @@ import ps from "./page.module.css";
 
 export function HomePage() {
   const navigate = useNavigate();
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const activeCategory = params.get("category") ?? "all";
@@ -39,17 +39,6 @@ export function HomePage() {
     : viewSaved
       ? "Saved Items"
       : (CATEGORIES.find((c) => c.id === activeCategory)?.label ?? "All Categories");
-
-  const setParam = (key: string, value: string) => {
-    const next = new URLSearchParams(params);
-    if (value) next.set(key, value);
-    else next.delete(key);
-    if (key === "category") {
-      next.delete("saved");
-      next.delete("mine");
-    }
-    setParams(next, { replace: true });
-  };
 
   const fuse = useMemo(
     () =>
@@ -140,18 +129,6 @@ export function HomePage() {
           </button>
         </div>
       )}
-
-      <div className={s.mobilePills}>
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            className={`${s.pill} ${activeCategory === cat.id ? s.pillActive : ""}`}
-            onClick={() => setParam("category", cat.id === "all" ? "" : cat.id)}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
 
       {loading ? (
         <div className={s.emptyState}>

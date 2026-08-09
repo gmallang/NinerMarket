@@ -1,12 +1,13 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { ShieldCheck, ShoppingBag, MapPin, X } from "lucide-react";
+import { ShieldCheck, ShoppingBag, MapPin, X, ChevronDown, Eye, EyeOff } from "lucide-react";
 import ninerLogo from "@/assets/NinerMarket.png";
-import { PAYMENT_METHODS, SCHOOL_YEARS } from "@/lib/user";
+import { SCHOOL_YEARS } from "@/lib/user";
 import type { CurrentUser } from "@/lib/types";
 import {
   isCharlotteEmail,
   localSignIn,
+  nameFromEmail,
   signInWithGoogle,
   signin,
   signup,
@@ -24,12 +25,12 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
   const [agree, setAgree] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [googleOpen, setGoogleOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [schoolYear, setSchoolYear] = useState("");
-  const [payments, setPayments] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [verifyEmailAddress, setVerifyEmailAddress] = useState("");
@@ -74,10 +75,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       setError("Please select your school year.");
       return;
     }
-    if (mode === "signup" && payments.length === 0) {
-      setError("Select at least one payment method you accept.");
-      return;
-    }
     if (mode === "signup" && password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;
@@ -90,7 +87,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
     setError("");
     try {
       if (mode === "signup") {
-        const res = await signup(name, email, password, schoolYear, payments);
+        const res = await signup(name, email, password, schoolYear, []);
         if (res.needsVerification) {
           setVerifyEmailAddress(email.trim().toLowerCase());
           setCode("");
@@ -105,7 +102,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       }
     } catch (e) {
       if (e instanceof TypeError) {
-        onAuthed(localSignIn(email, email.split("@")[0]));
+        onAuthed(localSignIn(email, nameFromEmail(email)));
         return;
       }
       const message = e instanceof Error ? e.message : "";
@@ -195,9 +192,10 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       <div className={s.xMain}>
         {/* Left — light side with headline, logo, features & footer */}
         <div className={s.xLeft}>
-          <h1 className={s.xHeadline}>More accessible than ever</h1>
+          <h1 className={s.xHeadline}>Your campus marketplace</h1>
           <div className={s.xLogo}>
             <img className={s.xLogoImg} src={ninerLogo} alt="NinerMarket" />
+            <span className={s.xLogoName}>NinerMarket</span>
           </div>
           <ul className={s.xFeatures}>
             <li>
@@ -210,22 +208,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
               <MapPin size={16} /> Meet up on campus, pay your way
             </li>
           </ul>
-
-          <footer className={s.xFooter}>
-            <span>About</span>
-            <span>·</span>
-            <button type="button" className={s.xFooterLink} onClick={() => setHelpOpen(true)}>
-              Help
-            </button>
-            <span>·</span>
-            <button type="button" className={s.xFooterLink} onClick={() => setTermsOpen(true)}>
-              Terms
-            </button>
-            <span>·</span>
-            <span>Privacy</span>
-            <span>·</span>
-            <span>© 2026 NinerMarket</span>
-          </footer>
         </div>
 
         {/* Right — light side with join panel */}
@@ -234,7 +216,17 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
             <h2 className={s.xSubheadline}>Shop &amp; sell on campus</h2>
 
             <div className={s.xActions}>
-              <button type="button" className={s.xSocialBtn} onClick={() => setGoogleOpen(true)}>
+              <button
+                type="button"
+                className={s.xSocialBtn}
+                onClick={() => {
+                  if (!agree) {
+                    setError("Please accept the Terms & Conditions to continue.");
+                    return;
+                  }
+                  setGoogleOpen(true);
+                }}
+              >
                 <GoogleG />
                 Continue with Google
               </button>
@@ -242,14 +234,14 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
                 NinerMarket is for UNC Charlotte students, faculty &amp; staff only. Sign in with
                 your @charlotte.edu Google account.
               </p>
-              <button type="button" className={s.xEmailLink} onClick={() => openForm("signup")}>
-                Sign up with your email instead
-              </button>
               <label className={s.xTerms}>
                 <input
                   type="checkbox"
                   checked={agree}
-                  onChange={(e) => setAgree(e.target.checked)}
+                  onChange={(e) => {
+                    setAgree(e.target.checked);
+                    if (e.target.checked) setError("");
+                  }}
                 />
                 <span>
                   By signing up, you agree to the{" "}
@@ -262,7 +254,12 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
               {error && <p className={s.xError}>{error}</p>}
             </div>
 
+            <hr className={s.xDivider} />
+
             <div className={s.xSignInBox}>
+              <button type="button" className={s.xEmailLink} onClick={() => openForm("signup")}>
+                Sign up with your @charlotte.edu email instead
+              </button>
               <p className={s.xSignInLabel}>Already have an account?</p>
               <button type="button" className={s.xSignInBtn} onClick={() => openForm("signin")}>
                 Sign in
@@ -271,6 +268,22 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
           </div>
         </div>
       </div>
+
+      <footer className={s.xFooter}>
+        <span>About</span>
+        <span>·</span>
+        <button type="button" className={s.xFooterLink} onClick={() => setHelpOpen(true)}>
+          Help
+        </button>
+        <span>·</span>
+        <button type="button" className={s.xFooterLink} onClick={() => setTermsOpen(true)}>
+          Terms
+        </button>
+        <span>·</span>
+        <span>Privacy</span>
+        <span>·</span>
+        <span>© 2026 NinerMarket</span>
+      </footer>
 
       {/* Sign-in / sign-up modal */}
       <Modal
@@ -284,7 +297,9 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
           <button className={s.xModalClose} onClick={closeForm} aria-label="Close">
             <X size={18} />
           </button>
-          <img className={s.xModalLogo} src={ninerLogo} alt="NinerMarket" />
+          {formOpen !== "signup" && (
+            <img className={s.xModalLogo} src={ninerLogo} alt="NinerMarket" />
+          )}
           <h2 className={s.xModalTitle}>
             {verifying
               ? "Verify your email"
@@ -347,18 +362,31 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
               Must be a @charlotte.edu email to access NinerMarket.
             </span>
           )}
-          <input
-            className={s.xInput}
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-          />
+          <div className={s.xPasswordWrap}>
+            <input
+              className={s.xInput}
+              type={showPwd ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+            />
+            <button
+              type="button"
+              className={s.xPwdToggle}
+              onClick={() => setShowPwd((v) => !v)}
+              aria-label={showPwd ? "Hide password" : "Show password"}
+            >
+              {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
           {formOpen === "signup" && (
-            <>
-              <div className={s.xFormBlock}>
-                <span className={s.xFormLabel}>What year are you in?</span>
+            <div className={s.xFormBlock}>
+              <label className={s.xFormLabel} htmlFor="school-year">
+                School year
+              </label>
+              <div className={s.xSelectWrap}>
                 <select
+                  id="school-year"
                   className={s.xSelect}
                   value={schoolYear}
                   onChange={(e) => setSchoolYear(e.target.value)}
@@ -370,27 +398,9 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
                     </option>
                   ))}
                 </select>
+                <ChevronDown size={16} className={s.xSelectIcon} />
               </div>
-              <div className={s.xFormBlock}>
-                <span className={s.xFormLabel}>Payment methods you accept</span>
-                <div className={s.xPayments}>
-                  {PAYMENT_METHODS.map((p) => (
-                    <label key={p} className={s.xPay}>
-                      <input
-                        type="checkbox"
-                        checked={payments.includes(p)}
-                        onChange={() =>
-                          setPayments((prev) =>
-                            prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
-                          )
-                        }
-                      />
-                      <span>{p}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </>
+            </div>
           )}
           {formOpen === "signin" && (
             <button type="button" className={s.xForgot} onClick={forgotPassword}>
@@ -408,7 +418,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
             </span>
           </label>
           {error && <p className={s.xError}>{error}</p>}
-          <button type="submit" className={s.xSubmitBtn}>
+          <button type="submit" className={s.xSubmitBtn} disabled={!agree}>
             {formOpen === "signup" ? "Sign up" : "Log in"}
           </button>
           {formOpen === "signin" && (

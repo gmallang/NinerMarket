@@ -1,0 +1,470 @@
+INFO:     Will watch for changes in these directories: ['/home/kankroid/NinerMarket/Backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [333630] using StatReload
+INFO:     Started server process [333633]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:56464 - "GET / HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56478 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53924 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53928 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53944 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53950 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53954 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53970 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53418 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53426 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53430 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53442 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53468 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53458 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35302 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35310 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50918 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50926 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50938 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50954 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50958 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50960 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39688 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39704 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39700 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55636 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55646 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55642 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55668 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55656 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55682 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54822 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54824 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54818 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54826 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54828 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54838 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52022 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52030 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52040 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52050 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52042 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52052 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'seed.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [333633]
+WARNING:  StatReload detected changes in 'seed.py'. Reloading...
+INFO:     Started server process [358216]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [358216]
+INFO:     Started server process [358298]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:58944 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58956 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58968 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58978 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58992 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58998 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50164 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50176 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50186 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50188 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50210 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50196 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50224 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50226 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50236 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50242 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50266 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50250 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56432 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56424 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56444 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56456 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56468 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56480 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56490 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56506 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56508 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56516 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56520 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56536 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48366 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48380 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48382 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48384 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48398 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48414 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48108 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48122 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48120 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48132 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48136 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48152 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48160 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48172 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48176 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33440 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33456 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33468 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33484 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33490 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33502 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33518 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33532 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33536 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33550 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33566 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33568 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33576 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33590 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33588 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33598 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33600 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33610 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33612 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33620 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33628 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33638 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33654 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33630 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33674 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33658 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33690 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47500 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47504 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47518 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47520 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47530 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47540 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47552 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47554 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47570 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'seed.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [358298]
+INFO:     Started server process [373362]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:32822 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32836 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32838 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32842 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32856 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32870 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60698 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60706 - "PATCH /users/u-anna/notifications/n-1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60716 - "PATCH /users/u-anna/notifications/n-2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60718 - "PATCH /users/u-anna/notifications/n-3 HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'seed.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [373362]
+WARNING:  StatReload detected changes in 'seed.py'. Reloading...
+INFO:     Started server process [393291]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [393291]
+INFO:     Started server process [393345]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:42282 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42294 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42300 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42310 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42314 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42330 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42342 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42358 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42372 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42380 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42382 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42398 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45962 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45974 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45984 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46008 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45990 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45998 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46010 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46012 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46022 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46024 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46026 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46028 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36348 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36362 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36376 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36386 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36396 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36410 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36402 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36416 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36420 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42492 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32856 - "GET /ratings/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32860 - "GET /users/u-anna/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32862 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32878 - "GET /ratings/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32892 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32880 - "GET /users/u-anna/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46668 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46684 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46690 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46694 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46696 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46712 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46728 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46736 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46746 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48576 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48590 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48596 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48610 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48618 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48634 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48636 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48646 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48662 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48676 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48678 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48684 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48686 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48692 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48700 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46282 - "PATCH /users/u-anna/threads/2/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46298 - "PATCH /users/u-anna/threads/3/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46314 - "PATCH /users/u-anna/threads/2/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46316 - "PATCH /users/u-anna/threads/4/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46322 - "PATCH /users/u-anna/threads/2/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46326 - "PATCH /users/u-anna/threads/3/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46334 - "PATCH /users/u-anna/threads/1/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37534 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37540 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37552 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37556 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37564 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37566 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37582 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37596 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37602 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37604 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37612 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37626 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37622 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37638 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37650 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45598 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45614 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45626 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45642 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45656 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45654 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45666 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45682 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45698 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45706 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45718 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45734 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39816 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39828 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39844 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39854 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39868 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39860 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39876 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39878 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39896 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39892 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39908 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39910 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35952 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35960 - "GET /ratings/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35976 - "GET /users/u-anna/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35978 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35984 - "GET /ratings/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35996 - "GET /users/u-anna/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36304 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36318 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36324 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36340 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36364 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36356 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36376 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36386 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36392 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36408 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36424 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36430 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36434 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36446 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36454 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36466 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36470 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36508 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36494 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36478 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36510 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36522 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36532 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36530 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'seed.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [393345]
+INFO:     Started server process [511321]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:41518 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41526 - "GET /ratings/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41528 - "GET /users/u-anna/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41546 - "GET /ratings/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41542 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41562 - "GET /users/u-anna/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38898 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38910 - "GET /ratings/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38914 - "GET /users/u-anna/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38930 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38944 - "GET /users/u-anna/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38934 - "GET /ratings/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38948 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38964 - "GET /ratings/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38968 - "GET /users/u-anna/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38978 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38980 - "GET /ratings/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38986 - "GET /users/u-anna/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57968 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57976 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57980 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57992 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57996 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58004 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58028 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58036 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58016 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58052 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58058 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58098 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58072 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58084 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58112 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58122 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58126 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58134 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58150 - "PATCH /users/u-anna/threads/4/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58156 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58168 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58184 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58152 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58198 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58208 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58216 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58230 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58240 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58244 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58250 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58256 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58258 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58268 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58296 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58280 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58306 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58310 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58314 - "PATCH /users/u-anna/threads/2/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59312 - "PATCH /users/u-anna/threads/3/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59314 - "POST /users/u-anna/threads/3/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59322 - "POST /users/u-anna/threads/3/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59332 - "POST /users/u-anna/threads/3/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59342 - "POST /users/u-anna/threads/3/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59358 - "POST /users/u-anna/threads/3/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59370 - "POST /users/u-anna/threads/3/messages HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49470 - "PATCH /users/u-anna/threads/1/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49474 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49482 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35484 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35498 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35504 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35514 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35958 - "POST /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57084 - "GET /users/seller-9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57106 - "GET /users/seller-9/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57100 - "GET /ratings/seller-9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57126 - "GET /users/seller-9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57136 - "GET /users/seller-9/listings?status=active HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57112 - "GET /ratings/seller-9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43148 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43152 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43168 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43158 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43172 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43188 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43196 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43200 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43214 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43210 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43232 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43228 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38938 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38952 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38964 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38974 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38986 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38998 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39012 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39028 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39040 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39052 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39060 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39072 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39074 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39084 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39094 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50204 - "PATCH /users/u-anna/threads/3/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50208 - "PATCH /users/u-anna/threads/1/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50212 - "PATCH /users/u-anna/threads/2/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50222 - "PATCH /users/u-anna/threads/4/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50234 - "PATCH /users/u-anna/threads/1/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50248 - "PATCH /users/u-anna/threads/3/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50264 - "PATCH /users/u-anna/threads/5/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50280 - "PATCH /users/u-anna/threads/1/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50296 - "PATCH /users/u-anna/threads/2/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50304 - "PATCH /users/u-anna/threads/4/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50312 - "PATCH /users/u-anna/threads/1/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53874 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53890 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53892 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53900 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53912 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53934 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53930 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53946 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53950 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53960 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53990 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53974 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54014 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53998 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37752 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37768 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37744 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37778 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37792 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37794 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37810 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37814 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37822 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37838 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37854 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37860 - "GET /users/u-anna/threads HTTP/1.1" 200 OK

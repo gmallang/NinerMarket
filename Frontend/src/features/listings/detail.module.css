@@ -227,7 +227,7 @@
 
 .detailSellerRating {
   font-size: 0.75rem;
-  color: #b45309;
+  color: var(--color-primary);
   font-weight: 600;
   margin-top: 2px;
 }

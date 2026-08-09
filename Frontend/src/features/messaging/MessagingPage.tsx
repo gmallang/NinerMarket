@@ -1,5 +1,6 @@
 import type { KeyboardEvent, RefObject } from "react";
-import { MessageCircle, X, Send } from "lucide-react";
+import { useState } from "react";
+import { MessageCircle, X, Send, Search } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
 import { formatClockTime, formatRelativeTime } from "@/lib/format";
@@ -42,6 +43,16 @@ export function MessagingPage({
 }: MessagingPageProps) {
   const activeConv = convs.find((c) => c.id === activeConvId) ?? convs[0];
 
+  const [search, setSearch] = useState("");
+  const query = search.trim().toLowerCase();
+  const filteredConvs = query
+    ? convs.filter(
+        (c) =>
+          c.name.toLowerCase().includes(query) ||
+          (c.lastMsg ?? "").toLowerCase().includes(query)
+      )
+    : convs;
+
   return (
     <div className={`${m.panel} ${className}`}>
       {/* Panel header */}
@@ -63,8 +74,19 @@ export function MessagingPage({
               Conversations
             </span>
           </div>
+          <div className={m.convSearchWrap}>
+            <Search size={14} className={m.convSearchIcon} />
+            <input
+              className={m.convSearch}
+              type="text"
+              placeholder="Search conversations"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search conversations"
+            />
+          </div>
           <div className={m.convScroll}>
-            {convs.map((conv) => (
+            {filteredConvs.map((conv) => (
               <div
                 key={conv.id}
                 className={`${m.convItem} ${conv.id === activeConvId ? m.convItemActive : ""}`}
@@ -91,6 +113,7 @@ export function MessagingPage({
                 {conv.unread > 0 && <span className={m.convUnread}>{conv.unread}</span>}
               </div>
             ))}
+            {filteredConvs.length === 0 && <p className={m.convEmpty}>No conversations found</p>}
           </div>
         </div>
 
@@ -114,78 +137,71 @@ export function MessagingPage({
 
           {/* Messages */}
           <div className={m.messages}>
-            <div className={m.dateDivider}>
-              <div className={m.dateLine} />
-              <span className={m.dateLabel}>Today</span>
-              <div className={m.dateLine} />
-            </div>
-
-            {activeConv.messages.map((msg) => (
-              <div key={msg.id} className={`${m.msgRow} ${msg.sent ? m.msgRowSent : ""}`}>
-                {!msg.sent && (
-                  <img
-                    src={activeConv.avatar}
-                    alt={activeConv.name}
-                    className={m.msgRowAvatar}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = avatarUrl(activeConv.name, 56);
-                    }}
-                  />
-                )}
-                <div className={m.msgGroup}>
-                  <div className={`${m.bubble} ${msg.sent ? m.bubbleSent : m.bubbleRecv}`}>
-                    {msg.text}
-                  </div>
-                  <span className={m.msgTime}>{formatClockTime(new Date(msg.timestamp))}</span>
-                </div>
-              </div>
-            ))}
-
             {activeConv.messages.length === 0 && (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "40px 0",
-                  color: "var(--color-fg-muted)",
-                  fontSize: "0.875rem",
-                }}
-              >
-                Start the conversation!
-              </div>
+              <div className={m.messagesEmpty}>Start the conversation!</div>
             )}
 
-            <div ref={messagesEndRef} />
+            <div className={m.messagesInner}>
+              <div className={m.dateDivider}>
+                <div className={m.dateLine} />
+                <span className={m.dateLabel}>Today</span>
+                <div className={m.dateLine} />
+              </div>
+
+              {activeConv.messages.map((msg) => (
+                <div key={msg.id} className={`${m.msgRow} ${msg.sent ? m.msgRowSent : ""}`}>
+                  {!msg.sent && (
+                    <img
+                      src={activeConv.avatar}
+                      alt={activeConv.name}
+                      className={m.msgRowAvatar}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = avatarUrl(activeConv.name, 56);
+                      }}
+                    />
+                  )}
+                  <div className={m.msgGroup}>
+                    <div className={`${m.bubble} ${msg.sent ? m.bubbleSent : m.bubbleRecv}`}>
+                      {msg.text}
+                    </div>
+                    <span className={m.msgTime}>{formatClockTime(new Date(msg.timestamp))}</span>
+                  </div>
+                </div>
+              ))}
+
+              <div ref={messagesEndRef} />
+            </div>
           </div>
 
-          {/* Quick replies */}
-          <div className={m.quickReplies}>
-            {QUICK_REPLIES.map((r) => (
-              <button key={r} className={m.quickReply} onClick={() => onQuickReply(r)}>
-                {r}
-              </button>
-            ))}
-          </div>
-
-          {/* Input area */}
+          {/* Input area (quick replies + composer) */}
           <div className={m.inputArea}>
             <div className={m.inputWrap}>
-              <textarea
-                className={m.msgInput}
-                rows={1}
-                placeholder={`Message ${activeConv.name}...`}
-                value={inputText}
-                onChange={(e) => onInputChange(e.target.value)}
-                onKeyDown={onKeyDown}
-              />
+              <div className={m.quickReplies}>
+                {QUICK_REPLIES.map((r) => (
+                  <button key={r} className={m.quickReply} onClick={() => onQuickReply(r)}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <div className={m.inputRow}>
+                <textarea
+                  className={m.msgInput}
+                  rows={1}
+                  placeholder={`Message ${activeConv.name}...`}
+                  value={inputText}
+                  onChange={(e) => onInputChange(e.target.value)}
+                  onKeyDown={onKeyDown}
+                />
+                <button
+                  className={`${m.sendBtn} ${!inputText.trim() ? m.sendBtnDisabled : ""}`}
+                  onClick={onSend}
+                  disabled={!inputText.trim()}
+                  aria-label="Send message"
+                >
+                  <Send size={16} />
+                </button>
+              </div>
             </div>
-            <button
-              className={`${m.sendBtn} ${!inputText.trim() ? m.sendBtnDisabled : ""}`}
-              onClick={onSend}
-              disabled={!inputText.trim()}
-              aria-label="Send message"
-            >
-              <Send size={15} />
-            </button>
           </div>
         </div>
       </div>

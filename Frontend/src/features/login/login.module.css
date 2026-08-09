@@ -39,36 +39,84 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-8);
+  gap: var(--space-6);
   padding: var(--space-8) var(--space-6);
 }
 
 @media (max-width: 860px) {
   .xLeft {
-    padding: var(--space-6) var(--space-6) 0;
+    flex: none;
+    justify-content: center;
+    padding: var(--space-6) var(--space-6) var(--space-3);
+    gap: var(--space-4);
   }
 }
 
 .xLogo {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
+}
+
+.xLogoName {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
+  transform: translateX(8px);
+}
+
+@media (max-width: 860px) {
+  .xLogoName {
+    font-size: 1.25rem;
+    transform: none;
+  }
 }
 
 .xLogoImg {
   display: block;
   width: min(300px, 70%);
-  height: 240px;
+  height: 210px;
   object-fit: contain;
-  transform: translateX(-16px);
-  filter: brightness(0) invert(72%) sepia(50%) saturate(250%) hue-rotate(4deg) brightness(72%);
+  filter: brightness(0) invert(1);
 }
 
 @media (max-width: 860px) {
   .xLogoImg {
-    width: min(160px, 55%);
-    height: 130px;
+    width: min(150px, 52%);
+    height: 118px;
   }
+}
+
+.xFeatures {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  color: #d7dfda;
+  font-size: 0.9375rem;
+  text-align: left;
+  width: 100%;
+  max-width: 420px;
+}
+
+.xFeatures li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.xFeatures li svg {
+  color: #fff;
+  stroke: #fff;
+  flex-shrink: 0;
 }
 
 /* Right — light side with join panel */
@@ -81,7 +129,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-10) var(--space-6);
+  padding: var(--space-8) var(--space-6);
+}
+
+@media (max-width: 860px) {
+  .xRight {
+    justify-content: flex-start;
+    padding: var(--space-5) var(--space-4) var(--space-4);
+  }
 }
 
 .xHeadline {
@@ -92,11 +147,13 @@
   letter-spacing: -0.01em;
   color: #fff;
   text-align: center;
+  text-wrap: balance;
+  margin-top: 0;
 }
 
 @media (max-width: 860px) {
   .xHeadline {
-    font-size: 2.25rem;
+    font-size: 2rem;
   }
 }
 
@@ -119,7 +176,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
-  padding: var(--space-8) var(--space-6);
+  padding: var(--space-6) var(--space-6) var(--space-5);
   box-sizing: border-box;
 }
 
@@ -131,10 +188,12 @@
 }
 
 .xActions {
-  margin-top: var(--space-6);
+  margin-top: var(--space-4);
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-3);
+  width: 100%;
   max-width: 360px;
 }
 
@@ -159,15 +218,30 @@
   background: var(--color-primary-dark);
 }
 
+.xSocialBtn:disabled,
+.xSubmitBtn:disabled {
+  background: var(--color-muted);
+  border-color: var(--color-border);
+  color: var(--color-fg-subtle);
+  cursor: not-allowed;
+}
+
+.xSocialBtn:disabled:hover,
+.xSubmitBtn:disabled:hover {
+  background: var(--color-muted);
+}
+
 .xEmailLink {
-  align-self: flex-start;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
+  text-align: left;
   color: var(--color-primary);
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .xEmailLink:hover {
@@ -217,17 +291,29 @@
 }
 
 .xSignInBox {
-  margin-top: var(--space-8);
+  width: 100%;
   max-width: 360px;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: var(--space-3);
+}
+
+.xDivider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  width: 100%;
+  max-width: 360px;
+  margin: var(--space-6) 0 var(--space-5);
 }
 
 .xSignInLabel {
   font-size: 1rem;
   font-weight: 700;
   color: var(--color-fg);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
 }
 
 .xSignInBtn {
@@ -236,20 +322,23 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--color-primary);
-  background: transparent;
-  border: 1px solid var(--color-border);
+  background: #fff;
+  border: 1.5px solid var(--color-primary);
   border-radius: var(--radius-full);
   cursor: pointer;
-  transition: background var(--duration) var(--ease);
+  transition:
+    background var(--duration) var(--ease),
+    border-color var(--duration) var(--ease);
 }
 
 .xSignInBtn:hover {
-  background: rgba(26, 122, 60, 0.08);
-  border-color: var(--color-primary);
+  background: var(--color-accent);
+  border-color: var(--color-primary-dark);
 }
 
 .xFooter {
-  padding: var(--space-4) var(--space-6) var(--space-6);
+  width: 100%;
+  padding: var(--space-4) var(--space-6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -257,6 +346,7 @@
   flex-wrap: wrap;
   font-size: 0.75rem;
   color: #7fa390;
+  background: #0b2418;
 }
 
 .xFooterLink {
@@ -271,6 +361,23 @@
 .xFooterLink:hover {
   text-decoration: underline;
   color: #b3a369;
+}
+
+@media (max-width: 860px) {
+  .xFooter {
+    background: var(--color-bg);
+    color: var(--color-fg-subtle);
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-4);
+  }
+
+  .xFooterLink {
+    color: var(--color-fg-subtle);
+  }
+
+  .xFooterLink:hover {
+    color: var(--color-primary);
+  }
 }
 
 .xDemoHint {
@@ -320,7 +427,7 @@
   height: 32px;
   object-fit: contain;
   flex-shrink: 0;
-  filter: brightness(0) invert(72%) sepia(50%) saturate(250%) hue-rotate(4deg) brightness(72%);
+  filter: brightness(0) invert(29%) sepia(64%) saturate(1200%) hue-rotate(98deg) brightness(84%) contrast(92%);
 }
 
 .xModalTitle {
@@ -335,6 +442,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  padding-bottom: var(--space-1);
 }
 
 .xInput {
@@ -392,6 +500,11 @@
   color: var(--color-primary);
 }
 
+.xSelectWrap {
+  position: relative;
+  width: 100%;
+}
+
 .xFormBlock {
   display: flex;
   flex-direction: column;
@@ -399,14 +512,46 @@
 }
 
 .xFormLabel {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-fg-muted);
 }
 
+.xPasswordWrap {
+  position: relative;
+  width: 100%;
+}
+
+.xPwdToggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 0;
+}
+
+.xPwdToggle:hover {
+  color: var(--color-fg);
+  background: var(--color-muted);
+}
+
+.xPasswordWrap .xInput {
+  padding-right: 42px;
+}
+
 .xSelect {
   width: 100%;
-  padding: 12px 14px;
+  padding: 12px 40px 12px 14px;
   font-family: var(--font-body);
   font-size: 0.9375rem;
   color: var(--color-fg);
@@ -429,36 +574,13 @@
   border-color: var(--color-primary);
 }
 
-.xPayments {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.xPay {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-fg);
-  cursor: pointer;
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  padding: 6px 12px;
-  transition:
-    border-color var(--duration) var(--ease),
-    background var(--duration) var(--ease);
-}
-
-.xPay:has(input:checked) {
-  border-color: var(--color-primary);
-  background: var(--color-accent);
-}
-
-.xPay input {
-  accent-color: var(--color-primary);
+.xSelectIcon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--color-fg-muted);
 }
 
 .xForgot {

@@ -98,14 +98,14 @@ def seed_dev_store(
 
     demo = [
         (1,  "Organic Chemistry (Clayden) 2nd Ed.", 45,   "textbooks",  "Good",     "North Campus",      "photo-1544716278-ca5e3f4abd8c", "seller-1",  "2h"),
-        (2,  "IKEA KALLAX Shelf Unit (White)",       35,   "furniture",  "Like New", "West Dorms",        "photo-1555041469-a586c61ea9bc", "seller-2",  "5h"),
-        (3,  "Twin XL Mattress Topper",              28,   "movein",     "Good",     "East Side",         "photo-1631049307264-da0ec9d70304", "seller-3",  "1d"),
+        (2,  "IKEA KALLAX Shelf Unit (White)",       35,   "furniture",  "Like New", "West Dorms",        "photo-1650315532817-02e0e9245e74", "seller-2",  "5h"),
+        (3,  "Twin XL Mattress Topper",              28,   "movein",     "Good",     "East Side",         "photo-1505693416388-ac5ce068fe85", "seller-3",  "1d"),
         (4,  'MacBook Pro 14" M2 (2023)',            1100, "electronics","Excellent","Main Quad",          "photo-1517336714731-489689fd1ca8", "seller-4",  "3h"),
         (5,  "Trek 7.2 FX City Bike",                280,  "bikes",      "Good",     "South Gate",        "photo-1485965120184-e220f721d03e", "seller-5",  "6h"),
-        (6,  "Calculus: Early Transcendentals 8e",   30,   "textbooks",  "Fair",     "Engineering Hall",  "photo-1509228468518-180dd4864904", "seller-6",  "12h"),
+        (6,  "Calculus: Early Transcendentals 8e",   30,   "textbooks",  "Fair",     "Engineering Hall",  "photo-1512820790803-83ca734da794", "seller-6",  "12h"),
         (7,  "Mini Fridge (Galanz 3.1 cu ft)",       65,   "movein",     "Good",     "Res Life Complex",  "photo-1584568694244-14fbdf83bd30", "seller-7",  "2d"),
         (8,  "Desk Lamp + USB Charging Hub",         18,   "movein",     "Like New", "North Campus",      "photo-1507473885765-e6ed057f782c", "seller-8",  "4h"),
-        (9,  "Sigma Chi Formal Suit (38R)",           55,   "clothing",   "Good",     "Greek Row",         "photo-1594938298603-c8148c4dae35", "seller-9",  "1d"),
+        (9,  "Sigma Chi Formal Suit (38R)",           55,   "clothing",   "Good",     "Greek Row",         "photo-1592343516109-362f7bd871aa", "seller-9",  "1d"),
         (10, "Peer Tutoring — Orgo & Bio Chem",      20,   "services",   "Service",  "Science Center",    "photo-1434030216411-0b793f4b4173", "seller-10", "3d"),
         (11, "Psychology 101 Course Pack Bundle",    22,   "textbooks",  "Good",     "Social Sciences",   "photo-1456513080510-7bf3a84b82f8", "seller-11", "7h"),
         (12, "Standing Desk Converter",              48,   "furniture",  "Like New", "Off-Campus Ave",    "photo-1593642632559-0c6d3fc62b89", "seller-12", "5d"),
@@ -204,7 +204,7 @@ def _seed_demo_threads(threads: dict, now: datetime) -> None:
             "name": "Sam R.",
             "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&auto=format",
             "online": True,
-            "unread": 0,
+            "unread": 2,
             "lastMsg": "Meet at the bike rack?",
             "lastTimestamp": hours_ago(6),
             "messages": [

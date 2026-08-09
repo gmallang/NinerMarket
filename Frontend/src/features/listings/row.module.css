@@ -18,13 +18,17 @@
 
 .rowImageWrap {
   width: 140px;
-  height: 128px;
   flex-shrink: 0;
+  align-self: stretch;
+  min-height: 120px;
+  position: relative;
   background: var(--color-muted);
   overflow: hidden;
 }
 
 .rowImage {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -65,9 +69,12 @@
   font-size: 0.875rem;
   color: var(--color-fg);
   margin-top: 2px;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: break-word;
+  line-height: 1.35;
 }
 
 .rowTags {
@@ -142,7 +149,7 @@
 .rowRating {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #b45309;
+  color: var(--color-primary);
   margin-left: 4px;
 }
 

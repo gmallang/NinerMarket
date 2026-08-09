@@ -95,7 +95,7 @@ export const CONVS: Conversation[] = [
     avatar:
       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&auto=format",
     online: true,
-    unread: 0,
+    unread: 2,
     lastMsg: "Meet at the bike rack?",
     lastTimestamp: hoursAgo(6),
     messages: [

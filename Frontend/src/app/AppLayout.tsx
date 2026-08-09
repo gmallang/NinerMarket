@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Search,
@@ -11,8 +11,9 @@ import {
   Heart,
   ShoppingBag,
   Bell,
-  SlidersHorizontal,
+  Menu,
   X,
+  Home,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import ninerLogo from "@/assets/NinerMarket.png";
@@ -21,7 +22,6 @@ import { useMarketStore } from "@/lib/store";
 import { CATEGORIES, CONDITIONS } from "@/data/categories";
 import { LOCATION_GROUPS } from "@/data/locations";
 import { Modal } from "@/components/shared/Modal";
-import shared from "@/components/shared/shared.module.css";
 import { SellForm } from "@/features/sell/SellForm";
 import { MessagesOverlay } from "@/features/messaging/MessagesOverlay";
 import { ListingOverlay } from "@/features/listings/ListingOverlay";
@@ -44,6 +44,7 @@ export function AppLayout() {
   const openListingOverlay = useMarketStore((s) => s.openListingOverlay);
   const logout = useMarketStore((s) => s.logout);
   const loadListings = useMarketStore((s) => s.loadListings);
+  const refreshProfile = useMarketStore((s) => s.refreshProfile);
   const addListing = useMarketStore((s) => s.addListing);
   const messagesOpen = useMarketStore((s) => s.messagesOpen);
   const openMessagesOverlay = useMarketStore((s) => s.openMessagesOverlay);
@@ -51,10 +52,12 @@ export function AppLayout() {
   const [q, setQ] = useState(params.get("q") ?? "");
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [sellOpen, setSellOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(true);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [minPriceInput, setMinPriceInput] = useState(params.get("minPrice") ?? "");
   const [maxPriceInput, setMaxPriceInput] = useState(params.get("maxPrice") ?? "");
+  const [showScrollFade, setShowScrollFade] = useState(false);
+  const fadeSentinelRef = useRef<HTMLDivElement | null>(null);
   const totalUnread = convs.reduce((n, c) => n + c.unread, 0);
   const unreadNotifs = notifications.filter((n) => !n.read).length;
   const activeConditions = (params.get("condition") ?? "").split(",").filter(Boolean);
@@ -69,6 +72,10 @@ export function AppLayout() {
   }, [loadListings]);
 
   useEffect(() => {
+    void refreshProfile();
+  }, [refreshProfile]);
+
+  useEffect(() => {
     if (user) {
       void loadNotifications();
       void loadThreads();
@@ -78,6 +85,31 @@ export function AppLayout() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+
+  useEffect(() => {
+    const sentinel = fadeSentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowScrollFade(!entry.isIntersecting),
+      { rootMargin: "0px 0px -24px 0px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (pathname !== "/") return;
+    if (q === (params.get("q") ?? "")) return;
+    const t = window.setTimeout(() => {
+      const next = new URLSearchParams(params);
+      next.delete("saved");
+      next.delete("mine");
+      if (q.trim()) next.set("q", q.trim());
+      else next.delete("q");
+      navigate(`/?${next.toString()}`, { replace: true });
+    }, 250);
+    return () => window.clearTimeout(t);
+  }, [q, params, pathname, navigate]);
 
   const submitSearch = () => {
     const next = new URLSearchParams(params);
@@ -195,10 +227,22 @@ export function AppLayout() {
     <div className={s.page}>
       <nav className={s.navbar}>
         <div className={s.navInner}>
-          <Link to="/" className={s.logo}>
-            <img className={s.logoIcon} src={ninerLogo} alt="NinerMarket" />
-            <span className={s.logoText}>NinerMarket</span>
-          </Link>
+          <div className={s.navLeft}>
+            <button
+              type="button"
+              className={s.menuBtn}
+              onClick={() => setMobileSidebarOpen(true)}
+              aria-label="Open menu"
+              title="Open menu"
+            >
+              <Menu size={18} />
+            </button>
+
+            <Link to="/" className={s.logo}>
+              <img className={s.logoIcon} src={ninerLogo} alt="NinerMarket" />
+              <span className={s.logoText}>NinerMarket</span>
+            </Link>
+          </div>
 
           <div className={s.searchWrap}>
             <span className={s.searchIcon}>
@@ -218,9 +262,12 @@ export function AppLayout() {
 
           <div className={s.navActions}>
             <button
-              className={`${s.iconBtn} ${messagesOpen ? s.iconBtnActive : ""}`}
+              className={`${s.iconBtn} ${s.messagesNavBtn} ${
+                messagesOpen ? s.iconBtnActive : ""
+              }`}
               onClick={openMessagesOverlay}
               aria-label="Messages"
+              title="Messages"
             >
               <MessageCircle size={16} />
               {totalUnread > 0 && <span className={s.notifDot} style={{ background: "#f87171" }} />}
@@ -229,7 +276,7 @@ export function AppLayout() {
             {user && (
               <DropdownMenu.Root onOpenChange={(open) => open && loadNotifications()}>
                 <DropdownMenu.Trigger asChild>
-                  <button className={s.iconBtn} aria-label="Notifications">
+                  <button className={s.iconBtn} aria-label="Notifications" title="Notifications">
                     <Bell size={16} />
                     {unreadNotifs > 0 && <span className={s.notifDot} />}
                   </button>
@@ -272,7 +319,12 @@ export function AppLayout() {
               </DropdownMenu.Root>
             )}
 
-            <button className={s.sellBtn} onClick={() => setSellOpen(true)}>
+            <button
+              className={s.sellBtn}
+              onClick={() => setSellOpen(true)}
+              aria-label="Sell an item"
+              title="Sell an item"
+            >
               <Plus size={14} />
               <span className={s.sellBtnLabel}>Sell</span>
             </button>
@@ -281,7 +333,7 @@ export function AppLayout() {
               <div className={s.profileWrap}>
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger asChild>
-                    <button className={s.navAvatar} aria-label="Your profile">
+                    <button className={s.navAvatar} aria-label="Your profile" title="Your profile">
                       <img src={avatarUrl(user.display_name, 64)} alt="Your profile" />
                     </button>
                   </DropdownMenu.Trigger>
@@ -323,7 +375,25 @@ export function AppLayout() {
       </nav>
 
       <div className={s.body}>
-        <aside className={s.sidebar}>
+        {mobileSidebarOpen && (
+          <div
+            className={s.sidebarBackdrop}
+            onClick={() => setMobileSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+        <aside className={`${s.sidebar} ${mobileSidebarOpen ? s.sidebarOpen : ""}`}>
+          <div className={s.sidebarHeader}>
+            <h3 className={s.sidebarTitle}>Browse</h3>
+            <button
+              type="button"
+              className={s.sidebarClose}
+              onClick={() => setMobileSidebarOpen(false)}
+              aria-label="Close menu"
+            >
+              <X size={16} />
+            </button>
+          </div>
           <div className={s.sidebarInner}>
             <div className={s.filtersSection}>
               <button
@@ -352,6 +422,7 @@ export function AppLayout() {
                   <Link
                     key={cat.id}
                     to={cat.id === "all" ? "/" : `/?category=${cat.id}`}
+                    onClick={() => setMobileSidebarOpen(false)}
                     className={`${s.catBtn} ${active ? s.catBtnActive : ""}`}
                   >
                     <Icon size={20} className={active ? s.catIconActive : s.catIcon} />
@@ -365,46 +436,70 @@ export function AppLayout() {
         </aside>
 
         <main className={s.content}>
-          <div className={s.mobileFilterBar}>
-            <button
-              type="button"
-              className={s.mobileFilterBtn}
-              onClick={() => setMobileFiltersOpen(true)}
-            >
-              <SlidersHorizontal size={15} />
-              Filters
-            </button>
-          </div>
           <Outlet />
         </main>
+        <div ref={fadeSentinelRef} aria-hidden="true" className={s.fadeSentinel} />
       </div>
 
-      <Modal
-        open={mobileFiltersOpen}
-        onOpenChange={setMobileFiltersOpen}
-        ariaLabel="Filters"
-        className={s.mobileFiltersDialog}
-      >
-        <div className={s.mobileFiltersHeader}>
-          <h2 className={s.filtersTitle}>Filters</h2>
-          <button
-            type="button"
-            className={shared.modalClose}
-            onClick={() => setMobileFiltersOpen(false)}
-            aria-label="Close"
-          >
-            <X size={16} />
-          </button>
-        </div>
-        {filterFields}
+      <div
+        className={`${s.scrollFade} ${showScrollFade ? s.scrollFadeShow : ""}`}
+        aria-hidden="true"
+      />
+
+      <nav className={s.bottomNav} aria-label="Bottom navigation">
+        <Link
+          to="/"
+          className={`${s.bottomNavItem} ${pathname === "/" ? s.bottomNavActive : ""}`}
+          aria-label="Home"
+          title="Home"
+        >
+          <Home size={20} />
+          <span>Home</span>
+        </Link>
+
         <button
           type="button"
-          className={s.mobileFiltersApplyBtn}
-          onClick={() => setMobileFiltersOpen(false)}
+          className={s.bottomNavItem}
+          onClick={openMessagesOverlay}
+          aria-label="Messages"
+          title="Messages"
         >
-          Show Results
+          <MessageCircle size={20} />
+          <span>Messages</span>
+          {totalUnread > 0 && <span className={s.bottomNavDot} />}
         </button>
-      </Modal>
+
+        <button
+          type="button"
+          className={s.bottomNavItem}
+          onClick={() => setSellOpen(true)}
+          aria-label="Sell an item"
+          title="Sell an item"
+        >
+          <Plus size={20} />
+          <span>Sell</span>
+        </button>
+
+        <Link
+          to="/?saved=1"
+          className={`${s.bottomNavItem} ${params.get("saved") === "1" ? s.bottomNavActive : ""}`}
+          aria-label="Saved items"
+          title="Saved items"
+        >
+          <Heart size={20} />
+          <span>Saved</span>
+        </Link>
+
+        <Link
+          to={user ? `/user/${user.id}` : "/login"}
+          className={s.bottomNavItem}
+          aria-label="Profile"
+          title="Profile"
+        >
+          <UserRound size={20} />
+          <span>Profile</span>
+        </Link>
+      </nav>
 
       <Modal
         open={sellOpen}

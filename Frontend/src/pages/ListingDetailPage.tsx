@@ -16,6 +16,7 @@ export function ListingDetailPage() {
   const toggleSave = useMarketStore((s) => s.toggleSave);
   const openMessageOverlay = useMarketStore((s) => s.openMessageOverlay);
   const markListingSold = useMarketStore((s) => s.markListingSold);
+  const openEditListing = useMarketStore((s) => s.openEditListing);
   const user = useMarketStore((s) => s.user);
 
   const cached = listings.find((l) => l.id === id);
@@ -75,6 +76,7 @@ export function ListingDetailPage() {
         onMessage={handleMessage}
         onOpenSeller={handleOpenSeller}
         onMarkSold={() => markListingSold(item.id)}
+        onEdit={isOwner ? () => openEditListing(item) : undefined}
       />
     </div>
   );

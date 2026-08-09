@@ -46,12 +46,15 @@ export function AppLayout() {
   const loadListings = useMarketStore((s) => s.loadListings);
   const refreshProfile = useMarketStore((s) => s.refreshProfile);
   const addListing = useMarketStore((s) => s.addListing);
+  const updateListing = useMarketStore((s) => s.updateListing);
+  const sellModal = useMarketStore((s) => s.sellModal);
+  const openSellForm = useMarketStore((s) => s.openSellForm);
+  const closeSellForm = useMarketStore((s) => s.closeSellForm);
   const messagesOpen = useMarketStore((s) => s.messagesOpen);
   const openMessagesOverlay = useMarketStore((s) => s.openMessagesOverlay);
 
   const [q, setQ] = useState(params.get("q") ?? "");
   const [prevPathname, setPrevPathname] = useState(pathname);
-  const [sellOpen, setSellOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [minPriceInput, setMinPriceInput] = useState(params.get("minPrice") ?? "");
@@ -321,7 +324,7 @@ export function AppLayout() {
 
             <button
               className={s.sellBtn}
-              onClick={() => setSellOpen(true)}
+              onClick={() => openSellForm()}
               aria-label="Sell an item"
               title="Sell an item"
             >
@@ -362,7 +365,10 @@ export function AppLayout() {
                       >
                         <ShoppingBag size={14} /> Your Listings
                       </DropdownMenu.Item>
-                      <DropdownMenu.Item className={s.profileMenuItem} onSelect={handleLogout}>
+                      <DropdownMenu.Item
+                        className={`${s.profileMenuItem} ${s.profileMenuItemDanger}`}
+                        onSelect={handleLogout}
+                      >
                         <LogOut size={14} /> Sign out
                       </DropdownMenu.Item>
                     </DropdownMenu.Content>
@@ -472,7 +478,7 @@ export function AppLayout() {
         <button
           type="button"
           className={s.bottomNavItem}
-          onClick={() => setSellOpen(true)}
+          onClick={() => openSellForm()}
           aria-label="Sell an item"
           title="Sell an item"
         >
@@ -502,16 +508,19 @@ export function AppLayout() {
       </nav>
 
       <Modal
-        open={sellOpen}
-        onOpenChange={setSellOpen}
-        ariaLabel="Sell an item"
+        open={!!sellModal}
+        onOpenChange={(open) => !open && closeSellForm()}
+        ariaLabel={sellModal?.mode === "edit" ? "Edit listing" : "Sell an item"}
         className={s.sellDialog}
       >
         <SellForm
-          onClose={() => setSellOpen(false)}
-          onCreated={(listing) => {
-            addListing(listing);
-            setSellOpen(false);
+          key={sellModal?.mode === "edit" ? sellModal.listing.id : "create"}
+          listing={sellModal?.mode === "edit" ? sellModal.listing : undefined}
+          onClose={closeSellForm}
+          onSaved={(listing) => {
+            if (sellModal?.mode === "edit") updateListing(listing);
+            else addListing(listing);
+            closeSellForm();
           }}
         />
       </Modal>

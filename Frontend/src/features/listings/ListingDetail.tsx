@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2, Heart, MapPin, MessageCircle, X } from "lucide-react";
+import { CheckCircle2, Heart, MapPin, MessageCircle, Pencil, X } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
 import { CATEGORIES } from "@/data/categories";
@@ -18,6 +18,7 @@ export function ListingDetail({
   onMessage,
   onOpenSeller,
   onMarkSold,
+  onEdit,
 }: {
   item: Listing;
   saved: boolean;
@@ -27,6 +28,7 @@ export function ListingDetail({
   onMessage: () => void;
   onOpenSeller?: () => void;
   onMarkSold?: () => Promise<void>;
+  onEdit?: () => void;
 }) {
   const photos = item.photos?.length ? item.photos : [item.image];
   const [activeImg, setActiveImg] = useState(0);
@@ -148,21 +150,33 @@ export function ListingDetail({
       </div>
       <div className={s.detailFooter}>
         {isOwner ? (
-          <div className={s.detailOwnerActions}>
-            {isSold ? (
-              <span className={s.soldBadge}>
-                <CheckCircle2 size={15} /> Sold
-              </span>
-            ) : (
-              <>
-                <button className={s.soldBtn} onClick={() => void handleMarkSold()} disabled={markingSold}>
-                  <CheckCircle2 size={15} />
-                  {markingSold ? "Updating…" : "Mark as Sold"}
-                </button>
-                {markSoldError && <p className={s.soldError}>{markSoldError}</p>}
-              </>
+          <>
+            {onEdit && (
+              <button className={`${shared.btnGhost} ${s.detailGhostBtn}`} onClick={onEdit}>
+                <Pencil size={15} />
+                Edit
+              </button>
             )}
-          </div>
+            <div className={s.detailOwnerActions}>
+              {isSold ? (
+                <span className={s.soldBadge}>
+                  <CheckCircle2 size={15} /> Sold
+                </span>
+              ) : (
+                <>
+                  <button
+                    className={s.soldBtn}
+                    onClick={() => void handleMarkSold()}
+                    disabled={markingSold}
+                  >
+                    <CheckCircle2 size={15} />
+                    {markingSold ? "Updating…" : "Mark as Sold"}
+                  </button>
+                  {markSoldError && <p className={s.soldError}>{markSoldError}</p>}
+                </>
+              )}
+            </div>
+          </>
         ) : (
           <>
             <button className={`${shared.btnGhost} ${s.detailGhostBtn}`} onClick={onToggleSave}>

@@ -12,19 +12,22 @@ import s from "./SellForm.module.css";
 // ─── Sell form ──────────────────────────────────────────────────────────────
 
 export function SellForm({
+  listing,
   onClose,
-  onCreated,
+  onSaved,
 }: {
+  listing?: Listing;
   onClose: () => void;
-  onCreated: (listing: Listing) => void;
+  onSaved: (listing: Listing) => void;
 }) {
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[1].id);
-  const [condition, setCondition] = useState(CONDITIONS[0]);
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
-  const [photos, setPhotos] = useState<string[]>([]);
+  const isEditing = !!listing;
+  const [name, setName] = useState(listing?.title ?? "");
+  const [price, setPrice] = useState(listing ? String(listing.price) : "");
+  const [category, setCategory] = useState(listing?.category ?? CATEGORIES[1].id);
+  const [condition, setCondition] = useState(listing?.condition ?? CONDITIONS[0]);
+  const [description, setDescription] = useState(listing?.description ?? "");
+  const [location, setLocation] = useState(listing?.campus ?? "");
+  const [photos, setPhotos] = useState<string[]>(listing?.photos ?? []);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -57,19 +60,31 @@ export function SellForm({
     setError("");
     setSubmitting(true);
     try {
-      const dto = await api.createListing({
-        seller_id: currentUserId(),
-        name,
-        price: Number(price),
-        category,
-        condition,
-        description,
-        pickup_location: location,
-        photos,
-      });
-      onCreated(fromDto(dto));
+      const dto = listing
+        ? await api.updateListing(listing.id, {
+            name,
+            price: Number(price),
+            category,
+            condition,
+            description,
+            pickup_location: location,
+            photos,
+          })
+        : await api.createListing({
+            seller_id: currentUserId(),
+            name,
+            price: Number(price),
+            category,
+            condition,
+            description,
+            pickup_location: location,
+            photos,
+          });
+      onSaved(fromDto(dto));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not create listing");
+      setError(
+        err instanceof Error ? err.message : `Could not ${listing ? "update" : "create"} listing`
+      );
     } finally {
       setSubmitting(false);
     }
@@ -78,7 +93,7 @@ export function SellForm({
   return (
     <>
       <div className={s.modalHeader}>
-        <h2 className={s.modalTitle}>Sell an item</h2>
+        <h2 className={s.modalTitle}>{isEditing ? "Edit listing" : "Sell an item"}</h2>
         <button className={shared.modalClose} onClick={onClose} aria-label="Close">
           <X size={16} />
         </button>
@@ -213,7 +228,13 @@ export function SellForm({
             Cancel
           </button>
           <button type="submit" className={shared.btnPrimary} disabled={submitting}>
-            {submitting ? "Posting..." : "Post Listing"}
+            {submitting
+              ? isEditing
+                ? "Saving..."
+                : "Posting..."
+              : isEditing
+                ? "Save Changes"
+                : "Post Listing"}
           </button>
         </div>
       </form>

@@ -105,7 +105,7 @@ describe("HomePage", () => {
     expect(screen.getByRole("heading", { name: "Your Listings" })).toBeInTheDocument();
     expect(screen.getByText("Organic Chemistry (Clayden) 2nd Ed.")).toBeInTheDocument();
     expect(screen.queryByText("IKEA KALLAX Shelf Unit (White)")).not.toBeInTheDocument();
-    expect(screen.getByText("1 active listing")).toBeInTheDocument();
+    expect(screen.getByText("1 listing")).toBeInTheDocument();
   });
 
   it("shows an error banner with retry when listings fail to load", () => {

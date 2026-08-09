@@ -36,6 +36,11 @@ export function ListingCard({
         <span className={`${c.condBadge} ${CONDITION_CLASS[item.condition]}`}>
           {item.condition}
         </span>
+        {item.status === "sold" && (
+          <div className={s.soldOverlay}>
+            <span className={s.soldTag}>Sold</span>
+          </div>
+        )}
       </div>
       <div className={s.cardBody}>
         <p className={s.cardPrice}>${item.price.toLocaleString()}</p>

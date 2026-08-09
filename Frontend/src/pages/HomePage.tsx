@@ -95,7 +95,7 @@ export function HomePage() {
           <h1 className={s.mainTitle}>{viewLabel}</h1>
           <p className={s.mainCount}>
             {viewMine
-              ? `${filtered.length} active listing${filtered.length === 1 ? "" : "s"}`
+              ? `${filtered.length} listing${filtered.length === 1 ? "" : "s"}`
               : viewSaved
                 ? `${filtered.length} saved item${filtered.length === 1 ? "" : "s"}`
                 : `${filtered.length} listings near your campus`}

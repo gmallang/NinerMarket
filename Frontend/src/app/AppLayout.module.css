@@ -55,6 +55,11 @@
   object-fit: contain;
   flex-shrink: 0;
   filter: brightness(0) invert(1);
+  transition: filter var(--duration) var(--ease);
+}
+
+.logo:hover .logoIcon {
+  filter: brightness(0) invert(1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.85));
 }
 
 .logoText {
@@ -65,11 +70,16 @@
   line-height: 1;
   white-space: nowrap;
   color: var(--color-fg-inverse);
-  transition: color var(--duration) var(--ease);
+  transition:
+    color var(--duration) var(--ease),
+    text-shadow var(--duration) var(--ease);
 }
 
 .logo:hover .logoText {
   color: #e6f7ec;
+  text-shadow:
+    0 0 8px rgba(230, 247, 236, 0.9),
+    0 0 18px rgba(230, 247, 236, 0.5);
 }
 
 @media (max-width: 640px) {
@@ -341,6 +351,12 @@
 .profileMenuItem:hover,
 .profileMenuItem:focus {
   background: var(--color-muted);
+}
+
+.profileMenuItemDanger:hover,
+.profileMenuItemDanger:focus {
+  background: #fef2f2;
+  color: var(--color-danger);
 }
 
 /* ── Notifications menu ── */

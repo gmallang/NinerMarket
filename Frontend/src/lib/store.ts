@@ -43,6 +43,11 @@ interface MarketState {
   refreshProfile: () => Promise<void>;
   loadListings: () => Promise<void>;
   addListing: (listing: Listing) => void;
+  updateListing: (listing: Listing) => void;
+  sellModal: { mode: "create" } | { mode: "edit"; listing: Listing } | null;
+  openSellForm: () => void;
+  openEditListing: (listing: Listing) => void;
+  closeSellForm: () => void;
   toggleSave: (id: string) => void;
   isSaved: (id: string) => boolean;
   setActiveConvId: (id: number) => void;
@@ -75,6 +80,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   notifications: [],
   messagesOpen: false,
   listingOverlayId: null,
+  sellModal: null,
 
   signIn: (user) => {
     set({ user });
@@ -126,6 +132,17 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   },
 
   addListing: (listing) => set((state) => ({ listings: [listing, ...state.listings] })),
+
+  updateListing: (listing) =>
+    set((state) => ({
+      listings: state.listings.map((l) => (l.id === listing.id ? listing : l)),
+    })),
+
+  openSellForm: () => set({ sellModal: { mode: "create" } }),
+
+  openEditListing: (listing) => set({ sellModal: { mode: "edit", listing } }),
+
+  closeSellForm: () => set({ sellModal: null }),
 
   toggleSave: (id) =>
     set((state) => {

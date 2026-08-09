@@ -37,6 +37,26 @@
   transform: scale(1.05);
 }
 
+.soldOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 24, 21, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.soldTag {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: var(--radius-md);
+  padding: 4px 16px;
+}
+
 .saveBtn {
   position: absolute;
   top: 8px;

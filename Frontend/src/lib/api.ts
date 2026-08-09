@@ -49,6 +49,12 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  updateListing: (id: string, data: Partial<Omit<NewListing, "seller_id">>) =>
+    request<ListingDto>(`/listings/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
   createUser: (data: {
     id: string;
     email: string;

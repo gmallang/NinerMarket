@@ -18,6 +18,7 @@ export function ListingOverlay() {
   const toggleSave = useMarketStore((s) => s.toggleSave);
   const openMessageOverlay = useMarketStore((s) => s.openMessageOverlay);
   const markListingSold = useMarketStore((s) => s.markListingSold);
+  const openEditListing = useMarketStore((s) => s.openEditListing);
   const user = useMarketStore((s) => s.user);
 
   const cached = listings.find((l) => l.id === listingOverlayId);
@@ -67,6 +68,14 @@ export function ListingOverlay() {
           onMessage={() => openMessageOverlay(item.id)}
           onOpenSeller={handleOpenSeller}
           onMarkSold={() => markListingSold(item.id)}
+          onEdit={
+            isOwner
+              ? () => {
+                  closeListingOverlay();
+                  openEditListing(item);
+                }
+              : undefined
+          }
         />
       ) : (
         listingOverlayId != null && (

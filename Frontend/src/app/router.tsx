@@ -11,6 +11,7 @@ const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default:
 const PrivacyPage = lazy(() =>
   import("@/pages/PrivacyPage").then((m) => ({ default: m.PrivacyPage }))
 );
+const ErrorPage = lazy(() => import("@/pages/ErrorPage").then((m) => ({ default: m.ErrorPage })));
 const ListingDetailPage = lazy(() =>
   import("@/pages/ListingDetailPage").then((m) => ({ default: m.ListingDetailPage }))
 );
@@ -32,34 +33,39 @@ const withSuspense = (node: ReactNode) => <Suspense fallback={fallback}>{node}</
 
 export const router = createBrowserRouter([
   {
-    path: "/login",
-    element: withSuspense(
-      <PublicOnly>
-        <LoginPage />
-      </PublicOnly>
-    ),
-  },
-  {
-    path: "/about",
-    element: withSuspense(<AboutPage />),
-  },
-  {
-    path: "/privacy",
-    element: withSuspense(<PrivacyPage />),
-  },
-  {
-    element: <RequireAuth />,
+    errorElement: withSuspense(<ErrorPage />),
     children: [
-      { path: "/setup", element: withSuspense(<SetupPage />) },
       {
-        element: <AppLayout />,
+        path: "/login",
+        element: withSuspense(
+          <PublicOnly>
+            <LoginPage />
+          </PublicOnly>
+        ),
+      },
+      {
+        path: "/about",
+        element: withSuspense(<AboutPage />),
+      },
+      {
+        path: "/privacy",
+        element: withSuspense(<PrivacyPage />),
+      },
+      {
+        element: <RequireAuth />,
         children: [
-          { path: "/", element: <HomePage /> },
-          { path: "/listing/:id", element: withSuspense(<ListingDetailPage />) },
-          { path: "/user/:id", element: withSuspense(<UserProfilePage />) },
+          { path: "/setup", element: withSuspense(<SetupPage />) },
+          {
+            element: <AppLayout />,
+            children: [
+              { path: "/", element: <HomePage /> },
+              { path: "/listing/:id", element: withSuspense(<ListingDetailPage />) },
+              { path: "/user/:id", element: withSuspense(<UserProfilePage />) },
+            ],
+          },
         ],
       },
+      { path: "*", element: <Navigate to="/" replace /> },
     ],
   },
-  { path: "*", element: <Navigate to="/" replace /> },
 ]);

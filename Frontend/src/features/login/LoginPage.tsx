@@ -28,7 +28,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
-  const [agree, setAgree] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [googleOpen, setGoogleOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -45,6 +44,22 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   const [confirmPassword, setConfirmPassword] = useState("");
   const [pwdError, setPwdError] = useState("");
   const [pwdSaving, setPwdSaving] = useState(false);
+
+  const [agree, setAgreeState] = useState(() => {
+    try {
+      return sessionStorage.getItem("nm-terms-agreed") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const setAgree = (value: boolean) => {
+    setAgreeState(value);
+    try {
+      sessionStorage.setItem("nm-terms-agreed", value ? "1" : "0");
+    } catch {
+      // ignore storage errors
+    }
+  };
 
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const agreeRef = useRef(agree);

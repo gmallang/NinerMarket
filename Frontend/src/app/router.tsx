@@ -7,6 +7,7 @@ import { PublicOnly, RequireAuth } from "./guards";
 import { HomePage } from "@/pages/HomePage";
 
 const LoginPage = lazy(() => import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
+const AboutPage = lazy(() => import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage })));
 const ListingDetailPage = lazy(() =>
   import("@/pages/ListingDetailPage").then((m) => ({ default: m.ListingDetailPage }))
 );
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
         <LoginPage />
       </PublicOnly>
     ),
+  },
+  {
+    path: "/about",
+    element: withSuspense(<AboutPage />),
   },
   {
     element: <RequireAuth />,

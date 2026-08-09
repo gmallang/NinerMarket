@@ -1,0 +1,197 @@
+/* ─────────────────────────────────────────────
+   AboutPage.module.css — public About page
+   ───────────────────────────────────────────── */
+
+.aPage {
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Hero ── */
+.aHero {
+  background:
+    radial-gradient(1100px 600px at 85% -10%, rgba(34, 160, 80, 0.18), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(34, 160, 80, 0.1), transparent 55%),
+    #0b2418;
+  color: #e7e9ea;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-10) var(--space-6) 64px;
+  gap: var(--space-4);
+}
+
+.aHeroLogo {
+  width: min(180px, 40%);
+  height: 126px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.aHeroName {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
+  transform: translateX(8px);
+}
+
+.aHeroTitle {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  max-width: 720px;
+}
+
+.aHeroSub {
+  color: #bcd3c3;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  max-width: 620px;
+}
+
+/* ── Mission ── */
+.aSection {
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--space-10) var(--space-6);
+}
+
+.aMission {
+  font-size: 1.25rem;
+  line-height: 1.7;
+  text-align: center;
+  color: var(--color-fg);
+}
+
+/* ── Core values ── */
+.aValues {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+.aValue {
+  text-align: center;
+  padding: var(--space-6) var(--space-5);
+}
+
+.aValueIcon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aValueTitle {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.aValueText {
+  font-size: 0.9375rem;
+  color: var(--color-fg-muted);
+  line-height: 1.55;
+}
+
+/* ── CTA ── */
+.aCta {
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--space-6) var(--space-10);
+}
+
+.aBtnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: var(--space-3) var(--space-8);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background var(--duration) var(--ease);
+}
+
+.aBtnPrimary:link,
+.aBtnPrimary:visited {
+  color: #fff;
+  text-decoration: none;
+}
+
+.aBtnPrimary:hover {
+  background: var(--color-primary-dark);
+}
+
+/* ── Footer ── */
+.aFooter {
+  margin-top: auto;
+  width: 100%;
+  padding: var(--space-4) var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: #7fa390;
+  background: #0b2418;
+}
+
+.aFooterLink {
+  font-size: 0.75rem;
+  color: #7fa390;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.aFooterLink:link,
+.aFooterLink:visited {
+  color: #7fa390;
+  text-decoration: none;
+}
+
+.aFooterLink:hover {
+  text-decoration: underline;
+  color: #b3a369;
+}
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  .aHero {
+    padding: var(--space-8) var(--space-5) 48px;
+  }
+
+  .aSection {
+    padding: var(--space-8) var(--space-5);
+  }
+
+  .aCta {
+    padding: 0 var(--space-5) var(--space-8);
+  }
+}
+
+@media (max-width: 700px) {
+  .aValues {
+    grid-template-columns: 1fr;
+  }
+}

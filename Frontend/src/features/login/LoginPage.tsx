@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { ShieldCheck, ShoppingBag, MapPin, X, ChevronDown, Eye, EyeOff } from "lucide-react";
 import ninerLogo from "@/assets/NinerMarket.png";
 import { SCHOOL_YEARS } from "@/lib/user";
@@ -270,7 +271,9 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       </div>
 
       <footer className={s.xFooter}>
-        <span>About</span>
+        <Link to="/about" className={s.xFooterLink}>
+          About
+        </Link>
         <span>·</span>
         <button type="button" className={s.xFooterLink} onClick={() => setHelpOpen(true)}>
           Help
@@ -279,8 +282,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
         <button type="button" className={s.xFooterLink} onClick={() => setTermsOpen(true)}>
           Terms
         </button>
-        <span>·</span>
-        <span>Privacy</span>
         <span>·</span>
         <span>© 2026 NinerMarket</span>
       </footer>

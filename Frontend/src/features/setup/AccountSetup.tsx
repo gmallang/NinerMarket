@@ -9,10 +9,14 @@ export function AccountSetup({
   name,
   onSave,
   onSkip,
+  saving = false,
+  error: saveError = "",
 }: {
   name: string;
   onSave: (year: string, payments: string[]) => void;
   onSkip: () => void;
+  saving?: boolean;
+  error?: string;
 }) {
   const [year, setYear] = useState("");
   const [payments, setPayments] = useState<string[]>([]);
@@ -30,6 +34,7 @@ export function AccountSetup({
       setError("Select at least one payment method you accept.");
       return;
     }
+    setError("");
     onSave(year, payments);
   };
 
@@ -77,14 +82,14 @@ export function AccountSetup({
         ))}
       </div>
 
-      {error && <p className={s.setupError}>{error}</p>}
+      {(error || saveError) && <p className={s.setupError}>{error || saveError}</p>}
 
       <div className={s.setupActions}>
-        <button type="button" className={s.setupSkip} onClick={onSkip}>
+        <button type="button" className={s.setupSkip} onClick={onSkip} disabled={saving}>
           Skip for now
         </button>
-        <button type="button" className={s.setupSave} onClick={submit}>
-          Save
+        <button type="button" className={s.setupSave} onClick={submit} disabled={saving}>
+          {saving ? "Saving..." : "Save"}
         </button>
       </div>
     </div>

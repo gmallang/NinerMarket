@@ -188,7 +188,7 @@ def google_login(body: GoogleLoginRequest, request: Request):
         info = verify_google_id_token(body.id_token)
     except ValueError as exc:
         logger.warning("google_login: token rejected: %s", exc)
-        raise HTTPException(status_code=401, detail="Invalid or expired Google session")
+        raise HTTPException(status_code=401, detail=f"Invalid or expired Google session: {exc}")
     except Exception as exc:
         logger.exception("google_login: unexpected failure")
         raise HTTPException(

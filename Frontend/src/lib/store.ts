@@ -39,7 +39,7 @@ interface MarketState {
 
   signIn: (user: CurrentUser) => void;
   logout: () => void;
-  updateProfile: (year: string, payments: string[]) => void;
+  updateProfile: (year: string, payments: string[]) => Promise<void>;
   refreshProfile: () => Promise<void>;
   loadListings: () => Promise<void>;
   addListing: (listing: Listing) => void;
@@ -93,10 +93,15 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     set({ user: null });
   },
 
-  updateProfile: (year, payments) => {
+  updateProfile: async (year, payments) => {
     const user = get().user;
     if (!user) return;
-    const updated: CurrentUser = { ...user, school_year: year, payment_methods: payments };
+    const dto = await api.updateUser(user.id, { school_year: year, payment_methods: payments });
+    const updated: CurrentUser = {
+      ...user,
+      school_year: dto.school_year,
+      payment_methods: dto.payment_methods,
+    };
     saveUser(updated);
     set({ user: updated });
   },

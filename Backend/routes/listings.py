@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from auth import require_user
+from broadcast import broadcast
 from database import db, listings, reports, users
 from models import Listing, ReportRequest
 from moderation import find_prohibited_reasons
@@ -116,6 +117,8 @@ def create_listing(listing: Listing, user_id: str = Depends(require_user)):
             f"Your listing \"{listing.name}\" is now live.",
             listing.id,
         )
+
+    broadcast("listings", "listing_changed", {"id": listing.id})
     return result
 
 
@@ -213,6 +216,8 @@ def report_listing(
         id,
     )
 
+    broadcast("listings", "listing_changed", {"id": id})
+
     return _with_seller(listing)
 
 
@@ -248,6 +253,7 @@ def update_listing(id: str, updates: dict, user_id: str = Depends(require_user))
             existing.data[0]["status"],
         )
         data = db.table("listings").update(updates).eq("id", id).execute()
+        broadcast("listings", "listing_changed", {"id": id})
         return _with_seller(data.data[0])
 
     if id not in listings:
@@ -257,6 +263,7 @@ def update_listing(id: str, updates: dict, user_id: str = Depends(require_user))
     _apply_moderation(updates, listings[id].name, listings[id].description, listings[id].status)
     for key, value in updates.items():
         setattr(listings[id], key, value)
+    broadcast("listings", "listing_changed", {"id": id})
     return _with_seller(listings[id])
 
 
@@ -269,6 +276,7 @@ def delete_listing(id: str, user_id: str = Depends(require_user)):
         if existing.data[0]["seller_id"] != user_id:
             raise HTTPException(status_code=403, detail="You can only delete your own listings")
         db.table("listings").delete().eq("id", id).execute()
+        broadcast("listings", "listing_changed", {"id": id})
         return {"deleted": id}
 
     if id not in listings:
@@ -276,4 +284,5 @@ def delete_listing(id: str, user_id: str = Depends(require_user)):
     if listings[id].seller_id != user_id:
         raise HTTPException(status_code=403, detail="You can only delete your own listings")
     del listings[id]
+    broadcast("listings", "listing_changed", {"id": id})
     return {"deleted": id}

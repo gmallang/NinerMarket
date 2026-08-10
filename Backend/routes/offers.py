@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from auth import require_user
+from broadcast import broadcast
 from database import db, listings, offers, users
 from models import OfferCreate
 from ratelimit import client_ip, rate_limit
@@ -187,6 +188,8 @@ def accept_offer(offer_id: str, user_id: str = Depends(require_user)):
         db.table("listings").update({"status": "sold"}).eq("id", offer["listing_id"]).execute()
     else:
         listing.status = "sold"
+
+    broadcast("listings", "listing_changed", {"id": offer["listing_id"]})
 
     create_notification(
         offer["buyer_id"],

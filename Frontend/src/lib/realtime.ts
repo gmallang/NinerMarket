@@ -41,6 +41,25 @@ export function subscribeInbox(
   };
 }
 
+/** Subscribes to a public "listings" channel. The backend broadcasts a
+ * listing_changed event whenever a listing is created, edited, deleted,
+ * flagged, or sold, so open tabs can refetch instead of waiting for a
+ * manual refresh. Carries no listing content — just "go refetch". */
+export function subscribeListings(handlers: { onChanged?: () => void }): () => void {
+  if (!client) return () => {};
+
+  const channel = client
+    .channel("listings")
+    .on("broadcast", { event: "listing_changed" }, () => {
+      handlers.onChanged?.();
+    })
+    .subscribe();
+
+  return () => {
+    void client.removeChannel(channel);
+  };
+}
+
 // Outgoing channels used to send typing pings — kept open and reused per
 // recipient rather than reconnecting on every keystroke, since broadcast
 // sends need the channel to have actually finished joining first.

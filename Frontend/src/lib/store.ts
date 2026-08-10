@@ -3,7 +3,7 @@ import type { Conversation } from "@/data/conversations";
 import { api, clearToken } from "@/lib/api";
 import { avatarUrl } from "@/lib/avatar";
 import { fromDto } from "@/lib/listings";
-import { broadcastTyping, subscribeInbox } from "@/lib/realtime";
+import { broadcastTyping, subscribeInbox, subscribeListings } from "@/lib/realtime";
 import { clearUser, loadUser, saveUser } from "@/lib/user";
 import type { CurrentUser, Listing, NotificationDto } from "@/lib/types";
 
@@ -12,6 +12,7 @@ const SAVED_KEY = "ninermarket-saved";
 // Realtime subscription + typing-timeout handles live outside the store's
 // reactive state — components never need to read them directly.
 let unsubscribeInbox: (() => void) | null = null;
+let unsubscribeListings: (() => void) | null = null;
 const typingTimeouts = new Map<number, ReturnType<typeof setTimeout>>();
 
 function loadSaved(): Set<string> {
@@ -47,10 +48,12 @@ interface MarketState {
   logout: () => void;
   startRealtimeInbox: () => void;
   stopRealtimeInbox: () => void;
+  startRealtimeListings: () => void;
+  stopRealtimeListings: () => void;
   sendTypingSignal: (isTyping: boolean) => void;
   updateProfile: (year: string, payments: string[]) => Promise<void>;
   refreshProfile: () => Promise<void>;
-  loadListings: () => Promise<void>;
+  loadListings: (silent?: boolean) => Promise<void>;
   addListing: (listing: Listing) => void;
   updateListing: (listing: Listing) => void;
   sellModal: { mode: "create" } | { mode: "edit"; listing: Listing } | null;
@@ -104,6 +107,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     clearUser();
     clearToken();
     get().stopRealtimeInbox();
+    get().stopRealtimeListings();
     set({ user: null });
   },
 
@@ -162,6 +166,18 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     typingTimeouts.clear();
   },
 
+  startRealtimeListings: () => {
+    unsubscribeListings?.();
+    unsubscribeListings = subscribeListings({
+      onChanged: () => void get().loadListings(true),
+    });
+  },
+
+  stopRealtimeListings: () => {
+    unsubscribeListings?.();
+    unsubscribeListings = null;
+  },
+
   sendTypingSignal: (isTyping) => {
     const { user, convs, activeConvId } = get();
     if (!user) return;
@@ -206,13 +222,14 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     }
   },
 
-  loadListings: async () => {
+  loadListings: async (silent?: boolean) => {
     if (!get().user) return;
-    set({ loading: true });
+    if (!silent) set({ loading: true });
     try {
       const dtos = await api.listListings();
       set({ listings: dtos.map(fromDto), loading: false, listingsError: null });
     } catch (err) {
+      if (silent) return;
       const message = err instanceof Error ? err.message : "Failed to load listings";
       set({ loading: false, listingsError: message });
     }

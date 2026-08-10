@@ -16,7 +16,7 @@ import {
   signup,
   verifyEmail,
 } from "@/lib/auth";
-import { API_BASE_URL, api, setToken } from "@/lib/api";
+import { API_BASE_URL, api, getToken, setToken } from "@/lib/api";
 import { GoogleChooser, GoogleG, TermsModal, HelpModal } from "./AuthModals";
 import { Modal } from "@/components/shared/Modal";
 import s from "./login.module.css";
@@ -159,6 +159,13 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       }
       try {
         setToken(token ?? "");
+        if (getToken() !== token) {
+          // Some mobile browsers briefly restrict storage writes right after
+          // a cross-origin redirect (Google -> our API -> here). One retry
+          // a beat later is enough to clear that window.
+          await new Promise((resolve) => window.setTimeout(resolve, 100));
+          setToken(token ?? "");
+        }
         const u = await loadSessionUser();
         if (cancelled) return;
         if (!u.has_password) {
@@ -325,7 +332,12 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       setSetPwdOpen(false);
       authedRef.current(u);
     } catch (err) {
-      setPwdError(err instanceof Error ? err.message : "Couldn't set the password.");
+      const message = err instanceof Error ? err.message : "";
+      if (/authorization|session/i.test(message)) {
+        setPwdError("Your session expired before we could save that. Please sign in again.");
+      } else {
+        setPwdError(message || "Couldn't set the password.");
+      }
     } finally {
       setPwdSaving(false);
     }

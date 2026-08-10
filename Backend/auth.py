@@ -14,13 +14,26 @@ PBKDF2_ITERATIONS = 600_000
 CODE_TTL_MINUTES = 15
 SESSION_TTL_DAYS = 30
 
-SESSION_SECRET = os.getenv("SESSION_SECRET")
-if not SESSION_SECRET:
-    # Fallback for any environment — regenerating this on every restart just
-    # means existing sessions get invalidated, which is a minor cost compared
-    # to the app failing to boot. Set SESSION_SECRET to a stable value for
-    # sessions that survive restarts.
-    SESSION_SECRET = secrets.token_hex(32)
+_session_secret: str | None = None
+
+
+def _get_session_secret() -> str:
+    """Lazily reads SESSION_SECRET on first use rather than at import time.
+    Some modules import this one before database.py runs load_dotenv(), so
+    reading os.getenv() at module load could lock in a value from before
+    .env was ever loaded, silently ignoring whatever's actually configured.
+    Deferring the read until a token is actually created/verified — which
+    only happens once every import has finished — avoids that entirely."""
+    global _session_secret
+    if _session_secret is None:
+        secret = os.getenv("SESSION_SECRET")
+        if not secret:
+            # Fallback for any environment — regenerating this on every
+            # restart just means existing sessions get invalidated, which is
+            # a minor cost compared to the app failing to boot.
+            secret = secrets.token_hex(32)
+        _session_secret = secret
+    return _session_secret
 
 
 def hash_password(password: str) -> str:
@@ -50,7 +63,7 @@ def create_session_token(user_id: str) -> str:
     is what actually authenticates them — nothing else does."""
     expires_at = int((datetime.now(timezone.utc) + timedelta(days=SESSION_TTL_DAYS)).timestamp())
     payload = f"{user_id}.{expires_at}"
-    signature = hmac.new(SESSION_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    signature = hmac.new(_get_session_secret().encode(), payload.encode(), hashlib.sha256).hexdigest()
     return f"{payload}.{signature}"
 
 
@@ -61,7 +74,7 @@ def verify_session_token(token: str) -> str | None:
     except ValueError:
         return None
     payload = f"{user_id}.{expires_at}"
-    expected = hmac.new(SESSION_SECRET.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    expected = hmac.new(_get_session_secret().encode(), payload.encode(), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(signature, expected):
         return None
     try:

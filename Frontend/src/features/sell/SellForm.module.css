@@ -35,6 +35,43 @@
   gap: 6px;
 }
 
+.locationField {
+  position: relative;
+}
+
+.locationDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 20;
+  padding: 4px;
+}
+
+.locationOption {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 0.875rem;
+  color: var(--color-fg);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.locationOption:hover,
+.locationOptionActive {
+  background: var(--color-accent);
+}
+
 .formLabel {
   font-size: 0.75rem;
   font-weight: 600;

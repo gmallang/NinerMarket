@@ -51,3 +51,7 @@ export const LOCATION_GROUPS = [
     ],
   },
 ];
+
+// Flat list derived from the groups above, used for the Sell form's
+// pickup-location autocomplete.
+export const CAMPUS_LOCATIONS: string[] = LOCATION_GROUPS.flatMap((g) => g.options);

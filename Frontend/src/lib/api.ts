@@ -184,6 +184,9 @@ export const api = {
 
   getThreads: (userId: string) => request<Conversation[]>(`/users/${userId}/threads`),
 
+  getThread: (userId: string, threadId: number) =>
+    request<Conversation>(`/users/${userId}/threads/${threadId}`),
+
   openThread: (userId: string, listingId: string) =>
     request<Conversation>(`/users/${userId}/threads`, {
       method: "POST",

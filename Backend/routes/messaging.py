@@ -142,6 +142,35 @@ def list_threads(user_id: str, caller_id: str = Depends(require_user)):
     return sorted(out, key=lambda t: t["lastTimestamp"], reverse=True)
 
 
+@router.get("/users/{user_id}/threads/{thread_id}")
+def get_thread(user_id: str, thread_id: int, caller_id: str = Depends(require_user)):
+    """Fetches a single thread. Used to refresh just the affected conversation
+    when a realtime "new message" signal arrives, instead of reloading every
+    thread the user has — that round trip (plus a per-thread messages query)
+    is what was showing up as a delay before a message actually appeared."""
+    _check_caller(user_id, caller_id)
+    if db:
+        existing = db.table("threads").select("*").eq("id", str(thread_id)).execute()
+        if not existing.data or not _is_participant(existing.data[0], user_id):
+            raise HTTPException(status_code=404, detail="Thread not found")
+        row = existing.data[0]
+        msgs = (
+            db.table("messages")
+            .select("*")
+            .eq("thread_id", str(thread_id))
+            .order("timestamp")
+            .execute()
+            .data
+        )
+        row["id"] = int(row["id"])
+        return _viewer_relative(row, msgs, user_id)
+
+    thread = threads.get(thread_id)
+    if not thread or not _is_participant(thread, user_id):
+        raise HTTPException(status_code=404, detail="Thread not found")
+    return _viewer_relative(thread, thread["messages"], user_id)
+
+
 @router.post("/users/{user_id}/threads")
 def open_thread(user_id: str, body: OpenThreadRequest, caller_id: str = Depends(require_user)):
     _check_caller(user_id, caller_id)

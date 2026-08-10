@@ -64,6 +64,7 @@ interface MarketState {
   sendMessage: () => void;
   openConversationForListing: (listingId: string) => void;
   loadThreads: () => Promise<void>;
+  refreshThread: (threadId: number) => Promise<void>;
   loadNotifications: () => Promise<void>;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
@@ -96,7 +97,6 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     set({ user });
     void get().loadNotifications();
     void get().loadThreads();
-    get().startRealtimeInbox();
   },
   logout: () => {
     clearUser();
@@ -110,7 +110,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     if (!user) return;
     unsubscribeInbox?.();
     unsubscribeInbox = subscribeInbox(user.id, {
-      onNewMessage: () => void get().loadThreads(),
+      onNewMessage: (payload) => void get().refreshThread(payload.thread_id),
       onTyping: (payload) => {
         if (payload.user_id === user.id) return;
         set((state) => ({
@@ -130,6 +130,24 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         }
       },
     });
+  },
+
+  refreshThread: async (threadId) => {
+    const user = get().user;
+    if (!user) return;
+    try {
+      const thread = await api.getThread(user.id, threadId);
+      set((state) => {
+        const exists = state.convs.some((c) => c.id === threadId);
+        const convs = exists
+          ? state.convs.map((c) => (c.id === threadId ? thread : c))
+          : [thread, ...state.convs];
+        return { convs };
+      });
+    } catch {
+      // fall back to a full reload if the targeted fetch fails for any reason
+      void get().loadThreads();
+    }
   },
 
   stopRealtimeInbox: () => {

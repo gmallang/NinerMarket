@@ -7,8 +7,11 @@ import { fromDto } from "@/lib/listings";
 import { currentUserId } from "@/lib/user";
 import type { Listing } from "@/lib/types";
 import { CATEGORIES, CONDITIONS } from "@/data/categories";
+import { CAMPUS_LOCATIONS } from "@/data/locations";
 import shared from "@/components/shared/shared.module.css";
 import s from "./SellForm.module.css";
+
+const MIN_LOCATION_CHARS = 3;
 
 // ─── Sell form ──────────────────────────────────────────────────────────────
 
@@ -28,10 +31,16 @@ export function SellForm({
   const [condition, setCondition] = useState(listing?.condition ?? CONDITIONS[0]);
   const [description, setDescription] = useState(listing?.description ?? "");
   const [location, setLocation] = useState(listing?.campus ?? "");
+  const [locationOpen, setLocationOpen] = useState(false);
   const [photos, setPhotos] = useState<string[]>(listing?.photos ?? []);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const locationMatches =
+    location.trim().length >= MIN_LOCATION_CHARS
+      ? CAMPUS_LOCATIONS.filter((loc) => loc.toLowerCase().includes(location.trim().toLowerCase()))
+      : [];
 
   const addFiles = (files: FileList | null) => {
     if (!files) return;
@@ -205,15 +214,41 @@ export function SellForm({
           </select>
         </label>
 
-        <label className={s.formField}>
+        <label className={`${s.formField} ${s.locationField}`}>
           <span className={s.formLabel}>Pickup location</span>
           <input
             className={s.formInput}
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => {
+              setLocation(e.target.value);
+              setLocationOpen(true);
+            }}
+            onFocus={() => setLocationOpen(true)}
+            onBlur={() => window.setTimeout(() => setLocationOpen(false), 100)}
             placeholder="e.g. Student Union"
+            autoComplete="off"
             required
           />
+          {locationOpen && locationMatches.length > 0 && (
+            <div className={s.locationDropdown} role="listbox">
+              {locationMatches.map((loc) => (
+                <button
+                  key={loc}
+                  type="button"
+                  className={s.locationOption}
+                  role="option"
+                  aria-selected={loc === location}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setLocation(loc);
+                    setLocationOpen(false);
+                  }}
+                >
+                  {loc}
+                </button>
+              ))}
+            </div>
+          )}
         </label>
 
         <label className={s.formField}>

@@ -24,6 +24,10 @@ function loadSaved(): Set<string> {
   }
 }
 
+function latestMsgId(conv: Conversation): number {
+  return conv.messages.reduce((maxId, m) => Math.max(maxId, m.id), 0);
+}
+
 function persistSaved(items: Set<string>): void {
   try {
     localStorage.setItem(SAVED_KEY, JSON.stringify([...items]));
@@ -71,6 +75,7 @@ interface MarketState {
   loadNotifications: () => Promise<void>;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
+  clearNotifications: () => void;
   messagesOpen: boolean;
   openMessagesOverlay: () => void;
   openMessageOverlay: (listingId: string) => void;
@@ -144,15 +149,22 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     try {
       const thread = await api.getThread(user.id, threadId);
       set((state) => {
+        const isViewed = state.messagesOpen && state.activeConvId === threadId;
+        const normalized = isViewed ? { ...thread, unread: 0 } : thread;
         const exists = state.convs.some((c) => c.id === threadId);
         const convs = exists
-          ? state.convs.map((c) => (c.id === threadId ? thread : c))
-          : [thread, ...state.convs];
+          ? state.convs.map((c) => (c.id === threadId ? normalized : c))
+          : [normalized, ...state.convs];
         const activeConvId = convs.some((c) => c.id === state.activeConvId)
           ? state.activeConvId
           : convs[0]?.id ?? state.activeConvId;
         return { convs, activeConvId };
       });
+      // If the recipient currently has this conversation open, they've seen
+      // it — advance their read cursor so no badge appears for it.
+      if (get().messagesOpen && get().activeConvId === threadId) {
+        void api.markThreadRead(user.id, threadId, latestMsgId(thread)).catch(() => {});
+      }
     } catch {
       // fall back to a full reload if the targeted fetch fails for any reason
       void get().loadThreads();
@@ -261,11 +273,12 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   setActiveConvId: (id) => {
     const user = get().user;
+    const conv = get().convs.find((c) => c.id === id);
     set((state) => ({
       activeConvId: id,
       convs: state.convs.map((c) => (c.id === id ? { ...c, unread: 0 } : c)),
     }));
-    if (user) void api.markThreadRead(user.id, id).catch(() => {});
+    if (user && conv) void api.markThreadRead(user.id, id, latestMsgId(conv)).catch(() => {});
   },
 
   setInputText: (inputText) => set({ inputText }),
@@ -306,7 +319,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     const existing = convs.find((c) => c.listingId === listingId);
     if (existing) {
       set({ activeConvId: existing.id });
-      if (user) void api.markThreadRead(user.id, existing.id).catch(() => {});
+      if (user) void api.markThreadRead(user.id, existing.id, latestMsgId(existing)).catch(() => {});
       return;
     }
     const listing = listings.find((l) => l.id === listingId);
@@ -341,8 +354,15 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     if (!user) return;
     try {
       const list = await api.getThreads(user.id);
+      const { messagesOpen, activeConvId } = get();
+      const active = list.find((c) => c.id === activeConvId);
+      if (messagesOpen && active && active.unread > 0) {
+        void api.markThreadRead(user.id, active.id, latestMsgId(active)).catch(() => {});
+      }
       set((state) => ({
-        convs: list,
+        convs: messagesOpen
+          ? list.map((c) => (c.id === state.activeConvId ? { ...c, unread: 0 } : c))
+          : list,
         // activeConvId defaults to a placeholder that never corresponds to a
         // real thread. If it's still not pointing at anything real once
         // threads load, point it at the first one so sending a message
@@ -384,6 +404,12 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     if (user) {
       for (const id of ids) void api.markNotificationRead(user.id, id).catch(() => {});
     }
+  },
+
+  clearNotifications: () => {
+    const user = get().user;
+    set({ notifications: [] });
+    if (user) void api.clearNotifications(user.id).catch(() => {});
   },
 
   openMessageOverlay: (listingId) => {

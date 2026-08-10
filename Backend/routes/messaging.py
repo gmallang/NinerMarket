@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from auth import require_user
 from database import db, listings, threads, users
-from models import OpenThreadRequest, SendMessageRequest
+from models import MarkReadRequest, OpenThreadRequest, SendMessageRequest
 from broadcast import broadcast
 
 router = APIRouter()
@@ -50,12 +50,80 @@ def _is_participant(thread_row: dict, user_id: str) -> bool:
     return _listing_seller_id(thread_row.get("listingId", "")) == user_id
 
 
+# ── Per-participant read cursors ────────────────────────────────────────────
+# Unread is derived, not stored: each member's last_read_msg_id is the highest
+# message id they've seen, and unread = count of messages above that cursor.
+# Cursors only move forward (monotonic), so a stale device or a message sent
+# from the chat you're viewing can't resurface a badge.
+
+def _latest_msg_id(thread_id: int) -> int:
+    if db:
+        res = (
+            db.table("messages")
+            .select("id")
+            .eq("thread_id", str(thread_id))
+            .order("id", desc=True)
+            .limit(1)
+            .execute()
+        )
+        return res.data[0]["id"] if res.data else 0
+    thread = threads.get(thread_id)
+    msgs = thread.get("messages", []) if thread else []
+    return max((m["id"] for m in msgs), default=0)
+
+
+def _member_cursor(thread_id: int, user_id: str) -> int:
+    if db:
+        res = (
+            db.table("thread_members")
+            .select("last_read_msg_id")
+            .eq("thread_id", str(thread_id))
+            .eq("user_id", user_id)
+            .execute()
+        )
+        return res.data[0]["last_read_msg_id"] if res.data else 0
+    thread = threads.get(thread_id)
+    return (thread.get("reads") or {}).get(user_id, 0) if thread else 0
+
+
+def _advance_cursor(thread_id: int, user_id: str, up_to: int) -> None:
+    """Moves a member's read cursor forward to up_to, never backwards."""
+    current = _member_cursor(thread_id, user_id)
+    next_cursor = max(current, up_to)
+    if db:
+        db.table("thread_members").upsert(
+            {"thread_id": str(thread_id), "user_id": user_id, "last_read_msg_id": next_cursor},
+            on_conflict="thread_id,user_id",
+        ).execute()
+        return
+    thread = threads.get(thread_id)
+    if thread:
+        thread.setdefault("reads", {})[user_id] = next_cursor
+
+
+def _unread_for(thread_id: int, user_id: str) -> int:
+    cursor = _member_cursor(thread_id, user_id)
+    if db:
+        res = (
+            db.table("messages")
+            .select("id")
+            .eq("thread_id", str(thread_id))
+            .gt("id", cursor)
+            .execute()
+        )
+        return len(res.data)
+    thread = threads.get(thread_id)
+    return sum(1 for m in thread.get("messages", []) if m["id"] > cursor) if thread else 0
+
+
 def _viewer_relative(row: dict, msgs: list[dict], viewer_id: str) -> dict:
     """Threads are stored from the opener's point of view: name/avatar show
     the seller, and each message's `sent` means "sent by the opener". When
     the seller views the same thread, flip both so they see the buyer's name
     and correctly see which messages are theirs — without a second stored
-    copy of the thread."""
+    copy of the thread. Unread is derived per viewer from their cursor, and
+    `other_read_cursor` tells each side which of their messages the other
+    person has read (a message is read when its id is at or below that)."""
     row = dict(row)
     if row.get("user_id") != viewer_id:
         other_id = row.get("user_id", "")
@@ -65,8 +133,11 @@ def _viewer_relative(row: dict, msgs: list[dict], viewer_id: str) -> dict:
         row["other_user_id"] = other_id
         msgs = [{**m, "sent": not m.get("sent", True)} for m in msgs]
     else:
-        row["other_user_id"] = _listing_seller_id(row.get("listingId", ""))
+        other_id = _listing_seller_id(row.get("listingId", ""))
+        row["other_user_id"] = other_id
     row["messages"] = msgs
+    row["unread"] = _unread_for(int(row["id"]), viewer_id)
+    row["other_read_cursor"] = _member_cursor(int(row["id"]), other_id or "")
     return row
 
 
@@ -255,9 +326,10 @@ def send_thread_message(
             {
                 "lastMsg": msg["text"],
                 "lastTimestamp": msg["timestamp"],
-                "unread": thread_row.get("unread", 0) + 1,
             }
         ).eq("id", str(thread_id)).execute()
+        # The sender obviously saw what they just sent — advance their cursor.
+        _advance_cursor(thread_id, user_id, msg["id"])
         row = db.table("threads").select("*").eq("id", str(thread_id)).execute().data[0]
         msgs = (
             db.table("messages")
@@ -294,7 +366,7 @@ def send_thread_message(
     thread["messages"].append(msg)
     thread["lastMsg"] = msg["text"]
     thread["lastTimestamp"] = msg["timestamp"]
-    thread["unread"] = thread.get("unread", 0) + 1
+    _advance_cursor(thread_id, user_id, msg["id"])
 
     recipient_id = (
         _listing_seller_id(thread["listingId"]) if sent_by_opener else thread["user_id"]
@@ -305,14 +377,23 @@ def send_thread_message(
 
 
 @router.patch("/users/{user_id}/threads/{thread_id}/read")
-def mark_thread_read(user_id: str, thread_id: int, caller_id: str = Depends(require_user)):
+def mark_thread_read(
+    user_id: str,
+    thread_id: int,
+    caller_id: str = Depends(require_user),
+    body: MarkReadRequest | None = None,
+):
+    """Advances the caller's read cursor to the given message id (or the latest
+    message in the thread when omitted). Cursors are monotonic, so replayed or
+    out-of-order calls can never resurface already-read messages."""
     _check_caller(user_id, caller_id)
     if db:
         existing = db.table("threads").select("*").eq("id", str(thread_id)).execute()
         if not existing.data or not _is_participant(existing.data[0], user_id):
             raise HTTPException(status_code=404, detail="Thread not found")
-        data = db.table("threads").update({"unread": 0}).eq("id", str(thread_id)).execute()
-        row = data.data[0]
+        up_to = body.last_read_msg_id if body and body.last_read_msg_id else _latest_msg_id(thread_id)
+        _advance_cursor(thread_id, user_id, up_to)
+        row = db.table("threads").select("*").eq("id", str(thread_id)).execute().data[0]
         msgs = (
             db.table("messages")
             .select("*")
@@ -327,5 +408,6 @@ def mark_thread_read(user_id: str, thread_id: int, caller_id: str = Depends(requ
     thread = threads.get(thread_id)
     if not thread or not _is_participant(thread, user_id):
         raise HTTPException(status_code=404, detail="Thread not found")
-    thread["unread"] = 0
+    up_to = body.last_read_msg_id if body and body.last_read_msg_id else _latest_msg_id(thread_id)
+    _advance_cursor(thread_id, user_id, up_to)
     return _viewer_relative(thread, thread["messages"], user_id)

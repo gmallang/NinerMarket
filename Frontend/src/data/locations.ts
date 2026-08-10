@@ -40,16 +40,6 @@ export const LOCATION_GROUPS = [
     label: "Parking Decks",
     options: ["East Deck", "West Deck", "North Deck", "Union Deck", "South Village Deck"],
   },
-  {
-    label: "Off-Campus Housing",
-    options: [
-      "University Walk (UWalk)",
-      "The Grove at Sardis",
-      "Cambridge at Southpoint",
-      "Lodge at Crown Point",
-      "Off-Campus (Other)",
-    ],
-  },
 ];
 
 // Flat list derived from the groups above, used for the Sell form's

@@ -191,7 +191,44 @@
 }
 
 @media (max-width: 700px) {
+  .aHero {
+    min-height: 60svh;
+    justify-content: center;
+    padding: var(--space-8) var(--space-5);
+  }
+
+  .aSection {
+    padding: var(--space-5) var(--space-5);
+  }
+
+  .aMission {
+    text-align: left;
+  }
+
   .aValues {
     grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+
+  .aValue {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    text-align: left;
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .aValueIcon {
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .aValueTitle {
+    margin-bottom: 2px;
+    font-size: 1rem;
+  }
+
+  .aValueText {
+    font-size: 0.875rem;
   }
 }

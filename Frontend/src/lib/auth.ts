@@ -29,7 +29,6 @@ export function makeUserId(email: string): string {
 
 export interface SignupResult {
   user: CurrentUser;
-  devCode?: string;
   needsVerification: boolean;
 }
 
@@ -52,7 +51,6 @@ export async function signup(
   });
   return {
     user: res.user,
-    devCode: res.dev_code,
     needsVerification: !res.user.email_verified,
   };
 }

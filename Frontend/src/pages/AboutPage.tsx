@@ -4,7 +4,7 @@ import ninerLogo from "@/assets/NinerMarket.png";
 import s from "./AboutPage.module.css";
 
 const VALUES = [
-  { icon: Lock, title: "Verified Community", text: "@charlotte.edu only" },
+  { icon: Lock, title: "UNC Verified", text: "@charlotte.edu only" },
   { icon: MapPin, title: "Campus First", text: "Meet locally, no shipping" },
   { icon: Heart, title: "Free Forever", text: "No fees, no catch" },
 ];

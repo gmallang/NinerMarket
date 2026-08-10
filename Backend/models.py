@@ -110,3 +110,7 @@ class OpenThreadRequest(BaseModel):
 
 class SendMessageRequest(BaseModel):
     text: str
+
+
+class MarkReadRequest(BaseModel):
+    last_read_msg_id: int | None = None

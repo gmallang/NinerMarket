@@ -110,7 +110,7 @@ export const api = {
     school_year?: string;
     payment_methods?: string[];
   }) =>
-    request<{ user: UserDto; dev_code?: string }>("/users", {
+    request<{ user: UserDto }>("/users", {
       method: "POST",
       body: JSON.stringify(data),
     }),
@@ -122,7 +122,7 @@ export const api = {
     }),
 
   resendCode: (email: string) =>
-    request<{ user: UserDto; dev_code?: string }>("/users/resend", {
+    request<{ user: UserDto }>("/users/resend", {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
@@ -206,6 +206,9 @@ export const api = {
       method: "PATCH",
     }),
 
+  clearNotifications: (userId: string) =>
+    request<{ ok: boolean }>(`/users/${userId}/notifications`, { method: "DELETE" }),
+
   getThreads: (userId: string) => request<Conversation[]>(`/users/${userId}/threads`),
 
   getThread: (userId: string, threadId: number) =>
@@ -223,8 +226,12 @@ export const api = {
       body: JSON.stringify({ text }),
     }),
 
-  markThreadRead: (userId: string, threadId: number) =>
+  markThreadRead: (userId: string, threadId: number, upToMsgId?: number) =>
     request<Conversation>(`/users/${userId}/threads/${threadId}/read`, {
       method: "PATCH",
+      body:
+        upToMsgId === undefined
+          ? undefined
+          : JSON.stringify({ last_read_msg_id: upToMsgId }),
     }),
 };

@@ -121,8 +121,8 @@ def create_user(body: UserCreate):
     )
     _save_user(user)
 
-    dev_code = "" if send_verification_email(email, code) else code
-    return {"user": _to_public(user), "dev_code": dev_code}
+    send_verification_email(email, code)
+    return {"user": _to_public(user)}
 
 
 @router.post("/users/verify")
@@ -161,8 +161,8 @@ def resend_code(body: ResendRequest, request: Request):
     user.verification_code = code
     user.verification_expires = code_expiry()
     _save_user(user)
-    dev_code = "" if send_verification_email(email, code) else code
-    return {"user": _to_public(user), "dev_code": dev_code}
+    send_verification_email(email, code)
+    return {"user": _to_public(user)}
 
 
 @router.post("/users/login")

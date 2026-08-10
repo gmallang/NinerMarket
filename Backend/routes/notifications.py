@@ -63,6 +63,17 @@ def post_notification(
     return create_notification(user_id, body.text, body.listing_id)
 
 
+@router.delete("/users/{user_id}/notifications")
+def clear_notifications(user_id: str, caller_id: str = Depends(require_user)):
+    _check_caller(user_id, caller_id)
+    if db:
+        db.table("notifications").delete().eq("user_id", user_id).execute()
+        return {"ok": True}
+
+    notifications.pop(user_id, None)
+    return {"ok": True}
+
+
 @router.patch("/users/{user_id}/notifications/{notification_id}")
 def mark_notification_read(
     user_id: str, notification_id: str, caller_id: str = Depends(require_user)

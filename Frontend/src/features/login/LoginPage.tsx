@@ -43,7 +43,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   const [verifying, setVerifying] = useState(false);
   const [verifyEmailAddress, setVerifyEmailAddress] = useState("");
   const [code, setCode] = useState("");
-  const [devCode, setDevCode] = useState("");
   const [setPwdOpen, setSetPwdOpen] = useState(false);
   const [pendingToken, setPendingToken] = useState("");
   const [pendingUser, setPendingUser] = useState<CurrentUser | null>(null);
@@ -205,12 +204,10 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   const startVerify = async (targetEmail: string) => {
     setVerifyEmailAddress(targetEmail.trim().toLowerCase());
     setCode("");
-    setDevCode("");
     setVerifying(true);
     setError("");
     try {
-      const res = await api.resendCode(targetEmail.trim().toLowerCase());
-      setDevCode(res.dev_code ?? "");
+      await api.resendCode(targetEmail.trim().toLowerCase());
     } catch {
       // the code from signup is still usable; verify step will surface errors
     }
@@ -243,7 +240,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
         if (res.needsVerification) {
           setVerifyEmailAddress(email.trim().toLowerCase());
           setCode("");
-          setDevCode(res.devCode ?? "");
           setVerifying(true);
           return;
         }
@@ -284,8 +280,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   const resend = async () => {
     setError("");
     try {
-      const res = await api.resendCode(verifyEmailAddress);
-      setDevCode(res.dev_code ?? "");
+      await api.resendCode(verifyEmailAddress);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't resend the code.");
     }
@@ -350,7 +345,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
     setError("");
     setVerifying(false);
     setCode("");
-    setDevCode("");
     setFormOpen(mode);
   };
 
@@ -358,7 +352,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
     setFormOpen(null);
     setVerifying(false);
     setCode("");
-    setDevCode("");
     setError("");
   };
 
@@ -494,11 +487,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
               We emailed a 6-digit code to{" "}
               <strong>{verifyEmailAddress}</strong>. Enter it below to verify your account.
             </p>
-            {devCode && (
-              <p className={s.xDevCode}>
-                DEV MODE — no email key set, use code: <strong>{devCode}</strong>
-              </p>
-            )}
             <input
               className={s.xInput}
               inputMode="numeric"

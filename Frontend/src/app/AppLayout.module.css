@@ -469,6 +469,10 @@
   background: var(--color-muted);
 }
 
+.notifClearDanger {
+  color: var(--color-danger);
+}
+
 /* ── Body layout ── */
 .body {
   display: flex;

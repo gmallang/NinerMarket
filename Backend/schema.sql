@@ -65,6 +65,17 @@ create table if not exists messages (
   timestamp  timestamptz not null default now()
 );
 
+-- Per-participant read cursors (the "only notify if not seen" pattern):
+-- each member's last_read_msg_id is the highest message id they've viewed.
+-- Unread = count of messages with id above that cursor. Cursors only ever
+-- move forward (monotonic), so stale devices can't resurrect old unread.
+create table if not exists thread_members (
+  thread_id       text not null references threads(id) on delete cascade,
+  user_id         text not null references users(id) on delete cascade,
+  last_read_msg_id bigint not null default 0,
+  primary key (thread_id, user_id)
+);
+
 create table if not exists notifications (
   id          text primary key,
   user_id     text not null references users(id) on delete cascade,
@@ -100,6 +111,7 @@ create index if not exists idx_ratings_ratee_id on ratings (ratee_id);
 create unique index if not exists idx_ratings_rater_ratee on ratings (rater_id, ratee_id);
 create index if not exists idx_threads_user_id on threads (user_id);
 create index if not exists idx_messages_thread_id on messages (thread_id);
+create index if not exists idx_thread_members_user_id on thread_members (user_id);
 create index if not exists idx_notifications_user_id on notifications (user_id);
 create index if not exists idx_listing_reports_listing_id on listing_reports (listing_id);
 create index if not exists idx_listing_reports_reporter_id on listing_reports (reporter_id);

@@ -43,6 +43,7 @@ export function AppLayout() {
   const startRealtimeListings = useMarketStore((s) => s.startRealtimeListings);
   const markNotificationRead = useMarketStore((s) => s.markNotificationRead);
   const markAllNotificationsRead = useMarketStore((s) => s.markAllNotificationsRead);
+  const clearNotifications = useMarketStore((s) => s.clearNotifications);
   const openListingOverlay = useMarketStore((s) => s.openListingOverlay);
   const logout = useMarketStore((s) => s.logout);
   const loadListings = useMarketStore((s) => s.loadListings);
@@ -321,6 +322,14 @@ export function AppLayout() {
                         onSelect={markAllNotificationsRead}
                       >
                         Mark all as read
+                      </DropdownMenu.Item>
+                    )}
+                    {notifications.length > 0 && (
+                      <DropdownMenu.Item
+                        className={`${s.notifClear} ${s.notifClearDanger}`}
+                        onSelect={clearNotifications}
+                      >
+                        Clear all
                       </DropdownMenu.Item>
                     )}
                   </DropdownMenu.Content>

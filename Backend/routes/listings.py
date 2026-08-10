@@ -236,6 +236,17 @@ def _apply_moderation(updates: dict, current_name: str, current_desc: str, curre
         updates["flag_reason"] = ""
 
 
+def _sync_sold_at(updates: dict, current_status: str) -> None:
+    """Tracks when a listing became sold so the seller can unsell their most
+    recent ones: sold_at is stamped the moment a listing flips to sold and
+    cleared again when it's put back up for sale."""
+    new_status = updates.get("status")
+    if new_status == "sold" and current_status != "sold":
+        updates["sold_at"] = datetime.now(timezone.utc).isoformat()
+    elif current_status == "sold" and new_status and new_status != "sold":
+        updates["sold_at"] = None
+
+
 @router.patch("/listings/{id}")
 def update_listing(id: str, updates: dict, user_id: str = Depends(require_user)):
     updates = {k: v for k, v in updates.items() if k != "seller_id"}
@@ -252,6 +263,7 @@ def update_listing(id: str, updates: dict, user_id: str = Depends(require_user))
             existing.data[0]["description"],
             existing.data[0]["status"],
         )
+        _sync_sold_at(updates, existing.data[0]["status"])
         data = db.table("listings").update(updates).eq("id", id).execute()
         broadcast("listings", "listing_changed", {"id": id})
         return _with_seller(data.data[0])
@@ -261,6 +273,7 @@ def update_listing(id: str, updates: dict, user_id: str = Depends(require_user))
     if listings[id].seller_id != user_id:
         raise HTTPException(status_code=403, detail="You can only edit your own listings")
     _apply_moderation(updates, listings[id].name, listings[id].description, listings[id].status)
+    _sync_sold_at(updates, listings[id].status)
     for key, value in updates.items():
         setattr(listings[id], key, value)
     broadcast("listings", "listing_changed", {"id": id})

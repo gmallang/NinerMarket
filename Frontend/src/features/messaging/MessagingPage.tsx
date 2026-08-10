@@ -8,35 +8,6 @@ import { QUICK_REPLIES } from "@/data/conversations";
 import type { Conversation } from "@/data/conversations";
 import m from "./Messaging.module.css";
 
-// Consecutive messages from the same sender with identical text collapse into
-// a single bubble with a "(x2)"-style repeat count instead of duplicating it.
-interface MsgGroup {
-  id: number;
-  text: string;
-  sent: boolean;
-  count: number;
-  timestamp: string;
-}
-
-function groupMessages(messages: Conversation["messages"]): MsgGroup[] {
-  const groups: MsgGroup[] = [];
-  for (const msg of messages) {
-    const last = groups[groups.length - 1];
-    if (last && last.sent === msg.sent && last.text === msg.text) {
-      last.count += 1;
-    } else {
-      groups.push({
-        id: msg.id,
-        text: msg.text,
-        sent: msg.sent,
-        count: 1,
-        timestamp: msg.timestamp,
-      });
-    }
-  }
-  return groups;
-}
-
 // ─── Messaging page ─────────────────────────────────────────────────────────
 
 interface MessagingPageProps {
@@ -210,14 +181,14 @@ export function MessagingPage({
                 <div className={m.dateLine} />
               </div>
 
-              {groupMessages(activeConv.messages).map((group, index, groups) => {
-                const isLastGroup = index === groups.length - 1;
-                const lastMsg = activeConv.messages[activeConv.messages.length - 1];
-                const read = activeConv.other_read_cursor != null && lastMsg.id <= activeConv.other_read_cursor;
+              {activeConv.messages.map((msg, index, msgs) => {
+                const isLastMsg = index === msgs.length - 1;
+                const read =
+                  activeConv.other_read_cursor != null && msg.id <= activeConv.other_read_cursor;
                 return (
-                  <div key={group.id} className={`${m.msgRow} ${group.sent ? m.msgRowSent : ""}`}>
+                  <div key={msg.id} className={`${m.msgRow} ${msg.sent ? m.msgRowSent : ""}`}>
                     <div className={m.msgBubbleRow}>
-                      {!group.sent && (
+                      {!msg.sent && (
                         <img
                           src={activeConv.avatar}
                           alt={activeConv.name}
@@ -227,18 +198,13 @@ export function MessagingPage({
                           }}
                         />
                       )}
-                      <div
-                        className={`${m.bubble} ${group.sent ? m.bubbleSent : m.bubbleRecv}`}
-                      >
-                        {group.text}
-                        {group.count > 1 && (
-                          <span className={m.msgRepeat}>(x{group.count})</span>
-                        )}
+                      <div className={`${m.bubble} ${msg.sent ? m.bubbleSent : m.bubbleRecv}`}>
+                        {msg.text}
                       </div>
                     </div>
                     <span className={m.msgTime}>
-                      {formatClockTime(new Date(group.timestamp))}
-                      {isLastGroup && group.sent && read && (
+                      {formatClockTime(new Date(msg.timestamp))}
+                      {isLastMsg && msg.sent && read && (
                         <span className={m.msgRead}> · Read</span>
                       )}
                     </span>

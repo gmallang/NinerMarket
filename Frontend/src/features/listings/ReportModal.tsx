@@ -32,7 +32,7 @@ export function ReportModal({
   const [details, setDetails] = useState("");
 
   return (
-    <Modal open={open} onOpenChange={onOpenChange} ariaLabel="Report listing">
+    <Modal open={open} onOpenChange={onOpenChange} ariaLabel="Report listing" foreground>
       {done ? (
         <div className={s.reportDone}>
           <CheckCircle2 size={32} className={s.reportDoneIcon} />

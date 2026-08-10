@@ -77,6 +77,7 @@ export function MessagesOverlay() {
       }}
       ariaLabel="Messages"
       className={m.overlayContent}
+      foreground
     >
       {activeConv ? (
         <MessagingPage

@@ -93,6 +93,18 @@
   padding: var(--space-5);
 }
 
+/* Dialogs that open on top of another modal (offer/report/messages over a
+   listing) must cover the dialog beneath them — same stack as the base layer
+   plus one, so their backdrop also dims the listing instead of sitting
+   behind its content. */
+.modalOverlayForeground {
+  z-index: 1100;
+}
+
+.modalContentForeground {
+  z-index: 1101;
+}
+
 .modalContent[data-state="open"] {
   animation: modalIn 180ms var(--ease);
 }

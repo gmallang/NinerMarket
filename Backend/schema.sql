@@ -32,8 +32,12 @@ create table if not exists listings (
   flag_reason      text not null default '',
   photos           jsonb not null default '[]'::jsonb,
   pickup_location  text not null default '',
-  created_at       timestamptz not null default now()
+  created_at       timestamptz not null default now(),
+  sold_at          timestamptz
 );
+
+-- Migration for databases created before sold_at existed.
+alter table listings add column if not exists sold_at timestamptz;
 
 create table if not exists ratings (
   id           text primary key,

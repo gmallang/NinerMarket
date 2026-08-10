@@ -48,6 +48,8 @@ export function UserProfilePage() {
   const [submitMsg, setSubmitMsg] = useState<string | null>(null);
   const [offerBusy, setOfferBusy] = useState<string | null>(null);
   const [offerMsg, setOfferMsg] = useState<string | null>(null);
+  const [unsellingId, setUnsellingId] = useState<string | null>(null);
+  const [unsellMsg, setUnsellMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -131,10 +133,40 @@ export function UserProfilePage() {
 
   const syncSoldListing = (listingId: string) => {
     setListings((ls) =>
-      ls.map((l) => (l.id === listingId ? { ...l, status: "sold" } : l))
+      ls.map((l) =>
+        l.id === listingId
+          ? { ...l, status: "sold", soldAt: new Date().toISOString() }
+          : l
+      )
     );
     const cached = useMarketStore.getState().listings.find((l) => l.id === listingId);
-    if (cached) useMarketStore.getState().updateListing({ ...cached, status: "sold" });
+    if (cached)
+      useMarketStore
+        .getState()
+        .updateListing({ ...cached, status: "sold", soldAt: new Date().toISOString() });
+  };
+
+  const recentSoldIds = new Set(
+    listings
+      .filter((l) => l.status === "sold")
+      .sort((a, b) => (b.soldAt ?? "").localeCompare(a.soldAt ?? ""))
+      .slice(0, 3)
+      .map((l) => l.id)
+  );
+
+  const handleUnsell = async (listingId: string) => {
+    setUnsellingId(listingId);
+    setUnsellMsg(null);
+    try {
+      const next = await api.updateListing(listingId, { status: "active" });
+      const updated = fromDto(next);
+      setListings((ls) => ls.map((l) => (l.id === listingId ? updated : l)));
+      useMarketStore.getState().updateListing(updated);
+    } catch (err) {
+      setUnsellMsg(err instanceof Error ? err.message : "Couldn't put the listing back up.");
+    } finally {
+      setUnsellingId(null);
+    }
   };
 
   const handleAcceptOffer = async (offerId: string, listingId: string) => {
@@ -286,17 +318,35 @@ export function UserProfilePage() {
         ) : (
           <div className={s.grid}>
             {visibleListings.map((item) => (
-              <ListingCard
-                key={item.id}
-                item={item}
-                saved={savedItems.has(item.id)}
-                onToggleSave={() => toggleSave(item.id)}
-                onOpen={() => openListing(item.id)}
-                onOpenSeller={item.sellerId ? () => navigate(`/user/${item.sellerId}`) : undefined}
-              />
+              <div className={s.cardWrap} key={item.id}>
+                <ListingCard
+                  item={item}
+                  saved={savedItems.has(item.id)}
+                  onToggleSave={() => toggleSave(item.id)}
+                  onOpen={() => openListing(item.id)}
+                  onOpenSeller={
+                    item.sellerId ? () => navigate(`/user/${item.sellerId}`) : undefined
+                  }
+                />
+                {isOwnProfile &&
+                  item.status === "sold" &&
+                  recentSoldIds.has(item.id) && (
+                    <button
+                      className={s.unsellBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleUnsell(item.id);
+                      }}
+                      disabled={unsellingId === item.id}
+                    >
+                      {unsellingId === item.id ? "Reposting…" : "Unsell — put back up"}
+                    </button>
+                  )}
+              </div>
             ))}
           </div>
         )}
+        {unsellMsg && <p className={s.unsellMsg}>{unsellMsg}</p>}
       </section>
 
       {isOwnProfile && offers.length > 0 && (

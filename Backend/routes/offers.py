@@ -157,13 +157,59 @@ def list_offers(user_id: str, caller_id: str = Depends(require_user)):
 
     if db:
         rows = db.table("offers").select("*").order("created_at", desc=True).execute().data
-    else:
-        rows = sorted(offers.values(), key=lambda o: o["created_at"], reverse=True)
+        listing_ids = {r["listing_id"] for r in rows}
+        listing_rows: dict[str, dict] = {}
+        if listing_ids:
+            res = (
+                db.table("listings")
+                .select("id, name, price, status, seller_id")
+                .in_("id", list(listing_ids))
+                .execute()
+            )
+            listing_rows = {l["id"]: l for l in res.data}
+        buyer_ids = {r["buyer_id"] for r in rows}
+        names: dict[str, str] = {}
+        if buyer_ids:
+            res = (
+                db.table("users")
+                .select("id, display_name")
+                .in_("id", list(buyer_ids))
+                .execute()
+            )
+            names = {u["id"]: u["display_name"] for u in res.data}
 
+        out = []
+        for row in rows:
+            listing = listing_rows.get(row["listing_id"])
+            if not listing:
+                continue
+            if row["buyer_id"] == user_id or listing.get("seller_id") == user_id:
+                out.append(
+                    {
+                        "id": row["id"],
+                        "listing_id": row["listing_id"],
+                        "listing_name": listing.get("name", ""),
+                        "listing_price": listing.get("price", 0),
+                        "listing_status": listing.get("status", ""),
+                        "buyer_id": row["buyer_id"],
+                        "buyer_name": names.get(row["buyer_id"], "Former member"),
+                        "price": row["price"],
+                        "status": row["status"],
+                        "created_at": row["created_at"],
+                        "direction": (
+                            "received" if listing.get("seller_id") == user_id else "sent"
+                        ),
+                    }
+                )
+        return out
+
+    rows = sorted(offers.values(), key=lambda o: o["created_at"], reverse=True)
     out = []
     for row in rows:
-        listing = _get_listing(row["listing_id"])
-        if row["buyer_id"] == user_id or _listing_attr(listing, "seller_id") == user_id:
+        listing = listings.get(row["listing_id"])
+        if not listing:
+            continue
+        if row["buyer_id"] == user_id or listing.seller_id == user_id:
             out.append(_offer_out(row, user_id))
     return out
 
@@ -185,9 +231,12 @@ def accept_offer(offer_id: str, user_id: str = Depends(require_user)):
     _update_offer(offer_id, {"status": "accepted", "updated_at": now})
 
     if db:
-        db.table("listings").update({"status": "sold"}).eq("id", offer["listing_id"]).execute()
+        db.table("listings").update({"status": "sold", "sold_at": now}).eq(
+            "id", offer["listing_id"]
+        ).execute()
     else:
         listing.status = "sold"
+        listing.sold_at = datetime.now(timezone.utc)
 
     broadcast("listings", "listing_changed", {"id": offer["listing_id"]})
 

@@ -449,6 +449,14 @@
   color: var(--color-fg-muted);
 }
 
+.notifRepeat {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-fg-subtle);
+  white-space: nowrap;
+}
+
 .notifClear {
   width: 100%;
   display: flex;

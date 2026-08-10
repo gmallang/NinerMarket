@@ -212,6 +212,46 @@
   }
 }
 
+.cardWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.unsellBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border, #e5e5e5);
+  border-radius: var(--radius-md);
+  background: var(--color-surface, #fff);
+  color: var(--color-accent, #0070f3);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.unsellBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent, #0070f3) 8%, transparent);
+  border-color: var(--color-accent, #0070f3);
+}
+
+.unsellBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.unsellMsg {
+  margin-top: var(--space-2);
+  font-size: 0.8rem;
+  color: var(--color-danger, #e11d48);
+}
+
 .breakdown {
   display: flex;
   flex-direction: column;

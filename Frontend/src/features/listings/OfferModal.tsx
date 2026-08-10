@@ -34,7 +34,12 @@ export function OfferModal({
   };
 
   return (
-    <Modal open={open} onOpenChange={onOpenChange} ariaLabel="Make an offer">
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      ariaLabel="Make an offer"
+      foreground
+    >
       {done ? (
         <div className={s.offerDone}>
           <CheckCircle2 size={32} className={s.offerDoneIcon} />

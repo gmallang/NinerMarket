@@ -90,7 +90,10 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
-  updateListing: (id: string, data: Partial<Omit<NewListing, "seller_id">>) =>
+  updateListing: (
+    id: string,
+    data: Partial<Omit<NewListing, "seller_id">> & { status?: string },
+  ) =>
     request<ListingDto>(`/listings/${id}`, {
       method: "PATCH",
       body: JSON.stringify(data),

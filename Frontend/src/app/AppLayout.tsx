@@ -26,7 +26,23 @@ import { SellForm } from "@/features/sell/SellForm";
 import { MessagesOverlay } from "@/features/messaging/MessagesOverlay";
 import { ListingOverlay } from "@/features/listings/ListingOverlay";
 import { formatRelativeTime } from "@/lib/format";
+import type { NotificationDto } from "@/lib/types";
 import s from "./AppLayout.module.css";
+
+// Consecutive identical notifications (e.g. a burst of offers on the same
+// listing) collapse into a single row with a "(x2)"-style repeat count.
+function groupNotifs(list: NotificationDto[]): NotificationDto[][] {
+  const groups: NotificationDto[][] = [];
+  for (const n of list) {
+    const last = groups[groups.length - 1];
+    if (last && last[last.length - 1].text === n.text) {
+      last.push(n);
+    } else {
+      groups.push([n]);
+    }
+  }
+  return groups;
+}
 
 export function AppLayout() {
   const navigate = useNavigate();
@@ -299,21 +315,32 @@ export function AppLayout() {
                       <p className={s.notifEmpty}>You're all caught up.</p>
                     ) : (
                       <div className={s.notifList}>
-                        {notifications.slice(0, 10).map((n) => (
-                          <DropdownMenu.Item
-                            key={n.id}
-                            className={`${s.notifItem} ${n.read ? "" : s.notifItemUnread}`}
-                            onSelect={() => {
-                              markNotificationRead(n.id);
-                              if (n.listing_id) openListingOverlay(n.listing_id);
-                            }}
-                          >
-                            <span className={s.notifText}>{n.text}</span>
-                            <span className={s.notifTime}>
-                              {formatRelativeTime(n.created_at)}
-                            </span>
-                          </DropdownMenu.Item>
-                        ))}
+                        {groupNotifs(notifications)
+                          .slice(0, 10)
+                          .map((group) => {
+                            const n = group[0];
+                            const repeat = group.length;
+                            return (
+                              <DropdownMenu.Item
+                                key={n.id}
+                                className={`${s.notifItem} ${n.read ? "" : s.notifItemUnread}`}
+                                onSelect={() => {
+                                  group.forEach((item) => markNotificationRead(item.id));
+                                  if (n.listing_id) openListingOverlay(n.listing_id);
+                                }}
+                              >
+                                <span className={s.notifText}>
+                                  {n.text}
+                                  {repeat > 1 && (
+                                    <span className={s.notifRepeat}>(x{repeat})</span>
+                                  )}
+                                </span>
+                                <span className={s.notifTime}>
+                                  {formatRelativeTime(n.created_at)}
+                                </span>
+                              </DropdownMenu.Item>
+                            );
+                          })}
                       </div>
                     )}
                     {unreadNotifs > 0 && (

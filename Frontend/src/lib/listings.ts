@@ -23,5 +23,6 @@ export function fromDto(d: ListingDto): Listing {
     photos: d.photos ?? [],
     status: d.status,
     flagReason: d.flag_reason,
+    soldAt: d.sold_at ?? undefined,
   };
 }

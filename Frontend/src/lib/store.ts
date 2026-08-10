@@ -142,7 +142,10 @@ export const useMarketStore = create<MarketState>((set, get) => ({
         const convs = exists
           ? state.convs.map((c) => (c.id === threadId ? thread : c))
           : [thread, ...state.convs];
-        return { convs };
+        const activeConvId = convs.some((c) => c.id === state.activeConvId)
+          ? state.activeConvId
+          : convs[0]?.id ?? state.activeConvId;
+        return { convs, activeConvId };
       });
     } catch {
       // fall back to a full reload if the targeted fetch fails for any reason
@@ -319,7 +322,16 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     if (!user) return;
     try {
       const list = await api.getThreads(user.id);
-      set({ convs: list });
+      set((state) => ({
+        convs: list,
+        // activeConvId defaults to a placeholder that never corresponds to a
+        // real thread. If it's still not pointing at anything real once
+        // threads load, point it at the first one so sending a message
+        // targets an actual conversation instead of a stale/bogus id.
+        activeConvId: list.some((c) => c.id === state.activeConvId)
+          ? state.activeConvId
+          : list[0]?.id ?? state.activeConvId,
+      }));
     } catch {
       // Keep whatever's already shown when the backend is unavailable.
     }

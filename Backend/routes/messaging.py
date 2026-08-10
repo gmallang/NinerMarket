@@ -6,7 +6,6 @@ from auth import require_user
 from database import db, listings, threads, users
 from models import OpenThreadRequest, SendMessageRequest
 from broadcast import broadcast
-from routes.notifications import create_notification
 
 router = APIRouter()
 
@@ -32,16 +31,6 @@ def _listing_seller_id(listing_id: str) -> str | None:
     if not listing:
         return None
     return listing.seller_id if hasattr(listing, "seller_id") else listing.get("seller_id")
-
-
-def _listing_name(listing_id: str) -> str:
-    if db:
-        res = db.table("listings").select("name").eq("id", listing_id).execute()
-        return res.data[0]["name"] if res.data else "a listing"
-    listing = listings.get(listing_id)
-    if not listing:
-        return "a listing"
-    return listing.name if hasattr(listing, "name") else listing.get("name", "a listing")
 
 
 def _display_name(user_id: str) -> str:
@@ -280,17 +269,14 @@ def send_thread_message(
         )
         row["id"] = int(row["id"])
 
+        # No notification-center entry here on purpose: the thread's own
+        # unread badge already signals new messages and clears correctly the
+        # instant it's read, whereas a separate notification had no way to
+        # stay in sync with that and just piled up as noise.
         recipient_id = (
             _listing_seller_id(thread_row["listingId"]) if sent_by_opener else thread_row["user_id"]
         )
         if recipient_id:
-            sender_name = _display_name(user_id)
-            listing_name = _listing_name(thread_row["listingId"])
-            create_notification(
-                recipient_id,
-                f"{sender_name} sent you a message about {listing_name}.",
-                thread_row["listingId"],
-            )
             broadcast(f"inbox:{recipient_id}", "new_message", {"thread_id": thread_id})
         return _viewer_relative(row, msgs, user_id)
 
@@ -314,13 +300,6 @@ def send_thread_message(
         _listing_seller_id(thread["listingId"]) if sent_by_opener else thread["user_id"]
     )
     if recipient_id:
-        sender_name = _display_name(user_id)
-        listing_name = _listing_name(thread["listingId"])
-        create_notification(
-            recipient_id,
-            f"{sender_name} sent you a message about {listing_name}.",
-            thread["listingId"],
-        )
         broadcast(f"inbox:{recipient_id}", "new_message", {"thread_id": thread_id})
     return _viewer_relative(thread, thread["messages"], user_id)
 

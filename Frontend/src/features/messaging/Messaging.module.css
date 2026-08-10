@@ -343,11 +343,22 @@
 /* ── Individual message ── */
 .msgRow {
   display: flex;
-  align-items: flex-end;
-  gap: var(--space-2);
+  flex-direction: column;
+  gap: 3px;
 }
 
 .msgRowSent {
+  align-items: flex-end;
+}
+
+.msgBubbleRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  max-width: 68%;
+}
+
+.msgRowSent .msgBubbleRow {
   flex-direction: row-reverse;
 }
 
@@ -362,17 +373,6 @@
 
 .msgRowSent .msgRowAvatar {
   display: none;
-}
-
-.msgGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  max-width: 68%;
-}
-
-.msgRowSent .msgGroup {
-  align-items: flex-end;
 }
 
 .bubble {
@@ -399,6 +399,49 @@
   font-size: 0.65rem;
   color: var(--color-fg-subtle);
   padding: 0 4px;
+  /* line up under the bubble, not under the avatar, on received messages */
+  margin-left: calc(28px + var(--space-2));
+}
+
+.msgRowSent .msgTime {
+  margin-left: 0;
+}
+
+.typingBubble {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 11px 14px;
+}
+
+.typingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  opacity: 0.5;
+  animation: typingBounce 1.2s ease-in-out infinite;
+}
+
+.typingDot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typingDot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typingBounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
 }
 
 /* ── Input area ── */

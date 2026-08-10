@@ -3,10 +3,16 @@ import type { Conversation } from "@/data/conversations";
 import { api, clearToken } from "@/lib/api";
 import { avatarUrl } from "@/lib/avatar";
 import { fromDto } from "@/lib/listings";
+import { broadcastTyping, subscribeInbox } from "@/lib/realtime";
 import { clearUser, loadUser, saveUser } from "@/lib/user";
 import type { CurrentUser, Listing, NotificationDto } from "@/lib/types";
 
 const SAVED_KEY = "ninermarket-saved";
+
+// Realtime subscription + typing-timeout handles live outside the store's
+// reactive state — components never need to read them directly.
+let unsubscribeInbox: (() => void) | null = null;
+const typingTimeouts = new Map<number, ReturnType<typeof setTimeout>>();
 
 function loadSaved(): Set<string> {
   try {
@@ -35,9 +41,13 @@ interface MarketState {
   activeConvId: number;
   inputText: string;
   notifications: NotificationDto[];
+  typingByConvId: Record<number, boolean>;
 
   signIn: (user: CurrentUser) => void;
   logout: () => void;
+  startRealtimeInbox: () => void;
+  stopRealtimeInbox: () => void;
+  sendTypingSignal: (isTyping: boolean) => void;
   updateProfile: (year: string, payments: string[]) => Promise<void>;
   refreshProfile: () => Promise<void>;
   loadListings: () => Promise<void>;
@@ -77,6 +87,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   activeConvId: 1,
   inputText: "",
   notifications: [],
+  typingByConvId: {},
   messagesOpen: false,
   listingOverlayId: null,
   sellModal: null,
@@ -85,11 +96,59 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     set({ user });
     void get().loadNotifications();
     void get().loadThreads();
+    get().startRealtimeInbox();
   },
   logout: () => {
     clearUser();
     clearToken();
+    get().stopRealtimeInbox();
     set({ user: null });
+  },
+
+  startRealtimeInbox: () => {
+    const user = get().user;
+    if (!user) return;
+    unsubscribeInbox?.();
+    unsubscribeInbox = subscribeInbox(user.id, {
+      onNewMessage: () => void get().loadThreads(),
+      onTyping: (payload) => {
+        if (payload.user_id === user.id) return;
+        set((state) => ({
+          typingByConvId: { ...state.typingByConvId, [payload.thread_id]: payload.typing },
+        }));
+        const existing = typingTimeouts.get(payload.thread_id);
+        if (existing) clearTimeout(existing);
+        if (payload.typing) {
+          typingTimeouts.set(
+            payload.thread_id,
+            setTimeout(() => {
+              set((state) => ({
+                typingByConvId: { ...state.typingByConvId, [payload.thread_id]: false },
+              }));
+            }, 3000)
+          );
+        }
+      },
+    });
+  },
+
+  stopRealtimeInbox: () => {
+    unsubscribeInbox?.();
+    unsubscribeInbox = null;
+    for (const t of typingTimeouts.values()) clearTimeout(t);
+    typingTimeouts.clear();
+  },
+
+  sendTypingSignal: (isTyping) => {
+    const { user, convs, activeConvId } = get();
+    if (!user) return;
+    const conv = convs.find((c) => c.id === activeConvId);
+    if (!conv?.other_user_id) return;
+    broadcastTyping(conv.other_user_id, {
+      thread_id: activeConvId,
+      user_id: user.id,
+      typing: isTyping,
+    });
   },
 
   updateProfile: async (year, payments) => {

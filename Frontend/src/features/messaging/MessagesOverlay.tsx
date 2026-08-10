@@ -18,8 +18,11 @@ export function MessagesOverlay() {
   const sendMessage = useMarketStore((s) => s.sendMessage);
   const openListingOverlay = useMarketStore((s) => s.openListingOverlay);
   const loadThreads = useMarketStore((s) => s.loadThreads);
+  const sendTypingSignal = useMarketStore((s) => s.sendTypingSignal);
+  const typingByConvId = useMarketStore((s) => s.typingByConvId);
 
   const messagesEndRef: RefObject<HTMLDivElement> = useRef(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const activeConv = convs.find((c) => c.id === activeConvId) ?? convs[0];
   const activeListing = listings.find((l) => l.id === activeConv?.listingId);
 
@@ -33,10 +36,36 @@ export function MessagesOverlay() {
     return () => window.clearInterval(id);
   }, [open, loadThreads]);
 
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, []);
+
+  const stopTyping = () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    sendTypingSignal(false);
+  };
+
+  const handleInputChange = (text: string) => {
+    setInputText(text);
+    sendTypingSignal(true);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(stopTyping, 2000);
+  };
+
+  const handleSend = () => {
+    stopTyping();
+    sendMessage();
+  };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSend();
     }
   };
 
@@ -58,11 +87,12 @@ export function MessagesOverlay() {
           activeListing={activeListing}
           messagesEndRef={messagesEndRef}
           inputText={inputText}
-          onInputChange={setInputText}
+          onInputChange={handleInputChange}
           onQuickReply={setInputText}
-          onSend={sendMessage}
+          onSend={handleSend}
           onKeyDown={handleKeyDown}
           onOpenListing={activeListing ? () => openListingOverlay(activeListing.id) : undefined}
+          typingIndicator={!!typingByConvId[activeConvId]}
           className={m.overlayPanel}
         />
       ) : (

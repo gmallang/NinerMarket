@@ -39,6 +39,7 @@ export function AppLayout() {
   const notifications = useMarketStore((s) => s.notifications);
   const loadNotifications = useMarketStore((s) => s.loadNotifications);
   const loadThreads = useMarketStore((s) => s.loadThreads);
+  const startRealtimeInbox = useMarketStore((s) => s.startRealtimeInbox);
   const markNotificationRead = useMarketStore((s) => s.markNotificationRead);
   const markAllNotificationsRead = useMarketStore((s) => s.markAllNotificationsRead);
   const openListingOverlay = useMarketStore((s) => s.openListingOverlay);
@@ -82,8 +83,9 @@ export function AppLayout() {
     if (user) {
       void loadNotifications();
       void loadThreads();
+      startRealtimeInbox();
     }
-  }, [user, loadNotifications, loadThreads]);
+  }, [user, loadNotifications, loadThreads, startRealtimeInbox]);
 
   useEffect(() => {
     window.scrollTo(0, 0);

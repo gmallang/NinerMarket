@@ -21,6 +21,7 @@ export interface Conversation {
   lastMsg: string;
   lastTimestamp: string;
   messages: Message[];
+  other_user_id?: string;
 }
 
 export const CONVS: Conversation[] = [

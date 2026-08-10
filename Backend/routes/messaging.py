@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from auth import require_user
 from database import db, listings, threads, users
 from models import OpenThreadRequest, SendMessageRequest
+from broadcast import broadcast
 from routes.notifications import create_notification
 
 router = APIRouter()
@@ -68,10 +69,14 @@ def _viewer_relative(row: dict, msgs: list[dict], viewer_id: str) -> dict:
     copy of the thread."""
     row = dict(row)
     if row.get("user_id") != viewer_id:
-        other_name = _display_name(row.get("user_id", ""))
+        other_id = row.get("user_id", "")
+        other_name = _display_name(other_id)
         row["name"] = other_name
         row["avatar"] = _avatar_url(other_name)
+        row["other_user_id"] = other_id
         msgs = [{**m, "sent": not m.get("sent", True)} for m in msgs]
+    else:
+        row["other_user_id"] = _listing_seller_id(row.get("listingId", ""))
     row["messages"] = msgs
     return row
 
@@ -257,6 +262,7 @@ def send_thread_message(
                 f"{sender_name} sent you a message about {listing_name}.",
                 thread_row["listingId"],
             )
+            broadcast(f"inbox:{recipient_id}", "new_message", {"thread_id": thread_id})
         return _viewer_relative(row, msgs, user_id)
 
     thread = threads.get(thread_id)
@@ -286,6 +292,7 @@ def send_thread_message(
             f"{sender_name} sent you a message about {listing_name}.",
             thread["listingId"],
         )
+        broadcast(f"inbox:{recipient_id}", "new_message", {"thread_id": thread_id})
     return _viewer_relative(thread, thread["messages"], user_id)
 
 

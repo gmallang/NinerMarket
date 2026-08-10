@@ -68,4 +68,16 @@ describe("MessagesOverlay", () => {
     expect(screen.getAllByText("Yes, it is!")).toHaveLength(2);
     expect(useMarketStore.getState().convs[0].lastMsg).toBe("Yes, it is!");
   });
+
+  it("shows a typing indicator when the other person is typing", () => {
+    useMarketStore.setState({ messagesOpen: true, typingByConvId: { 11: true } });
+    render(<MessagesOverlay />);
+    expect(document.querySelector('[class*="typingBubble"]')).toBeInTheDocument();
+  });
+
+  it("hides the typing indicator once it's no longer set", () => {
+    useMarketStore.setState({ messagesOpen: true, typingByConvId: { 11: false } });
+    render(<MessagesOverlay />);
+    expect(document.querySelector('[class*="typingBubble"]')).not.toBeInTheDocument();
+  });
 });

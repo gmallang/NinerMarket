@@ -23,6 +23,7 @@ interface MessagingPageProps {
   onSend: () => void;
   onKeyDown: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
   onOpenListing?: () => void;
+  typingIndicator?: boolean;
   className?: string;
 }
 
@@ -39,6 +40,7 @@ export function MessagingPage({
   onSend,
   onKeyDown,
   onOpenListing,
+  typingIndicator = false,
   className = "",
 }: MessagingPageProps) {
   const activeConv = convs.find((c) => c.id === activeConvId) ?? convs[0];
@@ -150,7 +152,28 @@ export function MessagingPage({
 
               {activeConv.messages.map((msg) => (
                 <div key={msg.id} className={`${m.msgRow} ${msg.sent ? m.msgRowSent : ""}`}>
-                  {!msg.sent && (
+                  <div className={m.msgBubbleRow}>
+                    {!msg.sent && (
+                      <img
+                        src={activeConv.avatar}
+                        alt={activeConv.name}
+                        className={m.msgRowAvatar}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = avatarUrl(activeConv.name, 56);
+                        }}
+                      />
+                    )}
+                    <div className={`${m.bubble} ${msg.sent ? m.bubbleSent : m.bubbleRecv}`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                  <span className={m.msgTime}>{formatClockTime(new Date(msg.timestamp))}</span>
+                </div>
+              ))}
+
+              {typingIndicator && (
+                <div className={m.msgRow}>
+                  <div className={m.msgBubbleRow}>
                     <img
                       src={activeConv.avatar}
                       alt={activeConv.name}
@@ -159,15 +182,14 @@ export function MessagingPage({
                         (e.target as HTMLImageElement).src = avatarUrl(activeConv.name, 56);
                       }}
                     />
-                  )}
-                  <div className={m.msgGroup}>
-                    <div className={`${m.bubble} ${msg.sent ? m.bubbleSent : m.bubbleRecv}`}>
-                      {msg.text}
+                    <div className={`${m.bubble} ${m.bubbleRecv} ${m.typingBubble}`}>
+                      <span className={m.typingDot} />
+                      <span className={m.typingDot} />
+                      <span className={m.typingDot} />
                     </div>
-                    <span className={m.msgTime}>{formatClockTime(new Date(msg.timestamp))}</span>
                   </div>
                 </div>
-              ))}
+              )}
 
               <div ref={messagesEndRef} />
             </div>

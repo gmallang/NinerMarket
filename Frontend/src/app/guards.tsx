@@ -4,7 +4,7 @@ import { useMarketStore } from "@/lib/store";
 
 export function RequireAuth() {
   const user = useMarketStore((s) => s.user);
-  return user ? <Outlet /> : <Navigate to="/login" replace />;
+  return user ? <Outlet /> : <Navigate to="/about" replace />;
 }
 
 export function PublicOnly({ children }: { children: ReactNode }) {

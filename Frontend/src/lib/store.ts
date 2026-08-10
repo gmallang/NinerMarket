@@ -76,6 +76,8 @@ interface MarketState {
   openListingOverlay: (listingId: string) => void;
   closeListingOverlay: () => void;
   markListingSold: (listingId: string) => Promise<void>;
+  reportListing: (listingId: string, reason: string, details: string) => Promise<void>;
+  makeOffer: (listingId: string, price: number) => Promise<void>;
 }
 
 export const useMarketStore = create<MarketState>((set, get) => ({
@@ -389,5 +391,16 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     set((state) => ({
       listings: state.listings.map((l) => (l.id === listingId ? { ...l, status: "sold" } : l)),
     }));
+  },
+
+  reportListing: async (listingId, reason, details) => {
+    const dto = await api.reportListing(listingId, reason, details);
+    set((state) => ({
+      listings: state.listings.map((l) => (l.id === listingId ? fromDto(dto) : l)),
+    }));
+  },
+
+  makeOffer: async (listingId, price) => {
+    await api.createOffer(listingId, price);
   },
 }));

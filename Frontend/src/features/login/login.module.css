@@ -429,14 +429,6 @@
   background: var(--color-muted);
 }
 
-.xModalLogo {
-  width: 40px;
-  height: 32px;
-  object-fit: contain;
-  flex-shrink: 0;
-  filter: brightness(0) invert(29%) sepia(64%) saturate(1200%) hue-rotate(98deg) brightness(84%) contrast(92%);
-}
-
 .xModalTitle {
   font-size: 1.125rem;
   font-weight: 700;

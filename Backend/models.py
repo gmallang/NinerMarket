@@ -86,6 +86,15 @@ class Rating(BaseModel):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class ReportRequest(BaseModel):
+    reason: str = Field(min_length=1, max_length=120)
+    details: str = Field(default="", max_length=500)
+
+
+class OfferCreate(BaseModel):
+    price: float = Field(gt=0)
+
+
 class NotificationCreate(BaseModel):
     text: str
     listing_id: str = ""

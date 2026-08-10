@@ -74,6 +74,16 @@
   .convList {
     display: none;
   }
+
+  /* Mobile shows one pane at a time. When a conversation is open, the
+     list hides and a back bar (see .chatMobileBar) returns to it. */
+  .convListVisible {
+    display: flex;
+  }
+
+  .chatViewHidden {
+    display: none;
+  }
 }
 
 .convListHeader {
@@ -241,6 +251,59 @@
   background: var(--color-bg);
 }
 
+/* Mobile-only bar at the top of an open conversation with a back button
+   into the conversation list. Hidden on desktop where both panes sit side
+   by side. */
+.chatMobileBar {
+  display: none;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-card);
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .chatMobileBar {
+    display: flex;
+  }
+}
+
+.backBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--color-muted);
+  color: var(--color-fg);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 130ms ease;
+}
+
+@media (max-width: 600px) {
+  .backBtn {
+    display: flex;
+  }
+}
+
+.backBtn:hover {
+  background: var(--color-border);
+}
+
+.chatMobileName {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ── Chat listing header ── */
 .chatHeader {
   display: flex;
@@ -254,14 +317,29 @@
   border-left: none;
   border-right: none;
   border-top: none;
+}
+
+.chatHeaderMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: none;
+  border: none;
+  padding: 0;
   text-align: left;
   font: inherit;
   cursor: pointer;
   transition: background 130ms ease;
 }
 
-.chatHeader:hover:not(:disabled) {
+.chatHeaderMain:hover:not(:disabled) {
   background: var(--color-muted);
+}
+
+.chatHeaderMain:disabled {
+  cursor: default;
 }
 
 .chatThumb {

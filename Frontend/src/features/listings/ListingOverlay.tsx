@@ -18,6 +18,8 @@ export function ListingOverlay() {
   const toggleSave = useMarketStore((s) => s.toggleSave);
   const openMessageOverlay = useMarketStore((s) => s.openMessageOverlay);
   const markListingSold = useMarketStore((s) => s.markListingSold);
+  const reportListing = useMarketStore((s) => s.reportListing);
+  const makeOffer = useMarketStore((s) => s.makeOffer);
   const openEditListing = useMarketStore((s) => s.openEditListing);
   const user = useMarketStore((s) => s.user);
 
@@ -76,6 +78,8 @@ export function ListingOverlay() {
                 }
               : undefined
           }
+          onReport={(reason, details) => reportListing(item.id, reason, details)}
+          onMakeOffer={(price) => makeOffer(item.id, price)}
         />
       ) : (
         listingOverlayId != null && (

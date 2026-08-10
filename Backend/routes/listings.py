@@ -1,11 +1,13 @@
 import uuid
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from auth import require_user
-from database import db, listings, users
-from models import Listing
+from database import db, listings, reports, users
+from models import Listing, ReportRequest
 from moderation import find_prohibited_reasons
+from ratelimit import client_ip, rate_limit
 from routes.notifications import create_notification
 
 router = APIRouter()
@@ -128,6 +130,90 @@ def get_listing(id: str):
     if id not in listings:
         raise HTTPException(status_code=404, detail="Listing not found")
     return _with_seller(listings[id])
+
+
+@router.post("/listings/{id}/report")
+def report_listing(
+    id: str,
+    body: ReportRequest,
+    request: Request,
+    user_id: str = Depends(require_user),
+):
+    """Flags a listing for review after a user reports it. The report is
+    recorded so duplicates are rejected and there's an audit trail; the
+    listing gets status='flagged' so it drops out of browse, matching the
+    keyword-filter flow. The seller is notified and can edit to resolve."""
+    if db:
+        existing = db.table("listings").select("*").eq("id", id).execute()
+        if not existing.data:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        listing = existing.data[0]
+    else:
+        if id not in listings:
+            raise HTTPException(status_code=404, detail="Listing not found")
+        listing = listings[id]
+
+    seller_id = listing["seller_id"] if db else listing.seller_id
+    name = listing["name"] if db else listing.name
+
+    if seller_id == user_id:
+        raise HTTPException(status_code=400, detail="You can't report your own listing")
+
+    rate_limit(f"report:{user_id}:{client_ip(request)}", max_attempts=10, window_seconds=3600)
+
+    if db:
+        dup = (
+            db.table("listing_reports")
+            .select("id")
+            .eq("listing_id", id)
+            .eq("reporter_id", user_id)
+            .execute()
+        )
+        if dup.data:
+            raise HTTPException(status_code=409, detail="You've already reported this listing.")
+    elif any(
+        r["listing_id"] == id and r["reporter_id"] == user_id for r in reports.values()
+    ):
+        raise HTTPException(status_code=409, detail="You've already reported this listing.")
+
+    report = {
+        "id": generate_id(),
+        "listing_id": id,
+        "reporter_id": user_id,
+        "reason": body.reason,
+        "details": body.details,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if db:
+        db.table("listing_reports").insert(report).execute()
+    else:
+        reports[report["id"]] = report
+
+    flag_label = f"User report: {body.reason}"
+    if db:
+        existing_reason = listing.get("flag_reason") or ""
+        if flag_label not in existing_reason:
+            listing["flag_reason"] = (
+                f"{existing_reason}, {flag_label}".lstrip(", ") if existing_reason else flag_label
+            )
+        listing["status"] = "flagged"
+        db.table("listings").update(
+            {"status": "flagged", "flag_reason": listing["flag_reason"]}
+        ).eq("id", id).execute()
+    else:
+        listing.status = "flagged"
+        if flag_label not in listing.flag_reason:
+            listing.flag_reason = (
+                f"{listing.flag_reason}, {flag_label}" if listing.flag_reason else flag_label
+            )
+
+    create_notification(
+        seller_id,
+        f"Your listing \"{name}\" was reported and is hidden from other students until it's resolved.",
+        id,
+    )
+
+    return _with_seller(listing)
 
 
 def _apply_moderation(updates: dict, current_name: str, current_desc: str, current_status: str) -> None:

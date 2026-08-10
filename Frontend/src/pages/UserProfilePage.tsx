@@ -6,7 +6,7 @@ import { avatarUrl } from "@/lib/avatar";
 import { formatRelativeTime } from "@/lib/format";
 import { fromDto } from "@/lib/listings";
 import { useMarketStore } from "@/lib/store";
-import type { Listing, Rating, UserDto } from "@/lib/types";
+import type { Listing, Offer, Rating, UserDto } from "@/lib/types";
 import { ListingCard } from "@/features/listings/ListingCard";
 import ps from "./page.module.css";
 import s from "./UserProfilePage.module.css";
@@ -38,6 +38,7 @@ export function UserProfilePage() {
   const [profile, setProfile] = useState<UserDto | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -45,6 +46,8 @@ export function UserProfilePage() {
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitMsg, setSubmitMsg] = useState<string | null>(null);
+  const [offerBusy, setOfferBusy] = useState<string | null>(null);
+  const [offerMsg, setOfferMsg] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -59,10 +62,15 @@ export function UserProfilePage() {
           api.getRatings(id),
           api.getUserListings(id),
         ]);
+        let of: Offer[] = [];
+        if (currentUser?.id === id) {
+          of = await api.getOffers(id);
+        }
         if (!active) return;
         setProfile(u);
         setRatings(r);
         setListings(ls.map(fromDto));
+        setOffers(of);
       } catch (err) {
         if (!active) return;
         setError(err instanceof Error ? err.message : "Couldn't load profile");
@@ -74,7 +82,7 @@ export function UserProfilePage() {
     return () => {
       active = false;
     };
-  }, [id]);
+  }, [id, currentUser?.id]);
 
   const isOwnProfile = !!currentUser && currentUser.id === id;
   const visibleListings = showAll ? listings : listings.slice(0, 3);
@@ -109,6 +117,61 @@ export function UserProfilePage() {
       setSubmitMsg(err instanceof Error ? err.message : "Couldn't submit rating");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const receivedOffers = offers.filter((o) => o.direction === "received");
+  const sentOffers = offers.filter((o) => o.direction === "sent");
+
+  const offerBadgeClass = (status: Offer["status"]) =>
+    s[`offerBadge${status.charAt(0).toUpperCase()}${status.slice(1)}`] as string;
+
+  const replaceOffer = (next: Offer) =>
+    setOffers((os) => os.map((o) => (o.id === next.id ? next : o)));
+
+  const syncSoldListing = (listingId: string) => {
+    setListings((ls) =>
+      ls.map((l) => (l.id === listingId ? { ...l, status: "sold" } : l))
+    );
+    const cached = useMarketStore.getState().listings.find((l) => l.id === listingId);
+    if (cached) useMarketStore.getState().updateListing({ ...cached, status: "sold" });
+  };
+
+  const handleAcceptOffer = async (offerId: string, listingId: string) => {
+    setOfferBusy(offerId);
+    setOfferMsg(null);
+    try {
+      const next = await api.acceptOffer(offerId);
+      replaceOffer(next);
+      syncSoldListing(listingId);
+    } catch (err) {
+      setOfferMsg(err instanceof Error ? err.message : "Couldn't accept the offer.");
+    } finally {
+      setOfferBusy(null);
+    }
+  };
+
+  const handleDeclineOffer = async (offerId: string) => {
+    setOfferBusy(offerId);
+    setOfferMsg(null);
+    try {
+      replaceOffer(await api.declineOffer(offerId));
+    } catch (err) {
+      setOfferMsg(err instanceof Error ? err.message : "Couldn't decline the offer.");
+    } finally {
+      setOfferBusy(null);
+    }
+  };
+
+  const handleCancelOffer = async (offerId: string) => {
+    setOfferBusy(offerId);
+    setOfferMsg(null);
+    try {
+      replaceOffer(await api.cancelOffer(offerId));
+    } catch (err) {
+      setOfferMsg(err instanceof Error ? err.message : "Couldn't cancel the offer.");
+    } finally {
+      setOfferBusy(null);
     }
   };
 
@@ -236,6 +299,98 @@ export function UserProfilePage() {
         )}
       </section>
 
+      {isOwnProfile && offers.length > 0 && (
+        <section className={s.offersSection} aria-label="Offers">
+          <h2 className={s.sectionTitle}>Offers</h2>
+
+          {receivedOffers.length > 0 && (
+            <div className={s.offersGroup}>
+              <h3 className={s.offersSub}>Received</h3>
+              <ul className={s.offerList}>
+                {receivedOffers.map((o) => (
+                  <li key={o.id} className={s.offerItem}>
+                    <div className={s.offerInfo}>
+                      <p className={s.offerText}>
+                        <span className={s.offerBuyer}>{o.buyer_name}</span> offered{" "}
+                        <strong>${o.price.toLocaleString()}</strong> on{" "}
+                        <button className={s.offerListing} onClick={() => openListing(o.listing_id)}>
+                          {o.listing_name}
+                        </button>
+                      </p>
+                      {o.listing_status !== "active" && (
+                        <p className={s.offerHint}>This listing is no longer available.</p>
+                      )}
+                    </div>
+                    {o.status === "pending" ? (
+                      <div className={s.offerActions}>
+                        <button
+                          className={s.offerDecline}
+                          onClick={() => handleDeclineOffer(o.id)}
+                          disabled={offerBusy === o.id}
+                        >
+                          Decline
+                        </button>
+                        <button
+                          className={s.offerAccept}
+                          onClick={() => handleAcceptOffer(o.id, o.listing_id)}
+                          disabled={offerBusy === o.id || o.listing_status !== "active"}
+                        >
+                          Accept
+                        </button>
+                      </div>
+                    ) : (
+                      <span className={`${s.offerBadge} ${offerBadgeClass(o.status)}`}>
+                        {o.status}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {sentOffers.length > 0 && (
+            <div className={s.offersGroup}>
+              <h3 className={s.offersSub}>Sent</h3>
+              <ul className={s.offerList}>
+                {sentOffers.map((o) => (
+                  <li key={o.id} className={s.offerItem}>
+                    <div className={s.offerInfo}>
+                      <p className={s.offerText}>
+                        You offered <strong>${o.price.toLocaleString()}</strong> on{" "}
+                        <button className={s.offerListing} onClick={() => openListing(o.listing_id)}>
+                          {o.listing_name}
+                        </button>
+                      </p>
+                    </div>
+                    {o.status === "pending" ? (
+                      <div className={s.offerActions}>
+                        <button
+                          className={s.offerCancel}
+                          onClick={() => handleCancelOffer(o.id)}
+                          disabled={offerBusy === o.id}
+                        >
+                          Cancel
+                        </button>
+                        <span className={`${s.offerBadge} ${offerBadgeClass(o.status)}`}>
+                          {o.status}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className={`${s.offerBadge} ${offerBadgeClass(o.status)}`}>
+                        {o.status}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {offerMsg && <p className={s.offerMsg}>{offerMsg}</p>}
+        </section>
+      )}
+
       <section className={s.ratingsSection} aria-label="Ratings">
         <h2 className={s.sectionTitle}>Ratings</h2>
         {ratings.length === 0 ? (
@@ -263,6 +418,21 @@ export function UserProfilePage() {
                 .map((r) => (
                   <li key={r.id} className={s.ratingItem}>
                     <div className={s.ratingTop}>
+                      {r.rater ? (
+                        <button
+                          className={s.ratingAuthor}
+                          onClick={() => navigate(`/user/${r.rater!.id}`)}
+                        >
+                          <img
+                            src={avatarUrl(r.rater.display_name, 32)}
+                            alt={r.rater.display_name}
+                            className={s.ratingAuthorAvatar}
+                          />
+                          <span>{r.rater.display_name}</span>
+                        </button>
+                      ) : (
+                        <span className={s.ratingAuthor}>Former member</span>
+                      )}
                       <Stars value={r.stars} />
                       <span className={s.ratingTime}>{formatRelativeTime(r.created_at)}</span>
                     </div>

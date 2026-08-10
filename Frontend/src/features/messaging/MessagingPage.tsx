@@ -1,6 +1,6 @@
 import type { KeyboardEvent, RefObject } from "react";
 import { useState } from "react";
-import { MessageCircle, X, Send, Search } from "lucide-react";
+import { ArrowLeft, MessageCircle, X, Send, Search } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
 import { formatClockTime, formatRelativeTime } from "@/lib/format";
@@ -45,6 +45,10 @@ export function MessagingPage({
 }: MessagingPageProps) {
   const activeConv = convs.find((c) => c.id === activeConvId) ?? convs[0];
 
+  // On mobile the conversation list is hidden and the user navigates
+  // list -> chat -> back; on desktop both panes always render.
+  const [mobileView, setMobileView] = useState<"list" | "chat">("chat");
+
   const [search, setSearch] = useState("");
   const query = search.trim().toLowerCase();
   const filteredConvs = query
@@ -68,7 +72,11 @@ export function MessagingPage({
 
       <div className={m.panelBody}>
         {/* Conversation list */}
-        <div className={m.convList}>
+        <div
+          className={`${m.convList} ${
+            mobileView === "list" ? m.convListVisible : m.convListHidden
+          }`}
+        >
           <div className={m.convListHeader}>
             <span
               style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-fg-muted)" }}
@@ -92,7 +100,10 @@ export function MessagingPage({
               <div
                 key={conv.id}
                 className={`${m.convItem} ${conv.id === activeConvId ? m.convItemActive : ""}`}
-                onClick={() => onSelectConv(conv.id)}
+                onClick={() => {
+                  onSelectConv(conv.id);
+                  setMobileView("chat");
+                }}
               >
                 <div className={m.convAvatarWrap}>
                   <img
@@ -120,21 +131,41 @@ export function MessagingPage({
         </div>
 
         {/* Chat view */}
-        <div className={m.chatView}>
-          {/* Listing header */}
-          {activeListing && (
-            <button
-              className={m.chatHeader}
-              onClick={onOpenListing}
-              disabled={!onOpenListing}
-              aria-label={`View ${activeListing.title}`}
-            >
-              <img src={activeListing.image} alt={activeListing.title} className={m.chatThumb} />
-              <div className={m.chatHeaderInfo}>
-                <p className={m.chatListingTitle}>{activeListing.title}</p>
-                <p className={m.chatListingPrice}>${activeListing.price.toLocaleString()}</p>
-              </div>
-            </button>
+        <div className={`${m.chatView} ${mobileView === "list" ? m.chatViewHidden : ""}`}>
+          {/* Listing header with mobile back button */}
+          {activeListing ? (
+            <div className={m.chatHeader}>
+              <button
+                className={m.backBtn}
+                onClick={() => setMobileView("list")}
+                aria-label="Back to conversations"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <button
+                className={m.chatHeaderMain}
+                onClick={onOpenListing}
+                disabled={!onOpenListing}
+                aria-label={`View ${activeListing.title}`}
+              >
+                <img src={activeListing.image} alt={activeListing.title} className={m.chatThumb} />
+                <div className={m.chatHeaderInfo}>
+                  <p className={m.chatListingTitle}>{activeListing.title}</p>
+                  <p className={m.chatListingPrice}>${activeListing.price.toLocaleString()}</p>
+                </div>
+              </button>
+            </div>
+          ) : (
+            <div className={m.chatMobileBar}>
+              <button
+                className={m.backBtn}
+                onClick={() => setMobileView("list")}
+                aria-label="Back to conversations"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <span className={m.chatMobileName}>{activeConv.name}</span>
+            </div>
           )}
 
           {/* Messages */}

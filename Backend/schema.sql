@@ -74,8 +74,34 @@ create table if not exists notifications (
   read        boolean not null default false
 );
 
+create table if not exists listing_reports (
+  id           text primary key,
+  listing_id   text not null references listings(id) on delete cascade,
+  reporter_id  text not null references users(id) on delete cascade,
+  reason       text not null,
+  details      text not null default '',
+  created_at   timestamptz not null default now()
+);
+
+create table if not exists offers (
+  id          text primary key,
+  listing_id  text not null references listings(id) on delete cascade,
+  buyer_id    text not null references users(id) on delete cascade,
+  price       double precision not null check (price > 0),
+  status      text not null default 'pending',
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
 create index if not exists idx_listings_seller_id on listings (seller_id);
 create index if not exists idx_ratings_ratee_id on ratings (ratee_id);
+-- One rating per rater/ratee pair. If a live database already contains
+-- duplicates, delete them before applying this index.
+create unique index if not exists idx_ratings_rater_ratee on ratings (rater_id, ratee_id);
 create index if not exists idx_threads_user_id on threads (user_id);
 create index if not exists idx_messages_thread_id on messages (thread_id);
 create index if not exists idx_notifications_user_id on notifications (user_id);
+create index if not exists idx_listing_reports_listing_id on listing_reports (listing_id);
+create index if not exists idx_listing_reports_reporter_id on listing_reports (reporter_id);
+create index if not exists idx_offers_listing_id on offers (listing_id);
+create index if not exists idx_offers_buyer_id on offers (buyer_id);

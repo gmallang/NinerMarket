@@ -15,6 +15,8 @@ threads = {}
 messages = {}
 ratings = {}
 notifications = {}
+reports = {}
+offers = {}
 
 if SUPABASE_URL and SUPABASE_KEY:
     from supabase import create_client

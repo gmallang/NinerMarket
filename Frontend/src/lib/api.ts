@@ -4,6 +4,7 @@ import type {
   NewListing,
   NewRating,
   NotificationDto,
+  Offer,
   Rating,
   UserDto,
 } from "./types";
@@ -173,6 +174,29 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ status: "sold" }),
     }),
+
+  reportListing: (id: string, reason: string, details: string) =>
+    request<ListingDto>(`/listings/${id}/report`, {
+      method: "POST",
+      body: JSON.stringify({ reason, details }),
+    }),
+
+  createOffer: (listingId: string, price: number) =>
+    request<Offer>(`/listings/${listingId}/offers`, {
+      method: "POST",
+      body: JSON.stringify({ price }),
+    }),
+
+  getOffers: (userId: string) => request<Offer[]>(`/users/${userId}/offers`),
+
+  acceptOffer: (offerId: string) =>
+    request<Offer>(`/offers/${offerId}/accept`, { method: "POST" }),
+
+  declineOffer: (offerId: string) =>
+    request<Offer>(`/offers/${offerId}/decline`, { method: "POST" }),
+
+  cancelOffer: (offerId: string) =>
+    request<Offer>(`/offers/${offerId}`, { method: "DELETE" }),
 
   getNotifications: (userId: string) =>
     request<NotificationDto[]>(`/users/${userId}/notifications`),

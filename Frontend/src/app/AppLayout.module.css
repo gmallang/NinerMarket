@@ -345,6 +345,7 @@
   color: var(--color-fg);
   text-align: left;
   outline: none;
+  cursor: pointer;
   transition: background var(--duration) var(--ease);
 }
 

@@ -104,16 +104,6 @@ export function GoogleChooser({
         <button type="button" className={s.googleBack} onClick={onClose}>
           Cancel
         </button>
-        <button
-          type="button"
-          className={s.xDemoHint}
-          onClick={() => {
-            onAgree(true);
-            setEmail("anna@charlotte.edu");
-          }}
-        >
-          Demo account: anna@charlotte.edu
-        </button>
       </Modal>
 
       {termsOpen && (

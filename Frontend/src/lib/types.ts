@@ -69,6 +69,7 @@ export interface Rating {
   stars: number;
   comment: string;
   created_at: string;
+  rater?: { id: string; display_name: string } | null;
 }
 
 export interface NewRating {
@@ -107,4 +108,20 @@ export interface NotificationDto {
   listing_id?: string;
   created_at: string;
   read: boolean;
+}
+
+export type OfferStatus = "pending" | "accepted" | "declined" | "cancelled";
+
+export interface Offer {
+  id: string;
+  listing_id: string;
+  listing_name: string;
+  listing_price: number;
+  listing_status?: string;
+  buyer_id: string;
+  buyer_name: string;
+  price: number;
+  status: OfferStatus;
+  created_at: string;
+  direction: "sent" | "received";
 }

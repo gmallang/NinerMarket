@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { CheckCircle2, Heart, MapPin, MessageCircle, Pencil, X } from "lucide-react";
+import { CheckCircle2, Flag, HandCoins, Heart, MapPin, MessageCircle, Pencil, X } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
 import { CATEGORIES } from "@/data/categories";
 import { CONDITION_CLASS } from "./condition";
+import { OfferModal } from "./OfferModal";
+import { ReportModal } from "./ReportModal";
 import shared from "@/components/shared/shared.module.css";
 import s from "./detail.module.css";
 
@@ -19,6 +21,8 @@ export function ListingDetail({
   onOpenSeller,
   onMarkSold,
   onEdit,
+  onReport,
+  onMakeOffer,
 }: {
   item: Listing;
   saved: boolean;
@@ -29,14 +33,25 @@ export function ListingDetail({
   onOpenSeller?: () => void;
   onMarkSold?: () => Promise<void>;
   onEdit?: () => void;
+  onReport?: (reason: string, details: string) => Promise<void>;
+  onMakeOffer?: (price: number) => Promise<void>;
 }) {
   const photos = item.photos?.length ? item.photos : [item.image];
   const [activeImg, setActiveImg] = useState(0);
   const [markingSold, setMarkingSold] = useState(false);
   const [markSoldError, setMarkSoldError] = useState<string | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reportDone, setReportDone] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [offerSubmitting, setOfferSubmitting] = useState(false);
+  const [offerError, setOfferError] = useState<string | null>(null);
+  const [offerDone, setOfferDone] = useState(false);
   const categoryLabel = CATEGORIES.find((x) => x.id === item.category)?.label ?? item.category;
   const isSold = item.status === "sold";
   const isFlagged = item.status === "flagged";
+  const isActive = item.status === "active";
 
   const handleMarkSold = async () => {
     if (!onMarkSold) return;
@@ -49,6 +64,46 @@ export function ListingDetail({
     } finally {
       setMarkingSold(false);
     }
+  };
+
+  const handleReport = async (reason: string, details: string) => {
+    if (!onReport) return;
+    setReportSubmitting(true);
+    setReportError(null);
+    try {
+      await onReport(reason, details);
+      setReportDone(true);
+    } catch (err) {
+      setReportError(err instanceof Error ? err.message : "Couldn't submit report.");
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
+  const closeReport = () => {
+    setReportOpen(false);
+    setReportDone(false);
+    setReportError(null);
+  };
+
+  const handleOffer = async (price: number) => {
+    if (!onMakeOffer) return;
+    setOfferSubmitting(true);
+    setOfferError(null);
+    try {
+      await onMakeOffer(price);
+      setOfferDone(true);
+    } catch (err) {
+      setOfferError(err instanceof Error ? err.message : "Couldn't send offer.");
+    } finally {
+      setOfferSubmitting(false);
+    }
+  };
+
+  const closeOffer = () => {
+    setOfferOpen(false);
+    setOfferDone(false);
+    setOfferError(null);
   };
 
   return (
@@ -193,6 +248,24 @@ export function ListingDetail({
               <Heart size={15} fill={saved ? "currentColor" : "none"} />
               {saved ? "Saved" : "Save"}
             </button>
+            {!isSold && onReport && (
+              <button
+                className={`${shared.btnGhost} ${s.detailGhostBtn}`}
+                onClick={() => setReportOpen(true)}
+              >
+                <Flag size={15} />
+                Report
+              </button>
+            )}
+            {isActive && onMakeOffer && (
+              <button
+                className={`${shared.btnGhost} ${s.detailGhostBtn}`}
+                onClick={() => setOfferOpen(true)}
+              >
+                <HandCoins size={15} />
+                Make an offer
+              </button>
+            )}
             <button className={`${shared.btnPrimary} ${s.detailPrimaryBtn}`} onClick={onMessage}>
               <MessageCircle size={16} />
               Message Seller
@@ -200,6 +273,29 @@ export function ListingDetail({
           </>
         )}
       </div>
+      <ReportModal
+        key={reportOpen ? "open" : "closed"}
+        open={reportOpen}
+        onOpenChange={(open) => {
+          if (!open) closeReport();
+        }}
+        onSubmit={handleReport}
+        submitting={reportSubmitting}
+        error={reportError}
+        done={reportDone}
+      />
+      <OfferModal
+        key={offerOpen ? "open" : "closed"}
+        open={offerOpen}
+        onOpenChange={(open) => {
+          if (!open) closeOffer();
+        }}
+        listingPrice={item.price}
+        onSubmit={handleOffer}
+        submitting={offerSubmitting}
+        error={offerError}
+        done={offerDone}
+      />
     </div>
   );
 }

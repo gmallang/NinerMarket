@@ -1,0 +1,101 @@
+/* ─────────────────────────────────────────────
+   report.module.css — Report-a-listing dialog
+   ───────────────────────────────────────────── */
+
+.reportHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.reportTitle {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  margin: 0;
+}
+
+.reportSub {
+  font-size: 0.8125rem;
+  color: var(--color-fg-muted);
+  margin-top: 4px;
+}
+
+.reportReasons {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reportOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--color-fg);
+  cursor: pointer;
+  transition: background var(--duration) var(--ease);
+}
+
+.reportOption:hover {
+  background: var(--color-accent);
+}
+
+.reportOption input {
+  accent-color: var(--color-primary);
+}
+
+.reportDetails {
+  margin-top: var(--space-3);
+  width: 100%;
+  resize: vertical;
+  min-height: 64px;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--color-fg);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.reportDetails:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.reportActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.reportSubmit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reportDone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+  padding: var(--space-4) 0;
+}
+
+.reportDoneIcon {
+  color: var(--color-success);
+}
+
+.reportDoneText {
+  font-size: 0.875rem;
+  color: var(--color-fg-muted);
+  margin: 0 0 var(--space-2);
+}

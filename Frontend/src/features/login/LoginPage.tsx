@@ -310,9 +310,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   };
 
   const forgotPassword = () => {
-    setError(
-      "Password reset isn't available in this demo. Use the demo account or sign in with Google."
-    );
+    setError("Password reset isn't available right now. Sign in with Google to continue.");
   };
 
   const setPwdSubmit = async (e: FormEvent) => {
@@ -346,14 +344,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   const skipSetPwd = () => {
     setSetPwdOpen(false);
     if (pendingUser) authedRef.current(pendingUser);
-  };
-
-  const fillDemo = () => {
-    setFormOpen("signin");
-    setEmail("anna@charlotte.edu");
-    setPassword("ninermarket-demo");
-    setAgree(true);
-    setError("");
   };
 
   const openForm = (mode: "signin" | "signup") => {
@@ -490,9 +480,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
           <button className={s.xModalClose} onClick={closeForm} aria-label="Close">
             <X size={18} />
           </button>
-          {formOpen !== "signup" && (
-            <img className={s.xModalLogo} src={ninerLogo} alt="NinerMarket" />
-          )}
           <h2 className={s.xModalTitle}>
             {verifying
               ? "Verify your email"
@@ -614,11 +601,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
           <button type="submit" className={s.xSubmitBtn} disabled={!agree}>
             {formOpen === "signup" ? "Sign up" : "Log in"}
           </button>
-          {formOpen === "signin" && (
-            <button type="button" className={s.xDemoHint} onClick={fillDemo}>
-              Demo account: anna@charlotte.edu
-            </button>
-          )}
           </form>
         )}
       </Modal>

@@ -268,13 +268,41 @@
 .ratingTop {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-2);
+}
+
+.ratingAuthor {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-fg);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.ratingAuthor:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.ratingAuthorAvatar {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .ratingTime {
   font-size: 0.75rem;
   color: var(--color-fg-subtle);
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .ratingComment {
@@ -292,6 +320,162 @@
   color: var(--color-primary);
   margin-top: var(--space-2);
   text-decoration: underline;
+}
+
+/* ── Offers section (own profile) ── */
+.offersSection {
+  margin-top: var(--space-5);
+}
+
+.offersGroup {
+  margin-top: var(--space-3);
+}
+
+.offersSub {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+  margin-bottom: var(--space-2);
+}
+
+.offerList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.offerItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  flex-wrap: wrap;
+}
+
+.offerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.offerText {
+  font-size: 0.875rem;
+  color: var(--color-fg);
+  margin: 0;
+}
+
+.offerBuyer {
+  font-weight: 700;
+}
+
+.offerListing {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: inherit;
+  color: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.offerHint {
+  font-size: 0.75rem;
+  color: var(--color-fg-subtle);
+  margin-top: 2px;
+}
+
+.offerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.offerAccept,
+.offerDecline,
+.offerCancel {
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  transition:
+    background 130ms ease,
+    opacity 130ms ease;
+  border: none;
+}
+
+.offerAccept {
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+}
+
+.offerAccept:hover {
+  background: var(--color-primary-dark);
+}
+
+.offerAccept:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.offerDecline,
+.offerCancel {
+  background: var(--color-muted);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border);
+}
+
+.offerDecline:hover,
+.offerCancel:hover {
+  background: var(--color-border);
+}
+
+.offerCancel {
+  color: var(--color-danger);
+}
+
+.offerBadge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.offerBadgePending {
+  background: #fef3c7;
+  color: #78350f;
+}
+
+.offerBadgeAccepted {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.offerBadgeDeclined {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.offerBadgeCancelled {
+  background: var(--color-muted);
+  color: var(--color-fg-subtle);
+}
+
+.offerMsg {
+  font-size: 0.8125rem;
+  color: var(--color-danger);
+  margin: var(--space-2) 0 0;
 }
 
 @media (max-width: 560px) {

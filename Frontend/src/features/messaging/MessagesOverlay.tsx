@@ -17,6 +17,7 @@ export function MessagesOverlay() {
   const setInputText = useMarketStore((s) => s.setInputText);
   const sendMessage = useMarketStore((s) => s.sendMessage);
   const openListingOverlay = useMarketStore((s) => s.openListingOverlay);
+  const loadThreads = useMarketStore((s) => s.loadThreads);
 
   const messagesEndRef: RefObject<HTMLDivElement> = useRef(null);
   const activeConv = convs.find((c) => c.id === activeConvId) ?? convs[0];
@@ -25,6 +26,12 @@ export function MessagesOverlay() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [convs, activeConvId, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const id = window.setInterval(() => void loadThreads(), 4000);
+    return () => window.clearInterval(id);
+  }, [open, loadThreads]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {

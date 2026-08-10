@@ -281,9 +281,13 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   openMessageOverlay: (listingId) => {
     get().openConversationForListing(listingId);
     set({ messagesOpen: true });
+    void get().loadThreads();
   },
 
-  openMessagesOverlay: () => set({ messagesOpen: true }),
+  openMessagesOverlay: () => {
+    set({ messagesOpen: true });
+    void get().loadThreads();
+  },
 
   closeMessagesOverlay: () => set({ messagesOpen: false }),
 

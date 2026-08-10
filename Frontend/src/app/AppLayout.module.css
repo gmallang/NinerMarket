@@ -398,6 +398,11 @@
   justify-content: center;
 }
 
+.notifList {
+  max-height: 216px;
+  overflow-y: auto;
+}
+
 .notifEmpty {
   padding: var(--space-4);
   text-align: center;

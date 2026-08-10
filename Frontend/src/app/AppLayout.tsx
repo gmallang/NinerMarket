@@ -295,21 +295,23 @@ export function AppLayout() {
                     {notifications.length === 0 ? (
                       <p className={s.notifEmpty}>You're all caught up.</p>
                     ) : (
-                      notifications.slice(0, 10).map((n) => (
-                        <DropdownMenu.Item
-                          key={n.id}
-                          className={`${s.notifItem} ${n.read ? "" : s.notifItemUnread}`}
-                          onSelect={() => {
-                            markNotificationRead(n.id);
-                            if (n.listing_id) openListingOverlay(n.listing_id);
-                          }}
-                        >
-                          <span className={s.notifText}>{n.text}</span>
-                          <span className={s.notifTime}>
-                            {formatRelativeTime(n.created_at)}
-                          </span>
-                        </DropdownMenu.Item>
-                      ))
+                      <div className={s.notifList}>
+                        {notifications.slice(0, 10).map((n) => (
+                          <DropdownMenu.Item
+                            key={n.id}
+                            className={`${s.notifItem} ${n.read ? "" : s.notifItemUnread}`}
+                            onSelect={() => {
+                              markNotificationRead(n.id);
+                              if (n.listing_id) openListingOverlay(n.listing_id);
+                            }}
+                          >
+                            <span className={s.notifText}>{n.text}</span>
+                            <span className={s.notifTime}>
+                              {formatRelativeTime(n.created_at)}
+                            </span>
+                          </DropdownMenu.Item>
+                        ))}
+                      </div>
                     )}
                     {unreadNotifs > 0 && (
                       <DropdownMenu.Item

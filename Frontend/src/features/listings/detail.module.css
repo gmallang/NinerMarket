@@ -351,6 +351,19 @@
   margin-top: 4px;
 }
 
+.flaggedBanner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  font-size: 0.8125rem;
+  color: #78350f;
+}
+
 .soldBadge {
   display: flex;
   align-items: center;

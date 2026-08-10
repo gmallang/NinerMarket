@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from auth import require_user
 from database import db, listings, users
 from models import Listing
+from moderation import find_prohibited_reasons
 from routes.notifications import create_notification
 
 router = APIRouter()
@@ -87,6 +88,12 @@ def list_listings(
 def create_listing(listing: Listing, user_id: str = Depends(require_user)):
     listing.id = listing.id or generate_id()
     listing.seller_id = user_id
+
+    reasons = find_prohibited_reasons(listing.name, listing.description)
+    if reasons:
+        listing.status = "flagged"
+        listing.flag_reason = ", ".join(reasons)
+
     if db:
         data = db.table("listings").insert(listing.model_dump(mode="json")).execute()
         result = _with_seller(data.data[0])
@@ -94,11 +101,19 @@ def create_listing(listing: Listing, user_id: str = Depends(require_user)):
         listings[listing.id] = listing
         result = _with_seller(listing)
 
-    create_notification(
-        listing.seller_id,
-        f"Your listing \"{listing.name}\" is now live.",
-        listing.id,
-    )
+    if reasons:
+        create_notification(
+            listing.seller_id,
+            f"Your listing \"{listing.name}\" was flagged for review ({listing.flag_reason})"
+            " and isn't visible to others yet. Edit it to remove the prohibited item.",
+            listing.id,
+        )
+    else:
+        create_notification(
+            listing.seller_id,
+            f"Your listing \"{listing.name}\" is now live.",
+            listing.id,
+        )
     return result
 
 
@@ -115,6 +130,21 @@ def get_listing(id: str):
     return _with_seller(listings[id])
 
 
+def _apply_moderation(updates: dict, current_name: str, current_desc: str, current_status: str) -> None:
+    """Re-checks the (possibly updated) text and keeps status/flag_reason in
+    sync: flags it if the new text matches, or clears a flag that was only
+    ever due to this filter once the seller edits the offending text out."""
+    name = updates.get("name", current_name)
+    description = updates.get("description", current_desc)
+    reasons = find_prohibited_reasons(name, description)
+    if reasons:
+        updates["status"] = "flagged"
+        updates["flag_reason"] = ", ".join(reasons)
+    elif current_status == "flagged":
+        updates["status"] = "active"
+        updates["flag_reason"] = ""
+
+
 @router.patch("/listings/{id}")
 def update_listing(id: str, updates: dict, user_id: str = Depends(require_user)):
     updates = {k: v for k, v in updates.items() if k != "seller_id"}
@@ -125,6 +155,12 @@ def update_listing(id: str, updates: dict, user_id: str = Depends(require_user))
             raise HTTPException(status_code=404, detail="Listing not found")
         if existing.data[0]["seller_id"] != user_id:
             raise HTTPException(status_code=403, detail="You can only edit your own listings")
+        _apply_moderation(
+            updates,
+            existing.data[0]["name"],
+            existing.data[0]["description"],
+            existing.data[0]["status"],
+        )
         data = db.table("listings").update(updates).eq("id", id).execute()
         return _with_seller(data.data[0])
 
@@ -132,6 +168,7 @@ def update_listing(id: str, updates: dict, user_id: str = Depends(require_user))
         raise HTTPException(status_code=404, detail="Listing not found")
     if listings[id].seller_id != user_id:
         raise HTTPException(status_code=403, detail="You can only edit your own listings")
+    _apply_moderation(updates, listings[id].name, listings[id].description, listings[id].status)
     for key, value in updates.items():
         setattr(listings[id], key, value)
     return _with_seller(listings[id])

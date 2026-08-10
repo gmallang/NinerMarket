@@ -30,6 +30,11 @@ export function ListingRow({
             <span className={s.soldTag}>Sold</span>
           </div>
         )}
+        {item.status === "flagged" && (
+          <div className={s.flaggedOverlay}>
+            <span className={s.flaggedTag}>Under Review</span>
+          </div>
+        )}
       </div>
       <div className={s.rowBody}>
         <div className={s.rowTop}>

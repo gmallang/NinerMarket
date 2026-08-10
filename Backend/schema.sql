@@ -29,6 +29,7 @@ create table if not exists listings (
   condition        text not null default '',
   description      text not null default '',
   status           text not null default 'active',
+  flag_reason      text not null default '',
   photos           jsonb not null default '[]'::jsonb,
   pickup_location  text not null default '',
   created_at       timestamptz not null default now()

@@ -70,6 +70,7 @@ class Listing(BaseModel):
     condition: str
     description: str
     status: str = "active"
+    flag_reason: str = ""
     photos: list[str] = []
     pickup_location: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

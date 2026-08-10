@@ -33,6 +33,7 @@ export interface ListingDto {
   condition: string;
   description: string;
   status: string;
+  flag_reason?: string;
   photos: string[];
   pickup_location: string;
   created_at: string;
@@ -57,6 +58,7 @@ export interface Listing {
   description?: string;
   photos?: string[];
   status: string;
+  flagReason?: string;
 }
 
 export interface Rating {

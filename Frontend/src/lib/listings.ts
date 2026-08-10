@@ -22,5 +22,6 @@ export function fromDto(d: ListingDto): Listing {
     description: d.description,
     photos: d.photos ?? [],
     status: d.status,
+    flagReason: d.flag_reason,
   };
 }

@@ -66,7 +66,7 @@ export function HomePage() {
     .filter((l) => {
       if (viewMine) return !!user && l.sellerId === user.id;
       if (viewSaved) return savedItems.has(l.id);
-      if (l.status === "sold") return false;
+      if (l.status === "sold" || l.status === "flagged") return false;
       const matchCat = activeCategory === "all" || l.category === activeCategory;
       const matchSearch = !matchedIds || matchedIds.has(l.id);
       const matchMin = !minPrice || l.price >= Number(minPrice);

@@ -36,6 +36,7 @@ export function ListingDetail({
   const [markSoldError, setMarkSoldError] = useState<string | null>(null);
   const categoryLabel = CATEGORIES.find((x) => x.id === item.category)?.label ?? item.category;
   const isSold = item.status === "sold";
+  const isFlagged = item.status === "flagged";
 
   const handleMarkSold = async () => {
     if (!onMarkSold) return;
@@ -82,6 +83,15 @@ export function ListingDetail({
             </span>
             <span className={s.detailCategory}>{categoryLabel}</span>
           </div>
+          {isOwner && isFlagged && (
+            <div className={s.flaggedBanner}>
+              <strong>This listing was flagged for review{item.flagReason ? ` (${item.flagReason})` : ""}</strong>
+              <span>
+                It's hidden from other students until you edit it to remove the prohibited item.
+                Contact hrlfacilities@charlotte.edu if you think this was a mistake.
+              </span>
+            </div>
+          )}
           <h2 className={s.detailTitle}>{item.title}</h2>
           <p className={s.detailPrice}>${item.price.toLocaleString()}</p>
           <div className={s.detailMeta}>

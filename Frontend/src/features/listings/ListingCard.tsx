@@ -41,6 +41,11 @@ export function ListingCard({
             <span className={s.soldTag}>Sold</span>
           </div>
         )}
+        {item.status === "flagged" && (
+          <div className={s.flaggedOverlay}>
+            <span className={s.flaggedTag}>Under Review</span>
+          </div>
+        )}
       </div>
       <div className={s.cardBody}>
         <p className={s.cardPrice}>${item.price.toLocaleString()}</p>

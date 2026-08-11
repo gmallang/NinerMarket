@@ -143,6 +143,8 @@ def create_offer(
         f"{_user_name(user_id)} offered ${body.price:,.2f} on your listing "
         f'"{_listing_attr(listing, "name")}".',
         listing_id,
+        related_user_id=user_id,
+        related_user_name=_user_name(user_id),
     )
 
     return _offer_out(offer, user_id)
@@ -245,6 +247,8 @@ def accept_offer(offer_id: str, user_id: str = Depends(require_user)):
         f'Your offer of ${offer["price"]:,.2f} for '
         f'"{_listing_attr(listing, "name")}" was accepted.',
         offer["listing_id"],
+        related_user_id=user_id,
+        related_user_name=_user_name(user_id),
     )
 
     return _offer_out(_get_offer(offer_id), user_id)
@@ -268,6 +272,8 @@ def decline_offer(offer_id: str, user_id: str = Depends(require_user)):
         f'Your offer of ${offer["price"]:,.2f} for '
         f'"{_listing_attr(listing, "name")}" was declined.',
         offer["listing_id"],
+        related_user_id=user_id,
+        related_user_name=_user_name(user_id),
     )
 
     return _offer_out(_get_offer(offer_id), user_id)

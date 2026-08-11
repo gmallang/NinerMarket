@@ -81,13 +81,19 @@ create table if not exists thread_members (
 );
 
 create table if not exists notifications (
-  id          text primary key,
-  user_id     text not null references users(id) on delete cascade,
-  text        text not null,
-  listing_id  text not null default '',
-  created_at  timestamptz not null default now(),
-  read        boolean not null default false
+  id                 text primary key,
+  user_id            text not null references users(id) on delete cascade,
+  text               text not null,
+  listing_id         text not null default '',
+  related_user_id    text not null default '',
+  related_user_name  text not null default '',
+  created_at         timestamptz not null default now(),
+  read               boolean not null default false
 );
+
+-- Migration for databases created before related_user_id/related_user_name existed.
+alter table notifications add column if not exists related_user_id text not null default '';
+alter table notifications add column if not exists related_user_name text not null default '';
 
 create table if not exists listing_reports (
   id           text primary key,

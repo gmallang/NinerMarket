@@ -108,6 +108,8 @@ export interface NotificationDto {
   user_id: string;
   text: string;
   listing_id?: string;
+  related_user_id?: string;
+  related_user_name?: string;
   created_at: string;
   read: boolean;
 }

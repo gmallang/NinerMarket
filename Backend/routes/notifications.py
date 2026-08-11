@@ -15,20 +15,39 @@ def _check_caller(user_id: str, caller_id: str) -> None:
         raise HTTPException(status_code=403, detail="You can only access your own notifications")
 
 
-def _new_notification(user_id: str, text: str, listing_id: str = "") -> dict:
+def _new_notification(
+    user_id: str,
+    text: str,
+    listing_id: str = "",
+    related_user_id: str = "",
+    related_user_name: str = "",
+) -> dict:
     return {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
         "text": text,
         "listing_id": listing_id,
+        "related_user_id": related_user_id,
+        "related_user_name": related_user_name,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "read": False,
     }
 
 
-def create_notification(user_id: str, text: str, listing_id: str = "") -> dict:
-    """Create a notification for a user. Used internally by listings/checkout too."""
-    notification = _new_notification(user_id, text, listing_id)
+def create_notification(
+    user_id: str,
+    text: str,
+    listing_id: str = "",
+    related_user_id: str = "",
+    related_user_name: str = "",
+) -> dict:
+    """Create a notification for a user. Used internally by listings/offers too.
+    `related_user_id`/`related_user_name` name the other person involved (e.g.
+    an offer's buyer) so the frontend can offer to message them directly from
+    the notification."""
+    notification = _new_notification(
+        user_id, text, listing_id, related_user_id, related_user_name
+    )
     if db:
         db.table("notifications").insert(notification).execute()
         return notification

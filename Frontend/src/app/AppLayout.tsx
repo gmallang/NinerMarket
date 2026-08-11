@@ -61,6 +61,7 @@ export function AppLayout() {
   const markAllNotificationsRead = useMarketStore((s) => s.markAllNotificationsRead);
   const clearNotifications = useMarketStore((s) => s.clearNotifications);
   const openListingOverlay = useMarketStore((s) => s.openListingOverlay);
+  const openMessageOverlayWithBuyer = useMarketStore((s) => s.openMessageOverlayWithBuyer);
   const logout = useMarketStore((s) => s.logout);
   const loadListings = useMarketStore((s) => s.loadListings);
   const refreshProfile = useMarketStore((s) => s.refreshProfile);
@@ -326,7 +327,15 @@ export function AppLayout() {
                                 className={`${s.notifItem} ${n.read ? "" : s.notifItemUnread}`}
                                 onSelect={() => {
                                   group.forEach((item) => markNotificationRead(item.id));
-                                  if (n.listing_id) openListingOverlay(n.listing_id);
+                                  if (n.related_user_id && n.listing_id) {
+                                    openMessageOverlayWithBuyer(
+                                      n.listing_id,
+                                      n.related_user_id,
+                                      n.related_user_name ?? ""
+                                    );
+                                  } else if (n.listing_id) {
+                                    openListingOverlay(n.listing_id);
+                                  }
                                 }}
                               >
                                 <span className={s.notifText}>

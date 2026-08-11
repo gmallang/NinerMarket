@@ -47,7 +47,7 @@ export function MessagingPage({
 
   // On mobile the conversation list is hidden and the user navigates
   // list -> chat -> back; on desktop both panes always render.
-  const [mobileView, setMobileView] = useState<"list" | "chat">("chat");
+  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
 
   const [search, setSearch] = useState("");
   const query = search.trim().toLowerCase();

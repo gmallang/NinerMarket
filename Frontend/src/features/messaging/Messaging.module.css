@@ -81,7 +81,7 @@
     display: flex;
   }
 
-  .chatViewHidden {
+  .chatView.chatViewHidden {
     display: none;
   }
 }

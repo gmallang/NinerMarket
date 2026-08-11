@@ -395,18 +395,34 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       if (messagesOpen && active && active.unread > 0) {
         void api.markThreadRead(user.id, active.id, latestMsgId(active)).catch(() => {});
       }
-      set((state) => ({
-        convs: messagesOpen
-          ? list.map((c) => (c.id === state.activeConvId ? { ...c, unread: 0 } : c))
-          : list,
-        // activeConvId defaults to a placeholder that never corresponds to a
-        // real thread. If it's still not pointing at anything real once
-        // threads load, point it at the first one so sending a message
-        // targets an actual conversation instead of a stale/bogus id.
-        activeConvId: list.some((c) => c.id === state.activeConvId)
-          ? state.activeConvId
-          : list[0]?.id ?? state.activeConvId,
-      }));
+      set((state) => {
+        // A conversation just opened locally (e.g. from an offer notification
+        // or "Message Seller") may not have finished being created on the
+        // backend yet. Keep it instead of letting this refresh wipe it out —
+        // it'll be replaced once its own create-thread call resolves, or
+        // matched here on a later poll once the server catches up.
+        const pending = state.convs.filter(
+          (local) =>
+            !list.some(
+              (server) =>
+                server.listingId === local.listingId &&
+                (!local.other_user_id || server.other_user_id === local.other_user_id)
+            )
+        );
+        const merged = [...pending, ...list];
+        return {
+          convs: messagesOpen
+            ? merged.map((c) => (c.id === state.activeConvId ? { ...c, unread: 0 } : c))
+            : merged,
+          // activeConvId defaults to a placeholder that never corresponds to a
+          // real thread. If it's still not pointing at anything real once
+          // threads load, point it at the first one so sending a message
+          // targets an actual conversation instead of a stale/bogus id.
+          activeConvId: merged.some((c) => c.id === state.activeConvId)
+            ? state.activeConvId
+            : merged[0]?.id ?? state.activeConvId,
+        };
+      });
     } catch {
       // Keep whatever's already shown when the backend is unavailable.
     }

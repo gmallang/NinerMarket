@@ -439,6 +439,7 @@
   flex-shrink: 0;
 }
 
+.offerMessage,
 .offerAccept,
 .offerDecline,
 .offerCancel {
@@ -467,6 +468,7 @@
   cursor: not-allowed;
 }
 
+.offerMessage,
 .offerDecline,
 .offerCancel {
   background: var(--color-muted);
@@ -474,6 +476,7 @@
   border: 1px solid var(--color-border);
 }
 
+.offerMessage:hover,
 .offerDecline:hover,
 .offerCancel:hover {
   background: var(--color-border);

@@ -106,6 +106,7 @@ class PhotoUploadRequest(BaseModel):
 
 
 class OpenThreadRequest(BaseModel):
+    other_user_id: str | None = None
     listing_id: str
 
 

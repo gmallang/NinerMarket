@@ -135,6 +135,9 @@ def get_listing(id: str):
     return _with_seller(listings[id])
 
 
+REPORT_THRESHOLD = 3
+
+
 @router.post("/listings/{id}/report")
 def report_listing(
     id: str,
@@ -142,10 +145,11 @@ def report_listing(
     request: Request,
     user_id: str = Depends(require_user),
 ):
-    """Flags a listing for review after a user reports it. The report is
-    recorded so duplicates are rejected and there's an audit trail; the
-    listing gets status='flagged' so it drops out of browse, matching the
-    keyword-filter flow. The seller is notified and can edit to resolve."""
+    """Records a report after a user reports a listing (duplicates from the
+    same reporter are rejected). Only once REPORT_THRESHOLD distinct
+    reporters have flagged it does the listing actually get hidden — a
+    single report can't take a listing down on its own. The seller is
+    notified when that threshold is crossed and can edit to resolve."""
     if db:
         existing = db.table("listings").select("*").eq("id", id).execute()
         if not existing.data:
@@ -189,34 +193,42 @@ def report_listing(
     }
     if db:
         db.table("listing_reports").insert(report).execute()
+        report_count = len(
+            db.table("listing_reports").select("id").eq("listing_id", id).execute().data
+        )
     else:
         reports[report["id"]] = report
+        report_count = sum(1 for r in reports.values() if r["listing_id"] == id)
 
-    flag_label = f"User report: {body.reason}"
-    if db:
-        existing_reason = listing.get("flag_reason") or ""
-        if flag_label not in existing_reason:
-            listing["flag_reason"] = (
-                f"{existing_reason}, {flag_label}".lstrip(", ") if existing_reason else flag_label
-            )
-        listing["status"] = "flagged"
-        db.table("listings").update(
-            {"status": "flagged", "flag_reason": listing["flag_reason"]}
-        ).eq("id", id).execute()
-    else:
-        listing.status = "flagged"
-        if flag_label not in listing.flag_reason:
-            listing.flag_reason = (
-                f"{listing.flag_reason}, {flag_label}" if listing.flag_reason else flag_label
-            )
+    current_status = listing["status"] if db else listing.status
+    crosses_threshold = report_count >= REPORT_THRESHOLD and current_status != "flagged"
 
-    create_notification(
-        seller_id,
-        f"Your listing \"{name}\" was reported and is hidden from other students until it's resolved.",
-        id,
-    )
+    if crosses_threshold:
+        flag_label = f"User report: {body.reason}"
+        if db:
+            existing_reason = listing.get("flag_reason") or ""
+            if flag_label not in existing_reason:
+                listing["flag_reason"] = (
+                    f"{existing_reason}, {flag_label}".lstrip(", ") if existing_reason else flag_label
+                )
+            listing["status"] = "flagged"
+            db.table("listings").update(
+                {"status": "flagged", "flag_reason": listing["flag_reason"]}
+            ).eq("id", id).execute()
+        else:
+            listing.status = "flagged"
+            if flag_label not in listing.flag_reason:
+                listing.flag_reason = (
+                    f"{listing.flag_reason}, {flag_label}" if listing.flag_reason else flag_label
+                )
 
-    broadcast("listings", "listing_changed", {"id": id})
+        create_notification(
+            seller_id,
+            f"Your listing \"{name}\" was reported and is hidden from other students until it's resolved.",
+            id,
+        )
+
+        broadcast("listings", "listing_changed", {"id": id})
 
     return _with_seller(listing)
 

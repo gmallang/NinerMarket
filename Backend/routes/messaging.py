@@ -233,12 +233,31 @@ def get_thread(user_id: str, thread_id: int, caller_id: str = Depends(require_us
 
 @router.post("/users/{user_id}/threads")
 def open_thread(user_id: str, body: OpenThreadRequest, caller_id: str = Depends(require_user)):
+    """Opens (or reuses) the thread for a listing. Threads are always keyed by
+    the buyer's id, since that's who "opens" the conversation in the normal
+    flow. When the caller is the listing's seller — e.g. reaching out to
+    someone who made an offer, before that person has ever opened a chat —
+    `other_user_id` names the buyer, and the thread is keyed by their id
+    instead so it lines up with one they might open themselves later."""
     _check_caller(user_id, caller_id)
+    seller_id = _listing_seller_id(body.listing_id)
+    if seller_id is None:
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    if user_id == seller_id:
+        if not body.other_user_id:
+            raise HTTPException(
+                status_code=400, detail="other_user_id is required to message someone about your own listing"
+            )
+        buyer_id = body.other_user_id
+    else:
+        buyer_id = user_id
+
     if db:
         existing = (
             db.table("threads")
             .select("*")
-            .eq("user_id", user_id)
+            .eq("user_id", buyer_id)
             .eq("listingId", body.listing_id)
             .execute()
         )
@@ -255,19 +274,11 @@ def open_thread(user_id: str, body: OpenThreadRequest, caller_id: str = Depends(
             row["id"] = int(row["id"])
             return _viewer_relative(row, msgs, user_id)
 
-        res = db.table("listings").select("seller_id").eq("id", body.listing_id).execute()
-        if not res.data:
-            raise HTTPException(status_code=404, detail="Listing not found")
-        seller_id = res.data[0]["seller_id"]
-        if seller_id == user_id:
-            raise HTTPException(
-                status_code=400, detail="You can't message yourself about your own listing"
-            )
         name = _display_name(seller_id)
         tid = str(int(datetime.now(timezone.utc).timestamp() * 1000))
         thread = {
             "id": tid,
-            "user_id": user_id,
+            "user_id": buyer_id,
             "listingId": body.listing_id,
             "name": name,
             "avatar": _avatar_url(name),
@@ -279,23 +290,15 @@ def open_thread(user_id: str, body: OpenThreadRequest, caller_id: str = Depends(
         db.table("threads").insert(thread).execute()
         thread["id"] = int(tid)
         thread["messages"] = []
-        return thread
+        return _viewer_relative(thread, [], user_id)
 
     for t in threads.values():
-        if t["user_id"] == user_id and t["listingId"] == body.listing_id:
+        if t["user_id"] == buyer_id and t["listingId"] == body.listing_id:
             return _viewer_relative(t, t.get("messages", []), user_id)
 
-    listing = listings.get(body.listing_id)
-    if not listing:
-        raise HTTPException(status_code=404, detail="Listing not found")
-    seller_id = listing.seller_id if hasattr(listing, "seller_id") else listing.get("seller_id")
-    if seller_id == user_id:
-        raise HTTPException(
-            status_code=400, detail="You can't message yourself about your own listing"
-        )
-    thread = _thread_dict(_next_id(), user_id, body.listing_id, _display_name(seller_id))
+    thread = _thread_dict(_next_id(), buyer_id, body.listing_id, _display_name(seller_id))
     threads[thread["id"]] = thread
-    return thread
+    return _viewer_relative(thread, [], user_id)
 
 
 @router.post("/users/{user_id}/threads/{thread_id}/messages")

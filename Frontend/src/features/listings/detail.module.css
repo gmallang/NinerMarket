@@ -364,6 +364,12 @@
   color: #78350f;
 }
 
+.flaggedBannerLink {
+  color: #78350f;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 .soldBadge {
   display: flex;
   align-items: center;

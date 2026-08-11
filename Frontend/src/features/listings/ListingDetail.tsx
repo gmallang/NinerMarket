@@ -143,7 +143,15 @@ export function ListingDetail({
               <strong>This listing was flagged for review{item.flagReason ? ` (${item.flagReason})` : ""}</strong>
               <span>
                 It's hidden from other students until you edit it to remove the prohibited item.
-                Contact hrlfacilities@charlotte.edu if you think this was a mistake.
+                If you think this was a mistake, reach out to{" "}
+                <a href="mailto:gmallang@charlotte.edu" className={s.flaggedBannerLink}>
+                  gmallang@charlotte.edu
+                </a>{" "}
+                or{" "}
+                <a href="mailto:ksaifeld@charlotte.edu" className={s.flaggedBannerLink}>
+                  ksaifeld@charlotte.edu
+                </a>
+                .
               </span>
             </div>
           )}

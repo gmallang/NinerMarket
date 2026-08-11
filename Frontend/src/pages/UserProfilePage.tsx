@@ -34,6 +34,7 @@ export function UserProfilePage() {
   const savedItems = useMarketStore((s) => s.savedItems);
   const toggleSave = useMarketStore((s) => s.toggleSave);
   const openListingOverlay = useMarketStore((s) => s.openListingOverlay);
+  const openMessageOverlayWithBuyer = useMarketStore((s) => s.openMessageOverlayWithBuyer);
 
   const [profile, setProfile] = useState<UserDto | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
@@ -371,28 +372,38 @@ export function UserProfilePage() {
                         <p className={s.offerHint}>This listing is no longer available.</p>
                       )}
                     </div>
-                    {o.status === "pending" ? (
-                      <div className={s.offerActions}>
-                        <button
-                          className={s.offerDecline}
-                          onClick={() => handleDeclineOffer(o.id)}
-                          disabled={offerBusy === o.id}
-                        >
-                          Decline
-                        </button>
-                        <button
-                          className={s.offerAccept}
-                          onClick={() => handleAcceptOffer(o.id, o.listing_id)}
-                          disabled={offerBusy === o.id || o.listing_status !== "active"}
-                        >
-                          Accept
-                        </button>
-                      </div>
-                    ) : (
-                      <span className={`${s.offerBadge} ${offerBadgeClass(o.status)}`}>
-                        {o.status}
-                      </span>
-                    )}
+                    <div className={s.offerActions}>
+                      <button
+                        className={s.offerMessage}
+                        onClick={() =>
+                          openMessageOverlayWithBuyer(o.listing_id, o.buyer_id, o.buyer_name)
+                        }
+                      >
+                        Message
+                      </button>
+                      {o.status === "pending" ? (
+                        <>
+                          <button
+                            className={s.offerDecline}
+                            onClick={() => handleDeclineOffer(o.id)}
+                            disabled={offerBusy === o.id}
+                          >
+                            Decline
+                          </button>
+                          <button
+                            className={s.offerAccept}
+                            onClick={() => handleAcceptOffer(o.id, o.listing_id)}
+                            disabled={offerBusy === o.id || o.listing_status !== "active"}
+                          >
+                            Accept
+                          </button>
+                        </>
+                      ) : (
+                        <span className={`${s.offerBadge} ${offerBadgeClass(o.status)}`}>
+                          {o.status}
+                        </span>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>

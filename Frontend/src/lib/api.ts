@@ -217,10 +217,10 @@ export const api = {
   getThread: (userId: string, threadId: number) =>
     request<Conversation>(`/users/${userId}/threads/${threadId}`),
 
-  openThread: (userId: string, listingId: string) =>
+  openThread: (userId: string, listingId: string, otherUserId?: string) =>
     request<Conversation>(`/users/${userId}/threads`, {
       method: "POST",
-      body: JSON.stringify({ listing_id: listingId }),
+      body: JSON.stringify({ listing_id: listingId, other_user_id: otherUserId }),
     }),
 
   sendThreadMessage: (userId: string, threadId: number, text: string) =>

@@ -70,6 +70,7 @@ interface MarketState {
   setInputText: (text: string) => void;
   sendMessage: () => void;
   openConversationForListing: (listingId: string) => void;
+  openConversationWithBuyer: (listingId: string, buyerId: string, buyerName: string) => void;
   loadThreads: () => Promise<void>;
   refreshThread: (threadId: number) => Promise<void>;
   loadNotifications: () => Promise<void>;
@@ -79,6 +80,7 @@ interface MarketState {
   messagesOpen: boolean;
   openMessagesOverlay: () => void;
   openMessageOverlay: (listingId: string) => void;
+  openMessageOverlayWithBuyer: (listingId: string, buyerId: string, buyerName: string) => void;
   closeMessagesOverlay: () => void;
   listingOverlayId: string | null;
   openListingOverlay: (listingId: string) => void;
@@ -349,6 +351,40 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     }
   },
 
+  openConversationWithBuyer: (listingId, buyerId, buyerName) => {
+    const { convs, user } = get();
+    const existing = convs.find((c) => c.listingId === listingId && c.other_user_id === buyerId);
+    if (existing) {
+      set({ activeConvId: existing.id });
+      if (user) void api.markThreadRead(user.id, existing.id, latestMsgId(existing)).catch(() => {});
+      return;
+    }
+    const newConv: Conversation = {
+      id: convs.length + 10,
+      listingId,
+      name: buyerName,
+      avatar: avatarUrl(buyerName, 80),
+      online: false,
+      unread: 0,
+      lastMsg: "",
+      lastTimestamp: new Date().toISOString(),
+      messages: [],
+      other_user_id: buyerId,
+    };
+    set((state) => ({ convs: [newConv, ...state.convs], activeConvId: newConv.id }));
+    if (user) {
+      void api
+        .openThread(user.id, listingId, buyerId)
+        .then((thread) =>
+          set((state) => ({
+            convs: state.convs.map((c) => (c.id === newConv.id ? thread : c)),
+            activeConvId: state.activeConvId === newConv.id ? thread.id : state.activeConvId,
+          }))
+        )
+        .catch(() => {});
+    }
+  },
+
   loadThreads: async () => {
     const user = get().user;
     if (!user) return;
@@ -414,6 +450,12 @@ export const useMarketStore = create<MarketState>((set, get) => ({
 
   openMessageOverlay: (listingId) => {
     get().openConversationForListing(listingId);
+    set({ messagesOpen: true });
+    void get().loadThreads();
+  },
+
+  openMessageOverlayWithBuyer: (listingId, buyerId, buyerName) => {
+    get().openConversationWithBuyer(listingId, buyerId, buyerName);
     set({ messagesOpen: true });
     void get().loadThreads();
   },

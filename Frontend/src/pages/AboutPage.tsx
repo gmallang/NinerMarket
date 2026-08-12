@@ -20,19 +20,9 @@ export function AboutPage() {
         <p className={s.aHeroSub}>
           The trusted marketplace for UNC Charlotte students.
         </p>
-      </section>
-
-      {/* Mission */}
-      <section className={s.aSection}>
-        <p className={s.aMission}>
-          NinerMarket exists to make campus life a little easier. Whether you&apos;re hunting for a
-          textbook, clearing out your dorm, or finding a place to live, everything stays local,
-          verified, and free.
-        </p>
-        <p className={s.aDisclaimer}>
-          NinerMarket is an independent student project built by UNC Charlotte students. It is
-          not officially affiliated with, endorsed by, or operated by UNC Charlotte.
-        </p>
+        <Link to="/login" className={`${s.aBtnPrimary} ${s.aHeroCta}`}>
+          Sign up / Log in
+        </Link>
       </section>
 
       {/* Core values */}
@@ -53,11 +43,17 @@ export function AboutPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className={s.aCta}>
-        <Link to="/login" className={s.aBtnPrimary}>
-          Sign up / Log in
-        </Link>
+      {/* Mission */}
+      <section className={s.aSection}>
+        <p className={s.aMission}>
+          NinerMarket exists to make campus life a little easier. Whether you&apos;re hunting for a
+          textbook, clearing out your dorm, or finding a place to live, everything stays local,
+          verified, and free.
+        </p>
+        <p className={s.aDisclaimer}>
+          NinerMarket is an independent student project built by UNC Charlotte students. It is
+          not officially affiliated with, endorsed by, or operated by UNC Charlotte.
+        </p>
       </section>
 
       {/* Footer */}

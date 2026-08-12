@@ -147,6 +147,10 @@
   background: var(--color-primary-dark);
 }
 
+.aHeroCta {
+  margin-top: var(--space-2);
+}
+
 /* ── Footer ── */
 .aFooter {
   margin-top: auto;

@@ -1,6 +1,7 @@
 import { Heart, MapPin } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
+import { listingImageUrl, listingSrcSet } from "@/lib/image";
 import { CONDITION_CLASS } from "./condition";
 import s from "./card.module.css";
 import c from "./condition.module.css";
@@ -23,7 +24,15 @@ export function ListingCard({
   return (
     <div className={s.card} onClick={onOpen}>
       <div className={s.cardImageWrap}>
-        <img src={item.image} alt={item.title} className={s.cardImage} loading="lazy" decoding="async" />
+        <img
+          src={listingImageUrl(item.image, 400)}
+          srcSet={listingSrcSet(item.image)}
+          sizes="(max-width: 480px) 50vw, (max-width: 900px) 33vw, 240px"
+          alt={item.title}
+          className={s.cardImage}
+          loading="lazy"
+          decoding="async"
+        />
         <button
           className={`${s.saveBtn} ${saved ? s.saveBtnActive : ""}`}
           onClick={(e) => {

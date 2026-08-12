@@ -1,6 +1,36 @@
 const MAX_DIMENSION = 1280;
 const JPEG_QUALITY = 0.82;
 
+/** Returns a downscaled variant of a listing photo URL so cards only download
+ * the pixels they actually render. Supabase Storage transforms on the fly via
+ * query params (degrading gracefully to the original on plans without image
+ * transformations); Unsplash source URLs are re-requested at the target size.
+ * Base64 data URLs (local dev only) can't be transformed, so they pass through
+ * unchanged. */
+export function listingImageUrl(url: string, width: number): string {
+  if (url.startsWith("data:")) return url;
+  if (url.includes("/storage/v1/object/public/")) {
+    const sep = url.includes("?") ? "&" : "?";
+    return `${url}${sep}width=${width}&quality=75`;
+  }
+  if (url.startsWith("https://images.unsplash.com/")) {
+    const u = new URL(url);
+    u.searchParams.set("w", String(width));
+    u.searchParams.set("h", String(width));
+    u.searchParams.set("fit", "crop");
+    u.searchParams.set("auto", "format");
+    return u.toString();
+  }
+  return url;
+}
+
+/** Width-candidate list for a photo's srcset. Data URLs would only repeat the
+ * same embedded image, so they're excluded and the src alone is used. */
+export function listingSrcSet(url: string): string | undefined {
+  if (url.startsWith("data:")) return undefined;
+  return [400, 800, 1280].map((w) => `${listingImageUrl(url, w)} ${w}w`).join(", ");
+}
+
 /** Downscales and re-encodes an image file to a JPEG data URL, keeping the
  * longest edge at or under MAX_DIMENSION. Cuts typical phone-camera photos
  * (several MB) down to a few hundred KB before they hit storage/bandwidth. */

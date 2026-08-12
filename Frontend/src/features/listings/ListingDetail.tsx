@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CheckCircle2, Flag, HandCoins, Heart, MapPin, MessageCircle, Pencil, X } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
+import { listingImageUrl } from "@/lib/image";
 import { CATEGORIES } from "@/data/categories";
 import { CONDITION_CLASS } from "./condition";
 import { OfferModal } from "./OfferModal";
@@ -125,7 +126,7 @@ export function ListingDetail({
               {photos.map((p, i) => (
                 <img
                   key={i}
-                  src={p}
+                  src={listingImageUrl(p, 128)}
                   alt={`${item.title} ${i + 1}`}
                   className={`${s.detailThumb} ${i === activeImg ? s.detailThumbActive : ""}`}
                   onClick={() => setActiveImg(i)}

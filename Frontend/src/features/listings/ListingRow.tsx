@@ -1,5 +1,6 @@
 import { Heart, MapPin } from "lucide-react";
 import type { Listing } from "@/lib/types";
+import { listingImageUrl, listingSrcSet } from "@/lib/image";
 import { CONDITION_CLASS } from "./condition";
 import s from "./row.module.css";
 import c from "./condition.module.css";
@@ -24,7 +25,15 @@ export function ListingRow({
   return (
     <div className={s.row} onClick={onOpen}>
       <div className={s.rowImageWrap}>
-        <img src={item.image} alt={item.title} className={s.rowImage} loading="lazy" decoding="async" />
+        <img
+          src={listingImageUrl(item.image, 400)}
+          srcSet={listingSrcSet(item.image)}
+          sizes="140px"
+          alt={item.title}
+          className={s.rowImage}
+          loading="lazy"
+          decoding="async"
+        />
         {item.status === "sold" && (
           <div className={s.soldOverlay}>
             <span className={s.soldTag}>Sold</span>

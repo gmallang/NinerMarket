@@ -55,3 +55,12 @@ def upload_photo(user_id: str, data_url: str) -> str:
     path = f"{user_id}/{uuid.uuid4()}{ext}"
     db.storage.from_(BUCKET).upload(path, raw, {"content-type": content_type})
     return db.storage.from_(BUCKET).get_public_url(path)
+
+
+def ensure_photo_url(user_id: str, photo: str) -> str:
+    """Returns a photo as a storage URL, uploading base64 data-URL photos on
+    the way. Regular URLs (and the local-dev fallback) pass through unchanged,
+    so base64 blobs never end up persisted in the listings table."""
+    if photo.startswith("data:image/"):
+        return upload_photo(user_id, photo)
+    return photo

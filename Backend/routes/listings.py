@@ -10,6 +10,7 @@ from models import Listing, ReportRequest
 from moderation import find_prohibited_reasons
 from ratelimit import client_ip, rate_limit
 from routes.notifications import create_notification
+from storage import ensure_photo_url
 
 router = APIRouter()
 
@@ -92,6 +93,7 @@ def list_listings(
 def create_listing(listing: Listing, user_id: str = Depends(require_user)):
     listing.id = listing.id or generate_id()
     listing.seller_id = user_id
+    listing.photos = [ensure_photo_url(user_id, p) for p in listing.photos]
 
     reasons = find_prohibited_reasons(listing.name, listing.description)
     if reasons:
@@ -270,6 +272,8 @@ def update_listing(id: str, updates: dict, user_id: str = Depends(require_user))
             raise HTTPException(status_code=404, detail="Listing not found")
         if existing.data[0]["seller_id"] != user_id:
             raise HTTPException(status_code=403, detail="You can only edit your own listings")
+        if "photos" in updates:
+            updates["photos"] = [ensure_photo_url(user_id, p) for p in updates["photos"]]
         _apply_moderation(
             updates,
             existing.data[0]["name"],

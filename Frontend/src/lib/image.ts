@@ -10,8 +10,15 @@ const JPEG_QUALITY = 0.82;
 export function listingImageUrl(url: string, width: number): string {
   if (url.startsWith("data:")) return url;
   if (url.includes("/storage/v1/object/public/")) {
-    const sep = url.includes("?") ? "&" : "?";
-    return `${url}${sep}width=${width}&quality=75`;
+    // Plain object URLs are served as-is with no resizing — Supabase only
+    // transforms images requested through the separate /render/image/
+    // endpoint, so the width/quality params have to be applied there.
+    const renderUrl = url.replace(
+      "/storage/v1/object/public/",
+      "/storage/v1/render/image/public/"
+    );
+    const sep = renderUrl.includes("?") ? "&" : "?";
+    return `${renderUrl}${sep}width=${width}&quality=75`;
   }
   if (url.startsWith("https://images.unsplash.com/")) {
     const u = new URL(url);

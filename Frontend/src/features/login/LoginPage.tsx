@@ -487,6 +487,10 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
               We emailed a 6-digit code to{" "}
               <strong>{verifyEmailAddress}</strong>. Enter it below to verify your account.
             </p>
+            <p className={s.xSpamNote}>
+              Don&apos;t see it? Check your <strong>spam/junk folder</strong> — verification emails
+              sometimes land there. Still nothing after a minute? Tap Resend below.
+            </p>
             <input
               className={s.xInput}
               inputMode="numeric"

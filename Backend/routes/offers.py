@@ -138,13 +138,14 @@ def create_offer(
     else:
         offers[offer["id"]] = offer
 
+    buyer_name = _user_name(user_id)
     create_notification(
         seller_id,
-        f"{_user_name(user_id)} offered ${body.price:,.2f} on your listing "
+        f"{buyer_name} offered ${body.price:,.2f} on your listing "
         f'"{_listing_attr(listing, "name")}".',
         listing_id,
         related_user_id=user_id,
-        related_user_name=_user_name(user_id),
+        related_user_name=buyer_name,
     )
 
     return _offer_out(offer, user_id)
@@ -158,24 +159,50 @@ def list_offers(user_id: str, caller_id: str = Depends(require_user)):
         raise HTTPException(status_code=403, detail="You can only view your own offers")
 
     if db:
-        rows = db.table("offers").select("*").order("created_at", desc=True).execute().data
-        listing_ids = {r["listing_id"] for r in rows}
+        # First, find all listing IDs the user is selling so we can filter
+        # offers server-side instead of pulling the entire offers table.
+        seller_listing_ids = [
+            row["id"]
+            for row in db.table("listings").select("id").eq("seller_id", user_id).execute().data
+        ]
+
+        # Build a server-side OR filter: offers where user is the buyer OR
+        # offers on listings where user is the seller.
+        or_parts = [f"buyer_id.eq.{user_id}"]
+        if seller_listing_ids:
+            ids_csv = ",".join(seller_listing_ids)
+            or_parts.append(f"listing_id.in.({ids_csv})")
+
+        rows = (
+            db.table("offers")
+            .select("*")
+            .or_(",".join(or_parts))
+            .order("created_at", desc=True)
+            .execute()
+            .data
+        )
+
+        if not rows:
+            return []
+
+        # Batch-fetch listings and users to avoid N+1 queries.
+        listing_ids = list({r["listing_id"] for r in rows})
         listing_rows: dict[str, dict] = {}
         if listing_ids:
             res = (
                 db.table("listings")
                 .select("id, name, price, status, seller_id")
-                .in_("id", list(listing_ids))
+                .in_("id", listing_ids)
                 .execute()
             )
             listing_rows = {l["id"]: l for l in res.data}
-        buyer_ids = {r["buyer_id"] for r in rows}
+        buyer_ids = list({r["buyer_id"] for r in rows})
         names: dict[str, str] = {}
         if buyer_ids:
             res = (
                 db.table("users")
                 .select("id, display_name")
-                .in_("id", list(buyer_ids))
+                .in_("id", buyer_ids)
                 .execute()
             )
             names = {u["id"]: u["display_name"] for u in res.data}
@@ -185,24 +212,23 @@ def list_offers(user_id: str, caller_id: str = Depends(require_user)):
             listing = listing_rows.get(row["listing_id"])
             if not listing:
                 continue
-            if row["buyer_id"] == user_id or listing.get("seller_id") == user_id:
-                out.append(
-                    {
-                        "id": row["id"],
-                        "listing_id": row["listing_id"],
-                        "listing_name": listing.get("name", ""),
-                        "listing_price": listing.get("price", 0),
-                        "listing_status": listing.get("status", ""),
-                        "buyer_id": row["buyer_id"],
-                        "buyer_name": names.get(row["buyer_id"], "Former member"),
-                        "price": row["price"],
-                        "status": row["status"],
-                        "created_at": row["created_at"],
-                        "direction": (
-                            "received" if listing.get("seller_id") == user_id else "sent"
-                        ),
-                    }
-                )
+            out.append(
+                {
+                    "id": row["id"],
+                    "listing_id": row["listing_id"],
+                    "listing_name": listing.get("name", ""),
+                    "listing_price": listing.get("price", 0),
+                    "listing_status": listing.get("status", ""),
+                    "buyer_id": row["buyer_id"],
+                    "buyer_name": names.get(row["buyer_id"], "Former member"),
+                    "price": row["price"],
+                    "status": row["status"],
+                    "created_at": row["created_at"],
+                    "direction": (
+                        "received" if listing.get("seller_id") == user_id else "sent"
+                    ),
+                }
+            )
         return out
 
     rows = sorted(offers.values(), key=lambda o: o["created_at"], reverse=True)
@@ -242,13 +268,14 @@ def accept_offer(offer_id: str, user_id: str = Depends(require_user)):
 
     broadcast("listings", "listing_changed", {"id": offer["listing_id"]})
 
+    seller_name = _user_name(user_id)
     create_notification(
         offer["buyer_id"],
         f'Your offer of ${offer["price"]:,.2f} for '
         f'"{_listing_attr(listing, "name")}" was accepted.',
         offer["listing_id"],
         related_user_id=user_id,
-        related_user_name=_user_name(user_id),
+        related_user_name=seller_name,
     )
 
     return _offer_out(_get_offer(offer_id), user_id)
@@ -267,13 +294,14 @@ def decline_offer(offer_id: str, user_id: str = Depends(require_user)):
         offer_id, {"status": "declined", "updated_at": datetime.now(timezone.utc).isoformat()}
     )
 
+    seller_name = _user_name(user_id)
     create_notification(
         offer["buyer_id"],
         f'Your offer of ${offer["price"]:,.2f} for '
         f'"{_listing_attr(listing, "name")}" was declined.',
         offer["listing_id"],
         related_user_id=user_id,
-        related_user_name=_user_name(user_id),
+        related_user_name=seller_name,
     )
 
     return _offer_out(_get_offer(offer_id), user_id)

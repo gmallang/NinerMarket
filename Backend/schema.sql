@@ -31,6 +31,7 @@ create table if not exists listings (
   status           text not null default 'active',
   flag_reason      text not null default '',
   photos           jsonb not null default '[]'::jsonb,
+  photos_small     jsonb not null default '[]'::jsonb,
   pickup_location  text not null default '',
   created_at       timestamptz not null default now(),
   sold_at          timestamptz
@@ -38,6 +39,8 @@ create table if not exists listings (
 
 -- Migration for databases created before sold_at existed.
 alter table listings add column if not exists sold_at timestamptz;
+-- Migration for databases created before photos_small existed.
+alter table listings add column if not exists photos_small jsonb not null default '[]'::jsonb;
 
 create table if not exists ratings (
   id           text primary key,
@@ -115,11 +118,14 @@ create table if not exists offers (
 );
 
 create index if not exists idx_listings_seller_id on listings (seller_id);
+create index if not exists idx_listings_category on listings (category);
+create index if not exists idx_listings_status on listings (status);
 create index if not exists idx_ratings_ratee_id on ratings (ratee_id);
 -- One rating per rater/ratee pair. If a live database already contains
 -- duplicates, delete them before applying this index.
 create unique index if not exists idx_ratings_rater_ratee on ratings (rater_id, ratee_id);
 create index if not exists idx_threads_user_id on threads (user_id);
+create index if not exists idx_threads_listing_id on threads ("listingId");
 create index if not exists idx_messages_thread_id on messages (thread_id);
 create index if not exists idx_thread_members_user_id on thread_members (user_id);
 create index if not exists idx_notifications_user_id on notifications (user_id);
@@ -127,3 +133,7 @@ create index if not exists idx_listing_reports_listing_id on listing_reports (li
 create index if not exists idx_listing_reports_reporter_id on listing_reports (reporter_id);
 create index if not exists idx_offers_listing_id on offers (listing_id);
 create index if not exists idx_offers_buyer_id on offers (buyer_id);
+create index if not exists idx_offers_status on offers (status);
+-- Composite index for the common "does buyer have a pending offer on this listing?" check.
+create index if not exists idx_offers_listing_buyer_status on offers (listing_id, buyer_id, status);
+

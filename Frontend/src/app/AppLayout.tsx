@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Search,
@@ -84,6 +84,8 @@ export function AppLayout() {
   const totalUnread = convs.reduce((n, c) => n + c.unread, 0);
   const unreadNotifs = notifications.filter((n) => !n.read).length;
   const activeConditions = (params.get("condition") ?? "").split(",").filter(Boolean);
+  // Only regroup notifications when the list actually changes.
+  const groupedNotifs = useMemo(() => groupNotifs(notifications), [notifications]);
 
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
@@ -316,7 +318,7 @@ export function AppLayout() {
                       <p className={s.notifEmpty}>You're all caught up.</p>
                     ) : (
                       <div className={s.notifList}>
-                        {groupNotifs(notifications)
+                        {groupedNotifs
                           .slice(0, 10)
                           .map((group) => {
                             const n = group[0];

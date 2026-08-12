@@ -119,6 +119,8 @@ def seed_dev_store(
 
     for _, name, price, category, condition, campus, image, seller_id, ago in demo:
         n = int(ago[:-1])
+        # Use picsum.photos for actual photography placeholders instead of text
+        photo = f"https://picsum.photos/seed/{image}/800/800"
         listing = Listing(
             id=str(_),
             seller_id=seller_id,
@@ -128,7 +130,8 @@ def seed_dev_store(
             condition=condition,
             description=name,
             status="active",
-            photos=[f"https://images.unsplash.com/{image}?w=400&h=400&fit=crop&auto=format"],
+            photos=[photo],
+            photos_small=[photo],
             pickup_location=campus,
             created_at=now - timedelta(hours=n * hours_map[ago[-1]]),
         )

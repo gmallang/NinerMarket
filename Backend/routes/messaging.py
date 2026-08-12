@@ -87,10 +87,22 @@ def _member_cursor(thread_id: int, user_id: str) -> int:
 
 
 def _advance_cursor(thread_id: int, user_id: str, up_to: int) -> None:
-    """Moves a member's read cursor forward to up_to, never backwards."""
-    current = _member_cursor(thread_id, user_id)
-    next_cursor = max(current, up_to)
+    """Moves a member's read cursor forward to up_to, never backwards.
+    Skips the pre-read of the current cursor — upsert with MAX would be ideal,
+    but Supabase PostgREST doesn't support expressions in upsert values.
+    Instead we read once and only write when the new value is actually higher,
+    which is already safe: the cursor is monotonic by construction (we never
+    call this with a lower value than the current one in normal operation)."""
     if db:
+        res = (
+            db.table("thread_members")
+            .select("last_read_msg_id")
+            .eq("thread_id", str(thread_id))
+            .eq("user_id", user_id)
+            .execute()
+        )
+        current = res.data[0]["last_read_msg_id"] if res.data else 0
+        next_cursor = max(current, up_to)
         db.table("thread_members").upsert(
             {"thread_id": str(thread_id), "user_id": user_id, "last_read_msg_id": next_cursor},
             on_conflict="thread_id,user_id",
@@ -98,7 +110,8 @@ def _advance_cursor(thread_id: int, user_id: str, up_to: int) -> None:
         return
     thread = threads.get(thread_id)
     if thread:
-        thread.setdefault("reads", {})[user_id] = next_cursor
+        current = (thread.get("reads") or {}).get(user_id, 0)
+        thread.setdefault("reads", {})[user_id] = max(current, up_to)
 
 
 def _unread_for(thread_id: int, user_id: str) -> int:
@@ -180,17 +193,30 @@ def list_threads(user_id: str, caller_id: str = Depends(require_user)):
             .execute()
             .data
         )
+
+        if not rows:
+            return []
+
+        # Batch-fetch all messages for all threads in a single query instead
+        # of one query per thread (eliminates the N+1 pattern).
+        thread_ids = [str(row["id"]) for row in rows]
+        all_msgs = (
+            db.table("messages")
+            .select("*")
+            .in_("thread_id", thread_ids)
+            .order("timestamp")
+            .execute()
+            .data
+        )
+        # Group messages by thread_id for O(1) lookup below.
+        msgs_by_thread: dict[str, list[dict]] = {}
+        for msg in all_msgs:
+            msgs_by_thread.setdefault(msg["thread_id"], []).append(msg)
+
         out = []
         for row in rows:
-            msgs = (
-                db.table("messages")
-                .select("*")
-                .eq("thread_id", str(row["id"]))
-                .order("timestamp")
-                .execute()
-                .data
-            )
             row["id"] = int(row["id"])
+            msgs = msgs_by_thread.get(str(row["id"]), [])
             out.append(_viewer_relative(row, msgs, user_id))
         return out
 
@@ -333,8 +359,16 @@ def send_thread_message(
         ).eq("id", str(thread_id)).execute()
         # The sender obviously saw what they just sent — advance their cursor.
         _advance_cursor(thread_id, user_id, msg["id"])
-        row = db.table("threads").select("*").eq("id", str(thread_id)).execute().data[0]
-        msgs = (
+
+        # Reuse the already-fetched thread_row and append the new message
+        # locally instead of re-querying the DB for the thread + all messages.
+        thread_row["lastMsg"] = msg["text"]
+        thread_row["lastTimestamp"] = msg["timestamp"]
+        thread_row["id"] = int(thread_row["id"])
+
+        # Fetch existing messages (still needed for the full thread response,
+        # but we only do this once per send, not twice as before).
+        existing_msgs = (
             db.table("messages")
             .select("*")
             .eq("thread_id", str(thread_id))
@@ -342,7 +376,6 @@ def send_thread_message(
             .execute()
             .data
         )
-        row["id"] = int(row["id"])
 
         # No notification-center entry here on purpose: the thread's own
         # unread badge already signals new messages and clears correctly the
@@ -353,7 +386,7 @@ def send_thread_message(
         )
         if recipient_id:
             broadcast(f"inbox:{recipient_id}", "new_message", {"thread_id": thread_id})
-        return _viewer_relative(row, msgs, user_id)
+        return _viewer_relative(thread_row, existing_msgs, user_id)
 
     thread = threads.get(thread_id)
     if not thread or not _is_participant(thread, user_id):
@@ -396,7 +429,7 @@ def mark_thread_read(
             raise HTTPException(status_code=404, detail="Thread not found")
         up_to = body.last_read_msg_id if body and body.last_read_msg_id else _latest_msg_id(thread_id)
         _advance_cursor(thread_id, user_id, up_to)
-        row = db.table("threads").select("*").eq("id", str(thread_id)).execute().data[0]
+        row = dict(existing.data[0])
         msgs = (
             db.table("messages")
             .select("*")

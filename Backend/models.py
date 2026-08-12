@@ -72,6 +72,7 @@ class Listing(BaseModel):
     status: str = "active"
     flag_reason: str = ""
     photos: list[str] = []
+    photos_small: list[str] = []
     pickup_location: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     sold_at: datetime | None = None

@@ -38,6 +38,16 @@ PROHIBITED_TERMS: dict[str, list[str]] = {
     ],
 }
 
+# Compile each category's terms into a single alternation pattern at import
+# time so find_prohibited_reasons never rebuilds regex objects on hot paths.
+_COMPILED: dict[str, re.Pattern[str]] = {
+    reason: re.compile(
+        "|".join(rf"\b{re.escape(term)}\b" for term in terms),
+        re.IGNORECASE,
+    )
+    for reason, terms in PROHIBITED_TERMS.items()
+}
+
 
 def find_prohibited_reasons(*texts: str) -> list[str]:
     """Checks listing text against a keyword list of items UNC Charlotte
@@ -46,9 +56,5 @@ def find_prohibited_reasons(*texts: str) -> list[str]:
     if nothing matched. Word-filter based, so it will have false positives
     (e.g. "weed whacker") — that's an accepted trade-off; sellers can edit
     the listing to clear a flag."""
-    combined = " ".join(t or "" for t in texts).lower()
-    reasons = []
-    for reason, terms in PROHIBITED_TERMS.items():
-        if any(re.search(rf"\b{re.escape(term)}\b", combined) for term in terms):
-            reasons.append(reason)
-    return reasons
+    combined = " ".join(t or "" for t in texts)
+    return [reason for reason, pattern in _COMPILED.items() if pattern.search(combined)]

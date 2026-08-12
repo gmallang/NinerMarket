@@ -34,13 +34,22 @@ def _seller_dict(user):
     }
 
 
-def _with_seller(entry):
+def _with_seller(entry, seller: dict | None = None):
+    """Attach seller info to a listing dict or model.
+
+    Pass a pre-fetched `seller` dict when processing many listings at once
+    (e.g. list_listings already batch-fetches sellers). When `seller` is None
+    and the db is configured, a single targeted query is issued — callers that
+    know they only have one listing (get_listing, update_listing, etc.) still
+    get the convenience without triggering an N+1."""
     if isinstance(entry, Listing):
         data = entry.model_dump(mode="json")
     else:
         data = dict(entry)
 
-    if db:
+    if seller is not None:
+        data["seller"] = seller
+    elif db:
         res = db.table("users").select(SELLER_COLUMNS).eq("id", data.get("seller_id")).execute()
         data["seller"] = res.data[0] if res.data else None
     else:
@@ -93,7 +102,10 @@ def list_listings(
 def create_listing(listing: Listing, user_id: str = Depends(require_user)):
     listing.id = listing.id or generate_id()
     listing.seller_id = user_id
-    listing.photos = [ensure_photo_url(user_id, p) for p in listing.photos]
+    results = [ensure_photo_url(user_id, p) for p in listing.photos]
+    listing.photos = [r["url"] for r in results]
+    if not listing.photos_small:
+        listing.photos_small = [r["thumb_url"] for r in results]
 
     reasons = find_prohibited_reasons(listing.name, listing.description)
     if reasons:
@@ -233,7 +245,13 @@ def report_listing(
 
         broadcast("listings", "listing_changed", {"id": id})
 
-    return _with_seller(listing)
+    # Fetch seller once and pass it in to avoid a redundant DB query.
+    seller: dict | None = None
+    if db:
+        sres = db.table("users").select(SELLER_COLUMNS).eq("id", seller_id).execute()
+        seller = sres.data[0] if sres.data else None
+
+    return _with_seller(listing, seller=seller)
 
 
 def _apply_moderation(updates: dict, current_name: str, current_desc: str, current_status: str) -> None:
@@ -270,20 +288,22 @@ def update_listing(id: str, updates: dict, user_id: str = Depends(require_user))
         existing = db.table("listings").select("*").eq("id", id).execute()
         if not existing.data:
             raise HTTPException(status_code=404, detail="Listing not found")
-        if existing.data[0]["seller_id"] != user_id:
+        row = existing.data[0]
+        if row["seller_id"] != user_id:
             raise HTTPException(status_code=403, detail="You can only edit your own listings")
         if "photos" in updates:
-            updates["photos"] = [ensure_photo_url(user_id, p) for p in updates["photos"]]
-        _apply_moderation(
-            updates,
-            existing.data[0]["name"],
-            existing.data[0]["description"],
-            existing.data[0]["status"],
-        )
-        _sync_sold_at(updates, existing.data[0]["status"])
+            results = [ensure_photo_url(user_id, p) for p in updates["photos"]]
+            updates["photos"] = [r["url"] for r in results]
+            if "photos_small" not in updates:
+                updates["photos_small"] = [r["thumb_url"] for r in results]
+        _apply_moderation(updates, row["name"], row["description"], row["status"])
+        _sync_sold_at(updates, row["status"])
         data = db.table("listings").update(updates).eq("id", id).execute()
         broadcast("listings", "listing_changed", {"id": id})
-        return _with_seller(data.data[0])
+        # Fetch seller once and pass it in to avoid an extra DB query inside _with_seller.
+        sres = db.table("users").select(SELLER_COLUMNS).eq("id", row["seller_id"]).execute()
+        seller = sres.data[0] if sres.data else None
+        return _with_seller(data.data[0], seller=seller)
 
     if id not in listings:
         raise HTTPException(status_code=404, detail="Listing not found")

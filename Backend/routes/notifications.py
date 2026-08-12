@@ -123,3 +123,20 @@ def mark_notification_read(
             n["read"] = True
             return n
     raise HTTPException(status_code=404, detail="Notification not found")
+
+
+@router.patch("/users/{user_id}/notifications")
+def mark_all_notifications_read(user_id: str, caller_id: str = Depends(require_user)):
+    """Marks every unread notification for this user as read in a single
+    DB call, replacing N individual PATCH requests from the frontend."""
+    _check_caller(user_id, caller_id)
+    if db:
+        db.table("notifications").update({"read": True}).eq("user_id", user_id).eq(
+            "read", False
+        ).execute()
+        return {"ok": True}
+
+    for n in notifications.get(user_id, []):
+        n["read"] = True
+    return {"ok": True}
+

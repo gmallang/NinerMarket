@@ -357,9 +357,8 @@ def update_user(id: str, updates: dict, caller_id: str = Depends(require_user)):
         existing = db.table("users").select("id").eq("id", id).execute()
         if not existing.data:
             raise HTTPException(status_code=404, detail="User not found")
-        db.table("users").update(clean).eq("id", id).execute()
-        updated = db.table("users").select("*").eq("id", id).execute().data[0]
-        return _to_public(_row_to_user(updated))
+        updated = db.table("users").update(clean).eq("id", id).execute()
+        return _to_public(_row_to_user(updated.data[0]))
 
     if id not in users:
         raise HTTPException(status_code=404, detail="User not found")

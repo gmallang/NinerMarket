@@ -43,7 +43,9 @@ function loadSaved(): Set<string> {
 }
 
 function latestMsgId(conv: Conversation): number {
-  return conv.messages.reduce((maxId, m) => Math.max(maxId, m.id), 0);
+  // Messages are always appended in chronological order, so the last element
+  // has the highest id — no need to scan the entire array with reduce.
+  return conv.messages.at(-1)?.id ?? 0;
 }
 
 function persistSaved(items: Set<string>): void {
@@ -209,7 +211,23 @@ export const useMarketStore = create<MarketState>((set, get) => {
   startRealtimeListings: () => {
     unsubscribeListings?.();
     unsubscribeListings = subscribeListings({
-      onChanged: () => void get().loadListings(true),
+      onChanged: (listingId?: string) => {
+        if (listingId) {
+          // Refresh only the one listing that changed instead of reloading
+          // the entire listings array on every broadcast event.
+          void api.getListing(listingId).then((dto) => {
+            const listing = fromDto(dto);
+            const exists = get().listings.some((l) => l.id === listing.id);
+            if (exists) {
+              get().updateListing(listing);
+            } else {
+              get().addListing(listing);
+            }
+          }).catch(() => void get().loadListings(true));
+        } else {
+          void get().loadListings(true);
+        }
+      },
     });
   },
 
@@ -479,13 +497,12 @@ export const useMarketStore = create<MarketState>((set, get) => {
 
   markAllNotificationsRead: () => {
     const user = get().user;
-    const ids = get().notifications.map((n) => n.id);
+    // Optimistic update
     set((state) => ({
       notifications: state.notifications.map((n) => ({ ...n, read: true })),
     }));
-    if (user) {
-      for (const id of ids) void api.markNotificationRead(user.id, id).catch(() => {});
-    }
+    // Single bulk API call instead of N individual requests
+    if (user) void api.markAllNotificationsRead(user.id).catch(() => {});
   },
 
   clearNotifications: () => {
@@ -537,8 +554,10 @@ export const useMarketStore = create<MarketState>((set, get) => {
   };
 
   if (state.user) {
-    void get().loadThreads();
-    void get().loadNotifications();
+    setTimeout(() => {
+      void get().loadThreads();
+      void get().loadNotifications();
+    }, 0);
   }
 
   return state;

@@ -209,6 +209,9 @@ export const api = {
       method: "PATCH",
     }),
 
+  markAllNotificationsRead: (userId: string) =>
+    request<{ ok: boolean }>(`/users/${userId}/notifications`, { method: "PATCH" }),
+
   clearNotifications: (userId: string) =>
     request<{ ok: boolean }>(`/users/${userId}/notifications`, { method: "DELETE" }),
 

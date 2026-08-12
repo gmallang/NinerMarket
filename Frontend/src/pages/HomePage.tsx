@@ -58,9 +58,16 @@ export function HomePage() {
     () => (searchQuery.trim() ? fuse.search(searchQuery.trim()) : null),
     [fuse, searchQuery]
   );
-  const matchedIds = searchMatches && new Set(searchMatches.map((r) => r.item.id));
-  const relevanceRank =
-    searchMatches && new Map(searchMatches.map((r, i) => [r.item.id, i]));
+  // Wrap in useMemo so these Sets/Maps are only rebuilt when searchMatches
+  // actually changes, not on every render of HomePage.
+  const matchedIds = useMemo(
+    () => searchMatches && new Set(searchMatches.map((r) => r.item.id)),
+    [searchMatches]
+  );
+  const relevanceRank = useMemo(
+    () => searchMatches && new Map(searchMatches.map((r, i) => [r.item.id, i])),
+    [searchMatches]
+  );
 
   const filtered = listings
     .filter((l) => {
@@ -81,7 +88,9 @@ export function HomePage() {
       if (sortBy === "price-asc") return a.price - b.price;
       if (sortBy === "price-desc") return b.price - a.price;
       if (relevanceRank) return (relevanceRank.get(a.id) ?? 0) - (relevanceRank.get(b.id) ?? 0);
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      // ISO 8601 strings sort lexicographically, so direct string comparison
+      // is equivalent to comparing timestamps without creating Date objects.
+      return b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0;
     });
 
   const openListing = (id: string) => openListingOverlay(id);

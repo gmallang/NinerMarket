@@ -10,6 +10,7 @@ export function MessagesOverlay() {
   const open = useMarketStore((s) => s.messagesOpen);
   const close = useMarketStore((s) => s.closeMessagesOverlay);
   const convs = useMarketStore((s) => s.convs);
+  const threadsLoading = useMarketStore((s) => s.threadsLoading);
   const activeConvId = useMarketStore((s) => s.activeConvId);
   const setActiveConvId = useMarketStore((s) => s.setActiveConvId);
   const listings = useMarketStore((s) => s.listings);
@@ -94,8 +95,23 @@ export function MessagesOverlay() {
           onKeyDown={handleKeyDown}
           onOpenListing={activeListing ? () => openListingOverlay(activeListing.id) : undefined}
           typingIndicator={!!typingByConvId[activeConvId]}
+          threadsLoading={threadsLoading}
           className={m.overlayPanel}
         />
+      ) : threadsLoading ? (
+        <div className={m.overlayEmptyBox} aria-busy="true">
+          <div className={m.convSkeleton}>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className={m.convSkeletonRow}>
+                <div className={m.convSkeletonAvatar} />
+                <div className={m.convSkeletonMeta}>
+                  <div className={m.convSkeletonLine} style={{ width: "45%" }} />
+                  <div className={m.convSkeletonLine} style={{ width: "75%" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
         <div className={m.overlayEmptyBox}>
           <MessageCircle size={28} />

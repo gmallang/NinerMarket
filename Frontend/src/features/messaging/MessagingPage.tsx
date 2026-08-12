@@ -24,6 +24,7 @@ interface MessagingPageProps {
   onKeyDown: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
   onOpenListing?: () => void;
   typingIndicator?: boolean;
+  threadsLoading?: boolean;
   className?: string;
 }
 
@@ -41,6 +42,7 @@ export function MessagingPage({
   onKeyDown,
   onOpenListing,
   typingIndicator = false,
+  threadsLoading = false,
   className = "",
 }: MessagingPageProps) {
   const activeConv = convs.find((c) => c.id === activeConvId) ?? convs[0];
@@ -96,7 +98,20 @@ export function MessagingPage({
             />
           </div>
           <div className={m.convScroll}>
-            {filteredConvs.map((conv) => (
+            {threadsLoading && filteredConvs.length === 0 ? (
+              <div className={m.convSkeleton} aria-hidden="true">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className={m.convSkeletonRow}>
+                    <div className={m.convSkeletonAvatar} />
+                    <div className={m.convSkeletonMeta}>
+                      <div className={m.convSkeletonLine} style={{ width: "45%" }} />
+                      <div className={m.convSkeletonLine} style={{ width: "75%" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              filteredConvs.map((conv) => (
               <div
                 key={conv.id}
                 className={`${m.convItem} ${conv.id === activeConvId ? m.convItemActive : ""}`}
@@ -125,8 +140,11 @@ export function MessagingPage({
                 </div>
                 {conv.unread > 0 && <span className={m.convUnread}>{conv.unread}</span>}
               </div>
-            ))}
-            {filteredConvs.length === 0 && <p className={m.convEmpty}>No conversations found</p>}
+              ))
+            )}
+            {!threadsLoading && filteredConvs.length === 0 && (
+              <p className={m.convEmpty}>No conversations found</p>
+            )}
           </div>
         </div>
 

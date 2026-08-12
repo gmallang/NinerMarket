@@ -8,6 +8,24 @@ import { clearUser, loadUser, saveUser } from "@/lib/user";
 import type { CurrentUser, Listing, NotificationDto } from "@/lib/types";
 
 const SAVED_KEY = "ninermarket-saved";
+const THREADS_KEY = "ninermarket-threads";
+
+function loadThreadsCache(): Conversation[] {
+  try {
+    const raw = localStorage.getItem(THREADS_KEY);
+    return raw ? (JSON.parse(raw) as Conversation[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistThreadsCache(convs: Conversation[]): void {
+  try {
+    localStorage.setItem(THREADS_KEY, JSON.stringify(convs));
+  } catch {
+    // ignore storage errors
+  }
+}
 
 // Realtime subscription + typing-timeout handles live outside the store's
 // reactive state — components never need to read them directly.
@@ -43,6 +61,7 @@ interface MarketState {
   listingsError: string | null;
   savedItems: Set<string>;
   convs: Conversation[];
+  threadsLoading: boolean;
   activeConvId: number;
   inputText: string;
   notifications: NotificationDto[];
@@ -90,13 +109,15 @@ interface MarketState {
   makeOffer: (listingId: string, price: number) => Promise<void>;
 }
 
-export const useMarketStore = create<MarketState>((set, get) => ({
+export const useMarketStore = create<MarketState>((set, get) => {
+  const state: MarketState = {
   user: loadUser(),
   listings: [],
   loading: true,
   listingsError: null,
   savedItems: loadSaved(),
-  convs: [],
+  convs: loadThreadsCache(),
+  threadsLoading: false,
   activeConvId: 1,
   inputText: "",
   notifications: [],
@@ -115,7 +136,12 @@ export const useMarketStore = create<MarketState>((set, get) => ({
     clearToken();
     get().stopRealtimeInbox();
     get().stopRealtimeListings();
-    set({ user: null });
+    try {
+      localStorage.removeItem(THREADS_KEY);
+    } catch {
+      // ignore storage errors
+    }
+    set({ user: null, convs: [], activeConvId: 1 });
   },
 
   startRealtimeInbox: () => {
@@ -388,6 +414,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   loadThreads: async () => {
     const user = get().user;
     if (!user) return;
+    set({ threadsLoading: true });
     try {
       const list = await api.getThreads(user.id);
       const { messagesOpen, activeConvId } = get();
@@ -410,6 +437,7 @@ export const useMarketStore = create<MarketState>((set, get) => ({
             )
         );
         const merged = [...pending, ...list];
+        persistThreadsCache(merged);
         return {
           convs: messagesOpen
             ? merged.map((c) => (c.id === state.activeConvId ? { ...c, unread: 0 } : c))
@@ -425,6 +453,8 @@ export const useMarketStore = create<MarketState>((set, get) => ({
       });
     } catch {
       // Keep whatever's already shown when the backend is unavailable.
+    } finally {
+      set({ threadsLoading: false });
     }
   },
 
@@ -504,4 +534,12 @@ export const useMarketStore = create<MarketState>((set, get) => ({
   makeOffer: async (listingId, price) => {
     await api.createOffer(listingId, price);
   },
-}));
+  };
+
+  if (state.user) {
+    void get().loadThreads();
+    void get().loadNotifications();
+  }
+
+  return state;
+});

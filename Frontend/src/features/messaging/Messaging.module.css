@@ -137,6 +137,51 @@
   color: var(--color-fg-muted);
 }
 
+/* ── Conversation list skeleton (loading state) ── */
+.convSkeleton {
+  padding: var(--space-2) 0;
+}
+
+.convSkeletonRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.convSkeletonAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  background: var(--color-muted);
+  animation: convShimmer 1.4s ease-in-out infinite;
+}
+
+.convSkeletonMeta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.convSkeletonLine {
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-muted);
+  animation: convShimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes convShimmer {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .convScroll {
   flex: 1;
   overflow-y: auto;

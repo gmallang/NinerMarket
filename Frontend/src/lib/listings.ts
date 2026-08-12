@@ -11,6 +11,7 @@ export function fromDto(d: ListingDto): Listing {
     category: d.category,
     campus: d.pickup_location,
     time: formatRelativeTime(d.created_at),
+    createdAt: d.created_at,
     condition: d.condition,
     image: d.photos?.[0] ?? PLACEHOLDER_IMG,
     seller: d.seller?.display_name ?? "Unknown seller",

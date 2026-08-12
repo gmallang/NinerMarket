@@ -48,6 +48,7 @@ export interface Listing {
   category: string;
   campus: string;
   time: string;
+  createdAt: string;
   condition: string;
   image: string;
   seller: string;

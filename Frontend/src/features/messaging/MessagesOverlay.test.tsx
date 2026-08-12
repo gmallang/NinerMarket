@@ -26,6 +26,7 @@ const LISTING: Listing = {
   category: "textbooks",
   campus: "North Campus",
   time: "2h ago",
+  createdAt: "2026-01-01T10:00:00.000Z",
   condition: "Good",
   image: "https://example.com/book.jpg",
   seller: "Maya T.",

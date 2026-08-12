@@ -13,6 +13,7 @@ const LISTINGS: Listing[] = [
     category: "textbooks",
     campus: "North Campus",
     time: "2h ago",
+    createdAt: "2026-01-01T10:00:00.000Z",
     condition: "Good",
     image: "https://example.com/chem.jpg",
     seller: "Maya T.",
@@ -27,6 +28,7 @@ const LISTINGS: Listing[] = [
     category: "furniture",
     campus: "West Dorms",
     time: "5h ago",
+    createdAt: "2026-01-01T08:00:00.000Z",
     condition: "Like New",
     image: "https://example.com/kallax.jpg",
     seller: "Jordan K.",
@@ -41,6 +43,7 @@ const LISTINGS: Listing[] = [
     category: "electronics",
     campus: "Main Quad",
     time: "3h ago",
+    createdAt: "2026-01-01T09:00:00.000Z",
     condition: "Excellent",
     image: "https://example.com/mbp.jpg",
     seller: "Chris L.",
@@ -106,6 +109,18 @@ describe("HomePage", () => {
     expect(screen.getByText("Organic Chemistry (Clayden) 2nd Ed.")).toBeInTheDocument();
     expect(screen.queryByText("IKEA KALLAX Shelf Unit (White)")).not.toBeInTheDocument();
     expect(screen.getByText("1 listing")).toBeInTheDocument();
+  });
+
+  it("sorts by most recent by default, newest first", () => {
+    const { container } = renderWithRouter(<HomePage />);
+    const titles = Array.from(container.querySelectorAll('[class*="cardTitle"]')).map(
+      (el) => el.textContent
+    );
+    expect(titles).toEqual([
+      "Organic Chemistry (Clayden) 2nd Ed.",
+      'MacBook Pro 14" M2 (2023)',
+      "IKEA KALLAX Shelf Unit (White)",
+    ]);
   });
 
   it("shows an error banner with retry when listings fail to load", () => {

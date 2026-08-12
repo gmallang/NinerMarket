@@ -64,7 +64,7 @@ def list_listings(
             query = query.lte("price", max_price)
         if status:
             query = query.eq("status", status)
-        rows = query.execute().data
+        rows = query.order("created_at", desc=True).execute().data
 
         seller_ids = {r.get("seller_id") for r in rows if r.get("seller_id")}
         sellers = {}
@@ -84,6 +84,7 @@ def list_listings(
         results = [l for l in results if l.price <= max_price]
     if status:
         results = [l for l in results if l.status == status]
+    results = sorted(results, key=lambda l: l.created_at, reverse=True)
     return [_with_seller(l) for l in results]
 
 

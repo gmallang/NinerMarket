@@ -113,7 +113,13 @@ export function ListingDetail({
       </button>
       <div className={s.detailBody}>
         <div className={s.detailGallery}>
-          <img src={photos[activeImg]} alt={item.title} className={s.detailMainImg} />
+          <img
+            src={photos[activeImg]}
+            alt={item.title}
+            className={s.detailMainImg}
+            decoding="async"
+            fetchPriority="high"
+          />
           {photos.length > 1 && (
             <div className={s.detailThumbs}>
               {photos.map((p, i) => (
@@ -123,6 +129,8 @@ export function ListingDetail({
                   alt={`${item.title} ${i + 1}`}
                   className={`${s.detailThumb} ${i === activeImg ? s.detailThumbActive : ""}`}
                   onClick={() => setActiveImg(i)}
+                  loading="lazy"
+                  decoding="async"
                 />
               ))}
             </div>
@@ -169,6 +177,8 @@ export function ListingDetail({
                   src={avatarUrl(item.seller, 64)}
                   alt={item.seller}
                   className={s.detailSellerAvatar}
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div>
                   <p className={s.detailSellerName}>{item.seller}</p>
@@ -187,6 +197,8 @@ export function ListingDetail({
                   src={avatarUrl(item.seller, 64)}
                   alt={item.seller}
                   className={s.detailSellerAvatar}
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div>
                   <p className={s.detailSellerName}>{item.seller}</p>

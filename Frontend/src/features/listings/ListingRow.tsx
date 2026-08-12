@@ -24,7 +24,7 @@ export function ListingRow({
   return (
     <div className={s.row} onClick={onOpen}>
       <div className={s.rowImageWrap}>
-        <img src={item.image} alt={item.title} className={s.rowImage} />
+        <img src={item.image} alt={item.title} className={s.rowImage} loading="lazy" decoding="async" />
         {item.status === "sold" && (
           <div className={s.soldOverlay}>
             <span className={s.soldTag}>Sold</span>

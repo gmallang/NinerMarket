@@ -121,7 +121,7 @@ export function SellForm({
             <div className={s.photoGrid}>
               {photos.map((p, i) => (
                 <div key={i} className={s.photoPreview}>
-                  <img src={p} alt={`Upload ${i + 1}`} />
+                  <img src={p} alt={`Upload ${i + 1}`} decoding="async" />
                   <button
                     type="button"
                     className={s.photoRemove}

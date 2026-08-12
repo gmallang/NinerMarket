@@ -388,7 +388,7 @@ export function AppLayout() {
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger asChild>
                     <button className={s.navAvatar} aria-label="Your profile" title="Your profile">
-                      <img src={avatarUrl(user.display_name, 64)} alt="Your profile" />
+                      <img src={avatarUrl(user.display_name, 64)} alt="Your profile" loading="lazy" decoding="async" />
                     </button>
                   </DropdownMenu.Trigger>
                   <DropdownMenu.Portal>

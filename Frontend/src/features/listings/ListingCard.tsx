@@ -23,7 +23,7 @@ export function ListingCard({
   return (
     <div className={s.card} onClick={onOpen}>
       <div className={s.cardImageWrap}>
-        <img src={item.image} alt={item.title} className={s.cardImage} />
+        <img src={item.image} alt={item.title} className={s.cardImage} loading="lazy" decoding="async" />
         <button
           className={`${s.saveBtn} ${saved ? s.saveBtnActive : ""}`}
           onClick={(e) => {
@@ -64,13 +64,13 @@ export function ListingCard({
                 onOpenSeller();
               }}
             >
-              <img src={avatarUrl(item.seller, 40)} alt={item.seller} className={s.sellerAvatar} />
+              <img src={avatarUrl(item.seller, 40)} alt={item.seller} className={s.sellerAvatar} loading="lazy" decoding="async" />
               <span className={s.sellerName}>{item.seller}</span>
               <span className={s.sellerRating}>★ {item.sellerRating}</span>
             </button>
           ) : (
             <>
-              <img src={avatarUrl(item.seller, 40)} alt={item.seller} className={s.sellerAvatar} />
+              <img src={avatarUrl(item.seller, 40)} alt={item.seller} className={s.sellerAvatar} loading="lazy" decoding="async" />
               <span className={s.sellerName}>{item.seller}</span>
               <span className={s.sellerRating}>★ {item.sellerRating}</span>
             </>

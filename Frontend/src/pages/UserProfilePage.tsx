@@ -233,6 +233,8 @@ export function UserProfilePage() {
           src={avatarUrl(profile.display_name, 96)}
           alt={profile.display_name}
           className={s.avatar}
+          loading="lazy"
+          decoding="async"
         />
         <div className={s.headerInfo}>
           <h1 className={s.name}>{profile.display_name}</h1>
@@ -488,6 +490,8 @@ export function UserProfilePage() {
                             src={avatarUrl(r.rater.display_name, 32)}
                             alt={r.rater.display_name}
                             className={s.ratingAuthorAvatar}
+                            loading="lazy"
+                            decoding="async"
                           />
                           <span>{r.rater.display_name}</span>
                         </button>

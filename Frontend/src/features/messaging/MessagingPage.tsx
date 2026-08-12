@@ -125,6 +125,8 @@ export function MessagingPage({
                     src={conv.avatar}
                     alt={conv.name}
                     className={m.convAvatar}
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = avatarUrl(conv.name, 80);
                     }}
@@ -166,7 +168,7 @@ export function MessagingPage({
                 disabled={!onOpenListing}
                 aria-label={`View ${activeListing.title}`}
               >
-                <img src={activeListing.image} alt={activeListing.title} className={m.chatThumb} />
+                <img src={activeListing.image} alt={activeListing.title} className={m.chatThumb} loading="lazy" decoding="async" />
                 <div className={m.chatHeaderInfo}>
                   <p className={m.chatListingTitle}>{activeListing.title}</p>
                   <p className={m.chatListingPrice}>${activeListing.price.toLocaleString()}</p>
@@ -211,6 +213,8 @@ export function MessagingPage({
                           src={activeConv.avatar}
                           alt={activeConv.name}
                           className={m.msgRowAvatar}
+                          loading="lazy"
+                          decoding="async"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = avatarUrl(activeConv.name, 56);
                           }}
@@ -230,17 +234,19 @@ export function MessagingPage({
                 );
               })}
 
-              {typingIndicator && (
-                <div className={m.msgRow}>
-                  <div className={m.msgBubbleRow}>
-                    <img
-                      src={activeConv.avatar}
-                      alt={activeConv.name}
-                      className={m.msgRowAvatar}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = avatarUrl(activeConv.name, 56);
-                      }}
-                    />
+                  {typingIndicator && (
+                    <div className={m.msgRow}>
+                      <div className={m.msgBubbleRow}>
+                        <img
+                          src={activeConv.avatar}
+                          alt={activeConv.name}
+                          className={m.msgRowAvatar}
+                          loading="lazy"
+                          decoding="async"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = avatarUrl(activeConv.name, 56);
+                          }}
+                        />
                     <div className={`${m.bubble} ${m.bubbleRecv} ${m.typingBubble}`}>
                       <span className={m.typingDot} />
                       <span className={m.typingDot} />

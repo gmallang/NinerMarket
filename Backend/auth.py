@@ -180,3 +180,4 @@ def verify_google_id_token(id_token: str) -> dict:
     if info.get("iss") not in ("accounts.google.com", "https://accounts.google.com"):
         raise ValueError("Invalid token issuer")
     return info
+

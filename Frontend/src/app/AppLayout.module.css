@@ -793,13 +793,11 @@
 
 @media (max-width: 1024px) {
   .body {
-    padding-bottom: 68px;
+    padding-bottom: calc(68px + env(safe-area-inset-bottom));
   }
 
   .scrollFade {
-    left: 0;
-    bottom: 68px;
-    height: 28px;
+    display: none;
   }
 
   .bottomNav {

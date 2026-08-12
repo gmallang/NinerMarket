@@ -9,6 +9,7 @@ export interface Message {
   text: string;
   sent: boolean;
   timestamp: string;
+  isOptimistic?: boolean;
 }
 
 export interface Conversation {

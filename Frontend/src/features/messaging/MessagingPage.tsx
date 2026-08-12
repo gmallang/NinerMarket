@@ -226,8 +226,14 @@ export function MessagingPage({
                     </div>
                     <span className={m.msgTime}>
                       {formatClockTime(new Date(msg.timestamp))}
-                      {isLastMsg && msg.sent && read && (
-                        <span className={m.msgRead}> · Read</span>
+                      {isLastMsg && msg.sent && (
+                        <span className={m.msgRead}>
+                          {msg.isOptimistic
+                            ? " · Sending..."
+                            : read
+                              ? " · Read"
+                              : " · Delivered"}
+                        </span>
                       )}
                     </span>
                   </div>

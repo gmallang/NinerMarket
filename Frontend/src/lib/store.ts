@@ -7,6 +7,38 @@ import { broadcastTyping, subscribeInbox, subscribeListings } from "@/lib/realti
 import { clearUser, loadUser, saveUser } from "@/lib/user";
 import type { CurrentUser, Listing, NotificationDto } from "@/lib/types";
 
+function mergeThread(oldThread: Conversation | undefined, newThread: Conversation): Conversation {
+  if (!oldThread) return newThread;
+
+  const oldOptimistic = oldThread.messages.filter((m: any) => m.isOptimistic);
+  const serverMessages = [...newThread.messages];
+  const pendingOptimistic = [];
+
+  for (const opt of oldOptimistic) {
+    let matched = false;
+    for (let i = serverMessages.length - 1; i >= 0; i--) {
+      const sm = serverMessages[i];
+      if (sm.sent === true && sm.text === opt.text && !(sm as any)._matched) {
+        (sm as any)._matched = true;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      pendingOptimistic.push(opt);
+    }
+  }
+
+  serverMessages.forEach((sm: any) => delete sm._matched);
+
+  return {
+    ...newThread,
+    messages: [...serverMessages, ...pendingOptimistic].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    ),
+  };
+}
+
 const SAVED_KEY = "ninermarket-saved";
 const THREADS_KEY = "ninermarket-threads";
 
@@ -183,7 +215,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
         const normalized = isViewed ? { ...thread, unread: 0 } : thread;
         const exists = state.convs.some((c) => c.id === threadId);
         const convs = exists
-          ? state.convs.map((c) => (c.id === threadId ? normalized : c))
+          ? state.convs.map((c) => (c.id === threadId ? mergeThread(c, normalized) : c))
           : [normalized, ...state.convs];
         const activeConvId = convs.some((c) => c.id === state.activeConvId)
           ? state.activeConvId
@@ -333,7 +365,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
     const { inputText, activeConvId, user } = get();
     const text = inputText.trim();
     if (!text) return;
-    const newMsg = { id: Date.now(), text, sent: true, timestamp: new Date().toISOString() };
+    const newMsg = { id: Date.now(), text, sent: true, timestamp: new Date().toISOString(), isOptimistic: true };
     set((state) => ({
       convs: state.convs.map((c) =>
         c.id === activeConvId
@@ -353,7 +385,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
         .sendThreadMessage(user.id, activeConvId, text)
         .then((thread) =>
           set((state) => ({
-            convs: state.convs.map((c) => (c.id === thread.id ? thread : c)),
+            convs: state.convs.map((c) => (c.id === thread.id ? mergeThread(c, thread) : c)),
           }))
         )
         .catch(() => {});

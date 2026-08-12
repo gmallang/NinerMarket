@@ -1,5 +1,9 @@
 export const TERMS_SECTIONS: { title: string; body: string }[] = [
   {
+    title: "Independent student project",
+    body: "NinerMarket is an independent project built and operated by UNC Charlotte students. It is not officially affiliated with, endorsed by, or operated by UNC Charlotte.",
+  },
+  {
     title: "Eligibility",
     body: "NinerMarket is exclusively for current UNC Charlotte students, faculty, and staff. You must sign in with a valid @charlotte.edu email, and your account is tied to your university identity.",
   },

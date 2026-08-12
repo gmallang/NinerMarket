@@ -71,6 +71,14 @@
   color: var(--color-fg);
 }
 
+.aDisclaimer {
+  margin-top: var(--space-3);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--color-fg-muted);
+}
+
 /* ── Core values ── */
 .aValues {
   display: grid;
@@ -201,7 +209,8 @@
     padding: var(--space-5) var(--space-5);
   }
 
-  .aMission {
+  .aMission,
+  .aDisclaimer {
     text-align: left;
   }
 

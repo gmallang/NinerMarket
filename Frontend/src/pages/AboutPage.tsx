@@ -29,6 +29,10 @@ export function AboutPage() {
           textbook, clearing out your dorm, or finding a place to live, everything stays local,
           verified, and free.
         </p>
+        <p className={s.aDisclaimer}>
+          NinerMarket is an independent student project built by UNC Charlotte students. It is
+          not officially affiliated with, endorsed by, or operated by UNC Charlotte.
+        </p>
       </section>
 
       {/* Core values */}

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Conversation } from "@/data/conversations";
+import type { Conversation, Message } from "@/data/conversations";
 import { api, clearToken } from "@/lib/api";
 import { avatarUrl } from "@/lib/avatar";
 import { fromDto } from "@/lib/listings";
@@ -10,16 +10,22 @@ import type { CurrentUser, Listing, NotificationDto } from "@/lib/types";
 function mergeThread(oldThread: Conversation | undefined, newThread: Conversation): Conversation {
   if (!oldThread) return newThread;
 
-  const oldOptimistic = oldThread.messages.filter((m: any) => m.isOptimistic);
+  // A send still in flight when this thread refreshes (e.g. a realtime ping
+  // for someone else's message landing mid-send) would otherwise vanish
+  // once replaced by the server's message list — keep it as "pending" until
+  // its own request resolves and gets folded in for real.
+  const oldOptimistic = oldThread.messages.filter((m) => m.isOptimistic);
   const serverMessages = [...newThread.messages];
-  const pendingOptimistic = [];
+  const matchedIndexes = new Set<number>();
+  const pendingOptimistic: Message[] = [];
 
   for (const opt of oldOptimistic) {
     let matched = false;
     for (let i = serverMessages.length - 1; i >= 0; i--) {
+      if (matchedIndexes.has(i)) continue;
       const sm = serverMessages[i];
-      if (sm.sent === true && sm.text === opt.text && !(sm as any)._matched) {
-        (sm as any)._matched = true;
+      if (sm.sent === true && sm.text === opt.text) {
+        matchedIndexes.add(i);
         matched = true;
         break;
       }
@@ -28,8 +34,6 @@ function mergeThread(oldThread: Conversation | undefined, newThread: Conversatio
       pendingOptimistic.push(opt);
     }
   }
-
-  serverMessages.forEach((sm: any) => delete sm._matched);
 
   return {
     ...newThread,

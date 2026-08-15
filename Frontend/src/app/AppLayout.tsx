@@ -26,6 +26,7 @@ import { SellForm } from "@/features/sell/SellForm";
 import { MessagesOverlay } from "@/features/messaging/MessagesOverlay";
 import { ListingOverlay } from "@/features/listings/ListingOverlay";
 import { formatRelativeTime } from "@/lib/format";
+import { pushSupported } from "@/lib/push";
 import type { NotificationDto } from "@/lib/types";
 import s from "./AppLayout.module.css";
 
@@ -60,6 +61,11 @@ export function AppLayout() {
   const markNotificationRead = useMarketStore((s) => s.markNotificationRead);
   const markAllNotificationsRead = useMarketStore((s) => s.markAllNotificationsRead);
   const clearNotifications = useMarketStore((s) => s.clearNotifications);
+  const pushEnabled = useMarketStore((s) => s.pushEnabled);
+  const pushPromptDismissed = useMarketStore((s) => s.pushPromptDismissed);
+  const checkPushEnabled = useMarketStore((s) => s.checkPushEnabled);
+  const enablePushNotifications = useMarketStore((s) => s.enablePushNotifications);
+  const dismissPushPrompt = useMarketStore((s) => s.dismissPushPrompt);
   const openListingOverlay = useMarketStore((s) => s.openListingOverlay);
   const openMessageOverlayWithBuyer = useMarketStore((s) => s.openMessageOverlayWithBuyer);
   const logout = useMarketStore((s) => s.logout);
@@ -104,10 +110,11 @@ export function AppLayout() {
     if (user) {
       void loadNotifications();
       void loadThreads();
+      void checkPushEnabled();
       startRealtimeInbox();
       startRealtimeListings();
     }
-  }, [user, loadNotifications, loadThreads, startRealtimeInbox, startRealtimeListings]);
+  }, [user, loadNotifications, loadThreads, checkPushEnabled, startRealtimeInbox, startRealtimeListings]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -314,6 +321,33 @@ export function AppLayout() {
                       <span>Notifications</span>
                       {unreadNotifs > 0 && <span className={s.notifCount}>{unreadNotifs}</span>}
                     </div>
+                    {pushSupported() && !pushEnabled && !pushPromptDismissed && (
+                      <div className={s.pushPrompt}>
+                        <span>Get notified even when NinerMarket isn't open.</span>
+                        <div className={s.pushPromptActions}>
+                          <button
+                            className={s.pushPromptBtn}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              void enablePushNotifications().then(
+                                (ok) => !ok && void checkPushEnabled()
+                              );
+                            }}
+                          >
+                            Enable
+                          </button>
+                          <button
+                            className={s.pushPromptDismiss}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              dismissPushPrompt();
+                            }}
+                          >
+                            Not now
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {notifications.length === 0 ? (
                       <p className={s.notifEmpty}>You're all caught up.</p>
                     ) : (

@@ -4,6 +4,7 @@ import { api, clearToken } from "@/lib/api";
 import { avatarUrl } from "@/lib/avatar";
 import { fromDto } from "@/lib/listings";
 import { broadcastTyping, subscribeInbox, subscribeListings } from "@/lib/realtime";
+import { enablePush, getExistingPushSubscription } from "@/lib/push";
 import { clearUser, loadUser, saveUser } from "@/lib/user";
 import type { CurrentUser, Listing, NotificationDto } from "@/lib/types";
 
@@ -104,6 +105,8 @@ interface MarketState {
   inputText: string;
   notifications: NotificationDto[];
   typingByConvId: Record<number, boolean>;
+  pushEnabled: boolean;
+  pushPromptDismissed: boolean;
 
   signIn: (user: CurrentUser) => void;
   logout: () => void;
@@ -145,6 +148,9 @@ interface MarketState {
   markListingSold: (listingId: string) => Promise<void>;
   reportListing: (listingId: string, reason: string, details: string) => Promise<void>;
   makeOffer: (listingId: string, price: number) => Promise<void>;
+  checkPushEnabled: () => Promise<void>;
+  enablePushNotifications: () => Promise<boolean>;
+  dismissPushPrompt: () => void;
 }
 
 export const useMarketStore = create<MarketState>((set, get) => {
@@ -160,6 +166,8 @@ export const useMarketStore = create<MarketState>((set, get) => {
   inputText: "",
   notifications: [],
   typingByConvId: {},
+  pushEnabled: false,
+  pushPromptDismissed: false,
   messagesOpen: false,
   listingOverlayId: null,
   sellModal: null,
@@ -188,6 +196,13 @@ export const useMarketStore = create<MarketState>((set, get) => {
     unsubscribeInbox?.();
     unsubscribeInbox = subscribeInbox(user.id, {
       onNewMessage: (payload) => void get().refreshThread(payload.thread_id),
+      onNewNotification: (notification) => {
+        set((state) =>
+          state.notifications.some((n) => n.id === notification.id)
+            ? state
+            : { notifications: [notification, ...state.notifications] }
+        );
+      },
       onTyping: (payload) => {
         if (payload.user_id === user.id) return;
         set((state) => ({
@@ -482,15 +497,20 @@ export const useMarketStore = create<MarketState>((set, get) => {
         // backend yet. Keep it instead of letting this refresh wipe it out —
         // it'll be replaced once its own create-thread call resolves, or
         // matched here on a later poll once the server catches up.
-        const pending = state.convs.filter(
-          (local) =>
-            !list.some(
-              (server) =>
-                server.listingId === local.listingId &&
-                (!local.other_user_id || server.other_user_id === local.other_user_id)
-            )
-        );
-        const merged = [...pending, ...list];
+        const findLocal = (server: Conversation) =>
+          state.convs.find(
+            (local) =>
+              local.listingId === server.listingId &&
+              (!local.other_user_id || server.other_user_id === local.other_user_id)
+          );
+        const pending = state.convs.filter((local) => !list.some((server) => findLocal(server) === local));
+        // Merge each server thread against its local counterpart instead of
+        // replacing it outright — otherwise this poll (every 4s while the
+        // overlay is open) can race a message that was just sent but hasn't
+        // landed in the DB yet, wiping the optimistic bubble until the send's
+        // own response re-adds it a moment later (a visible send/unsend/resend
+        // flicker).
+        const merged = [...pending, ...list.map((server) => mergeThread(findLocal(server), server))];
         persistThreadsCache(merged);
         return {
           convs: messagesOpen
@@ -522,6 +542,28 @@ export const useMarketStore = create<MarketState>((set, get) => {
       // Keep whatever is already shown when the backend is unavailable.
     }
   },
+
+  checkPushEnabled: async () => {
+    const sub = await getExistingPushSubscription().catch(() => null);
+    set({ pushEnabled: !!sub });
+  },
+
+  enablePushNotifications: async () => {
+    const user = get().user;
+    if (!user) return false;
+    try {
+      const { key } = await api.getVapidPublicKey();
+      const subscription = await enablePush(key);
+      if (!subscription) return false;
+      await api.subscribePush(user.id, subscription.toJSON());
+      set({ pushEnabled: true });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  dismissPushPrompt: () => set({ pushPromptDismissed: true }),
 
   markNotificationRead: (id) => {
     const user = get().user;

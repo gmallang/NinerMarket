@@ -240,4 +240,18 @@ export const api = {
           ? undefined
           : JSON.stringify({ last_read_msg_id: upToMsgId }),
     }),
+
+  getVapidPublicKey: () => request<{ key: string }>("/push/vapid-public-key"),
+
+  subscribePush: (userId: string, subscription: PushSubscriptionJSON) =>
+    request<{ ok: boolean }>(`/users/${userId}/push-subscriptions`, {
+      method: "POST",
+      body: JSON.stringify(subscription),
+    }),
+
+  unsubscribePush: (userId: string, endpoint: string) =>
+    request<{ ok: boolean }>(`/users/${userId}/push-subscriptions`, {
+      method: "DELETE",
+      body: JSON.stringify({ endpoint }),
+    }),
 };

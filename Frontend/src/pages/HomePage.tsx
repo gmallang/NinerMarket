@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import Fuse from "fuse.js";
+import type Fuse from "fuse.js";
 import { Search, Grid, List } from "lucide-react";
 import { useMarketStore } from "@/lib/store";
 import { CATEGORIES } from "@/data/categories";
@@ -22,7 +22,14 @@ export function HomePage() {
   const minPrice = params.get("minPrice");
   const maxPrice = params.get("maxPrice");
   const locationFilter = params.get("location");
-  const activeConditions = (params.get("condition") ?? "").split(",").filter(Boolean);
+  const conditionParam = params.get("condition") ?? "";
+  // Memoized on the raw string, not re-split into a fresh array on every
+  // render — otherwise `filtered` below would recompute unconditionally
+  // since a new array reference never equals the previous one.
+  const activeConditions = useMemo(
+    () => conditionParam.split(",").filter(Boolean),
+    [conditionParam]
+  );
 
   const listings = useMarketStore((s) => s.listings);
   const loading = useMarketStore((s) => s.loading);
@@ -40,22 +47,38 @@ export function HomePage() {
       ? "Saved Items"
       : (CATEGORIES.find((c) => c.id === activeCategory)?.label ?? "All Categories");
 
+  // fuse.js is only needed once someone actually searches, so it's kept out
+  // of the main bundle and loaded on first use instead of on every page load.
+  const [FuseCtor, setFuseCtor] = useState<typeof Fuse | null>(null);
+  useEffect(() => {
+    if (!searchQuery.trim() || FuseCtor) return;
+    let active = true;
+    void import("fuse.js").then((mod) => {
+      if (active) setFuseCtor(mod.default);
+    });
+    return () => {
+      active = false;
+    };
+  }, [searchQuery, FuseCtor]);
+
   const fuse = useMemo(
     () =>
-      new Fuse(listings, {
-        keys: [
-          { name: "title", weight: 0.6 },
-          { name: "campus", weight: 0.25 },
-          { name: "description", weight: 0.15 },
-        ],
-        threshold: 0.4,
-        ignoreLocation: true,
-      }),
-    [listings]
+      FuseCtor
+        ? new FuseCtor(listings, {
+            keys: [
+              { name: "title", weight: 0.6 },
+              { name: "campus", weight: 0.25 },
+              { name: "description", weight: 0.15 },
+            ],
+            threshold: 0.4,
+            ignoreLocation: true,
+          })
+        : null,
+    [FuseCtor, listings]
   );
 
   const searchMatches = useMemo(
-    () => (searchQuery.trim() ? fuse.search(searchQuery.trim()) : null),
+    () => (searchQuery.trim() && fuse ? fuse.search(searchQuery.trim()) : null),
     [fuse, searchQuery]
   );
   // Wrap in useMemo so these Sets/Maps are only rebuilt when searchMatches
@@ -69,29 +92,47 @@ export function HomePage() {
     [searchMatches]
   );
 
-  const filtered = listings
-    .filter((l) => {
-      if (viewMine) return !!user && l.sellerId === user.id;
-      if (viewSaved) return savedItems.has(l.id);
-      if (l.status === "sold" || l.status === "flagged") return false;
-      const matchCat = activeCategory === "all" || l.category === activeCategory;
-      const matchSearch = !matchedIds || matchedIds.has(l.id);
-      const matchMin = !minPrice || l.price >= Number(minPrice);
-      const matchMax = !maxPrice || l.price <= Number(maxPrice);
-      const matchLocation =
-        !locationFilter || l.campus.toLowerCase().includes(locationFilter.toLowerCase());
-      const matchCondition =
-        activeConditions.length === 0 || activeConditions.includes(l.condition);
-      return matchCat && matchSearch && matchMin && matchMax && matchLocation && matchCondition;
-    })
-    .sort((a, b) => {
-      if (sortBy === "price-asc") return a.price - b.price;
-      if (sortBy === "price-desc") return b.price - a.price;
-      if (relevanceRank) return (relevanceRank.get(a.id) ?? 0) - (relevanceRank.get(b.id) ?? 0);
-      // ISO 8601 strings sort lexicographically, so direct string comparison
-      // is equivalent to comparing timestamps without creating Date objects.
-      return b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0;
-    });
+  const filtered = useMemo(
+    () =>
+      listings
+        .filter((l) => {
+          if (viewMine) return !!user && l.sellerId === user.id;
+          if (viewSaved) return savedItems.has(l.id);
+          if (l.status === "sold" || l.status === "flagged") return false;
+          const matchCat = activeCategory === "all" || l.category === activeCategory;
+          const matchSearch = !matchedIds || matchedIds.has(l.id);
+          const matchMin = !minPrice || l.price >= Number(minPrice);
+          const matchMax = !maxPrice || l.price <= Number(maxPrice);
+          const matchLocation =
+            !locationFilter || l.campus.toLowerCase().includes(locationFilter.toLowerCase());
+          const matchCondition =
+            activeConditions.length === 0 || activeConditions.includes(l.condition);
+          return matchCat && matchSearch && matchMin && matchMax && matchLocation && matchCondition;
+        })
+        .sort((a, b) => {
+          if (sortBy === "price-asc") return a.price - b.price;
+          if (sortBy === "price-desc") return b.price - a.price;
+          if (relevanceRank) return (relevanceRank.get(a.id) ?? 0) - (relevanceRank.get(b.id) ?? 0);
+          // ISO 8601 strings sort lexicographically, so direct string comparison
+          // is equivalent to comparing timestamps without creating Date objects.
+          return b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0;
+        }),
+    [
+      listings,
+      viewMine,
+      viewSaved,
+      user,
+      savedItems,
+      activeCategory,
+      matchedIds,
+      minPrice,
+      maxPrice,
+      locationFilter,
+      activeConditions,
+      sortBy,
+      relevanceRank,
+    ]
+  );
 
   const openListing = (id: string) => openListingOverlay(id);
   const openSeller = (id: string) => navigate(`/user/${id}`);

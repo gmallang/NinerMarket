@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import users, listings, ratings, notifications, messaging, photos, offers
+from routes import users, listings, ratings, notifications, messaging, photos, offers, push
 
 app = FastAPI(title="NinerMarket API")
 
@@ -23,3 +23,4 @@ app.include_router(notifications.router)
 app.include_router(messaging.router)
 app.include_router(photos.router)
 app.include_router(offers.router)
+app.include_router(push.router)

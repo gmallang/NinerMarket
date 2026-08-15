@@ -4,8 +4,10 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 
 from auth import require_user
+from broadcast import broadcast
 from database import db, notifications
 from models import NotificationCreate
+from push import send_push
 
 router = APIRouter()
 
@@ -50,9 +52,15 @@ def create_notification(
     )
     if db:
         db.table("notifications").insert(notification).execute()
-        return notification
+    else:
+        notifications.setdefault(user_id, []).append(notification)
 
-    notifications.setdefault(user_id, []).append(notification)
+    # Best-effort live signal so an open tab bumps its bell badge instantly
+    # instead of only picking this up on next dropdown-open/sign-in poll.
+    broadcast(f"inbox:{user_id}", "new_notification", notification)
+    # Also reaches devices with no tab open at all, if they've granted
+    # notification permission.
+    send_push(user_id, "NinerMarket", text, f"/listing/{listing_id}" if listing_id else "/")
     return notification
 
 

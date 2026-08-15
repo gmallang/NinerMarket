@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import type { NotificationDto } from "@/lib/types";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -22,6 +23,7 @@ export function subscribeInbox(
   handlers: {
     onNewMessage?: (payload: { thread_id: number }) => void;
     onTyping?: (payload: TypingPayload) => void;
+    onNewNotification?: (payload: NotificationDto) => void;
   }
 ): () => void {
   if (!client || !userId) return () => {};
@@ -33,6 +35,9 @@ export function subscribeInbox(
     })
     .on("broadcast", { event: "typing" }, ({ payload }) => {
       handlers.onTyping?.(payload as TypingPayload);
+    })
+    .on("broadcast", { event: "new_notification" }, ({ payload }) => {
+      handlers.onNewNotification?.(payload as NotificationDto);
     })
     .subscribe();
 

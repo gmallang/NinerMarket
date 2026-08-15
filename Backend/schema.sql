@@ -98,6 +98,18 @@ create table if not exists notifications (
 alter table notifications add column if not exists related_user_id text not null default '';
 alter table notifications add column if not exists related_user_name text not null default '';
 
+-- Web Push subscriptions (Push API). One row per browser/device a user has
+-- granted notification permission on; a user can have several (phone,
+-- laptop, etc). endpoint is unique per browser subscription, so upserting on
+-- it naturally replaces a stale subscription for the same device.
+create table if not exists push_subscriptions (
+  endpoint   text primary key,
+  user_id    text not null references users(id) on delete cascade,
+  p256dh     text not null,
+  auth       text not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists listing_reports (
   id           text primary key,
   listing_id   text not null references listings(id) on delete cascade,
@@ -127,8 +139,13 @@ create unique index if not exists idx_ratings_rater_ratee on ratings (rater_id, 
 create index if not exists idx_threads_user_id on threads (user_id);
 create index if not exists idx_threads_listing_id on threads ("listingId");
 create index if not exists idx_messages_thread_id on messages (thread_id);
+-- Composite index for the per-thread unread/cursor queries, which filter by
+-- thread_id and then order/compare on id (idx_messages_thread_id alone can't
+-- satisfy the id ordering without an extra sort).
+create index if not exists idx_messages_thread_id_id on messages (thread_id, id);
 create index if not exists idx_thread_members_user_id on thread_members (user_id);
 create index if not exists idx_notifications_user_id on notifications (user_id);
+create index if not exists idx_push_subscriptions_user_id on push_subscriptions (user_id);
 create index if not exists idx_listing_reports_listing_id on listing_reports (listing_id);
 create index if not exists idx_listing_reports_reporter_id on listing_reports (reporter_id);
 create index if not exists idx_offers_listing_id on offers (listing_id);

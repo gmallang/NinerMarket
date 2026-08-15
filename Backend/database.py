@@ -17,6 +17,7 @@ ratings = {}
 notifications = {}
 reports = {}
 offers = {}
+push_subscriptions = {}
 
 if SUPABASE_URL and SUPABASE_KEY:
     from supabase import create_client

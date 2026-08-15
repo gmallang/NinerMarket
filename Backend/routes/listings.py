@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
 from auth import require_user
 from broadcast import broadcast
@@ -59,11 +59,17 @@ def _with_seller(entry, seller: dict | None = None):
 
 @router.get("/listings")
 def list_listings(
+    response: Response,
     category: str | None = Query(default=None),
     min_price: float | None = Query(default=None, ge=0),
     max_price: float | None = Query(default=None, ge=0),
     status: str | None = Query(default=None),
 ):
+    # Public, unauthenticated, not personalized — safe to cache briefly.
+    # Real-time freshness for changes (new/sold/edited listings) is already
+    # handled by the "listings" broadcast channel triggering a client refetch,
+    # so this short window only cuts down on redundant polling/reloads.
+    response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=60"
     if db:
         query = db.table("listings").select("*")
         if category:
@@ -138,7 +144,8 @@ def create_listing(listing: Listing, user_id: str = Depends(require_user)):
 
 
 @router.get("/listings/{id}")
-def get_listing(id: str):
+def get_listing(id: str, response: Response):
+    response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=60"
     if db:
         data = db.table("listings").select("*").eq("id", id).execute()
         if not data.data:

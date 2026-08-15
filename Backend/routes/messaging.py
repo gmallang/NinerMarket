@@ -6,6 +6,7 @@ from auth import require_user
 from database import db, listings, threads, users
 from models import MarkReadRequest, OpenThreadRequest, SendMessageRequest
 from broadcast import broadcast
+from push import send_push
 
 router = APIRouter()
 
@@ -154,6 +155,38 @@ def _viewer_relative(row: dict, msgs: list[dict], viewer_id: str) -> dict:
     return row
 
 
+def _viewer_relative_batched(
+    row: dict,
+    msgs: list[dict],
+    viewer_id: str,
+    seller_by_listing: dict[str, str],
+    name_by_user: dict[str, str],
+    cursor_by_thread_user: dict[tuple[str, str], int],
+) -> dict:
+    """Same output shape as _viewer_relative, but resolves the other-side
+    lookup and both read cursors from maps built once for the whole inbox
+    instead of issuing ~4 queries per thread (the actual cause of the inbox
+    getting slower as a user accumulates conversations)."""
+    row = dict(row)
+    thread_id = str(row["id"])
+    if row.get("user_id") != viewer_id:
+        other_id = row.get("user_id", "")
+        other_name = name_by_user.get(other_id, "Unknown user")
+        row["name"] = other_name
+        row["avatar"] = _avatar_url(other_name)
+        row["other_user_id"] = other_id
+        msgs = [{**m, "sent": not m.get("sent", True)} for m in msgs]
+    else:
+        other_id = seller_by_listing.get(row.get("listingId", ""))
+        row["other_user_id"] = other_id
+
+    viewer_cursor = cursor_by_thread_user.get((thread_id, viewer_id), 0)
+    row["messages"] = msgs
+    row["unread"] = sum(1 for m in msgs if m["id"] > viewer_cursor)
+    row["other_read_cursor"] = cursor_by_thread_user.get((thread_id, other_id or ""), 0)
+    return row
+
+
 def _thread_dict(thread_id: int, user_id: str, listing_id: str, name: str) -> dict:
     return {
         "id": thread_id,
@@ -213,11 +246,40 @@ def list_threads(user_id: str, caller_id: str = Depends(require_user)):
         for msg in all_msgs:
             msgs_by_thread.setdefault(msg["thread_id"], []).append(msg)
 
+        # Batch-resolve every "other side" lookup and read cursor once for
+        # the whole inbox instead of once per thread (eliminates the other
+        # N+1 pattern: seller/display-name lookups and unread-cursor checks
+        # that used to run 3-4 queries per thread).
+        listing_ids = list({row["listingId"] for row in rows})
+        sellers = (
+            db.table("listings").select("id,seller_id").in_("id", listing_ids).execute().data
+            if listing_ids
+            else []
+        )
+        seller_by_listing = {r["id"]: r["seller_id"] for r in sellers}
+
+        opener_ids = list({row["user_id"] for row in rows if row["user_id"] != user_id})
+        names = (
+            db.table("users").select("id,display_name").in_("id", opener_ids).execute().data
+            if opener_ids
+            else []
+        )
+        name_by_user = {r["id"]: r["display_name"] for r in names}
+
+        members = db.table("thread_members").select("*").in_("thread_id", thread_ids).execute().data
+        cursor_by_thread_user = {
+            (m["thread_id"], m["user_id"]): m["last_read_msg_id"] for m in members
+        }
+
         out = []
         for row in rows:
             row["id"] = int(row["id"])
             msgs = msgs_by_thread.get(str(row["id"]), [])
-            out.append(_viewer_relative(row, msgs, user_id))
+            out.append(
+                _viewer_relative_batched(
+                    row, msgs, user_id, seller_by_listing, name_by_user, cursor_by_thread_user
+                )
+            )
         return out
 
     out = [
@@ -386,6 +448,7 @@ def send_thread_message(
         )
         if recipient_id:
             broadcast(f"inbox:{recipient_id}", "new_message", {"thread_id": thread_id})
+            send_push(recipient_id, _display_name(user_id), msg["text"], "/")
         return _viewer_relative(thread_row, existing_msgs, user_id)
 
     thread = threads.get(thread_id)
@@ -409,6 +472,7 @@ def send_thread_message(
     )
     if recipient_id:
         broadcast(f"inbox:{recipient_id}", "new_message", {"thread_id": thread_id})
+        send_push(recipient_id, _display_name(user_id), msg["text"], "/")
     return _viewer_relative(thread, thread["messages"], user_id)
 
 

@@ -68,7 +68,14 @@
 /* ── Radix Dialog primitives ── */
 .modalOverlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  /* dvh tracks the keyboard-shrunk visual viewport on mobile — `inset: 0`
+     doesn't reliably resize with it on iOS Safari, leaving a gap at the
+     bottom where the page behind the modal shows through undimmed once the
+     keyboard opens. */
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.5);
   z-index: 1000;
 }

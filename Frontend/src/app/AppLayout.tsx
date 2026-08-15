@@ -86,6 +86,7 @@ export function AppLayout() {
   const [minPriceInput, setMinPriceInput] = useState(params.get("minPrice") ?? "");
   const [maxPriceInput, setMaxPriceInput] = useState(params.get("maxPrice") ?? "");
   const [showScrollFade, setShowScrollFade] = useState(false);
+  const [pushError, setPushError] = useState("");
   const fadeSentinelRef = useRef<HTMLDivElement | null>(null);
   const totalUnread = convs.reduce((n, c) => n + c.unread, 0);
   const unreadNotifs = notifications.filter((n) => !n.read).length;
@@ -324,14 +325,22 @@ export function AppLayout() {
                     {pushSupported() && !pushEnabled && !pushPromptDismissed && (
                       <div className={s.pushPrompt}>
                         <span>Get notified even when NinerMarket isn't open.</span>
+                        {pushError && <span className={s.pushPromptError}>{pushError}</span>}
                         <div className={s.pushPromptActions}>
                           <button
                             className={s.pushPromptBtn}
                             onClick={(e) => {
                               e.preventDefault();
-                              void enablePushNotifications().then(
-                                (ok) => !ok && void checkPushEnabled()
-                              );
+                              setPushError("");
+                              void enablePushNotifications().then((ok) => {
+                                if (ok) return;
+                                void checkPushEnabled();
+                                setPushError(
+                                  Notification.permission === "denied"
+                                    ? "Blocked — enable notifications for this site in your browser settings."
+                                    : "Not available yet — check back soon."
+                                );
+                              });
                             }}
                           >
                             Enable

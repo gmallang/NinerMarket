@@ -34,7 +34,13 @@ def send_push(user_id: str, title: str, body: str, url: str = "/") -> None:
     the in-app badge/realtime signal, not the source of truth."""
     if not VAPID_PRIVATE_KEY:
         return
-    for sub in _subscriptions_for(user_id):
+    try:
+        subs = _subscriptions_for(user_id)
+    except Exception:
+        # e.g. the push_subscriptions table/migration hasn't been applied yet.
+        logger.exception("failed to load push subscriptions")
+        return
+    for sub in subs:
         try:
             webpush(
                 subscription_info={

@@ -723,8 +723,12 @@
 @media (max-width: 1024px) {
   .overlayContent {
     top: 8px;
-    bottom: calc(80px + env(safe-area-inset-bottom));
-    height: auto !important;
+    /* dvh tracks the keyboard-shrunk visual viewport on mobile; a fixed
+       `bottom` offset combined with `height: auto` doesn't — it stays
+       anchored to the pre-keyboard viewport, which is what made this panel
+       appear to float mid-screen with the nav bar and page content
+       visible underneath it once the keyboard opened. */
+    height: calc(100dvh - 8px - 80px - env(safe-area-inset-bottom)) !important;
     transform: translateX(-50%);
   }
 }

@@ -59,7 +59,12 @@ export function HomePage() {
     // from also surfacing as an unhandled-promise console error.
     import("fuse.js")
       .then((mod) => {
-        if (active) setFuseCtor(mod.default);
+        // setFuseCtor(mod.default) would pass the Fuse class itself, and
+        // React's setState treats a function argument as a functional
+        // updater (state => newState) and calls it — which for a class
+        // means calling it without `new`, throwing exactly that error.
+        // Wrapping in a function stores the class as the value instead.
+        if (active) setFuseCtor(() => mod.default);
       })
       .catch(() => {});
     return () => {

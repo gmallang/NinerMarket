@@ -53,9 +53,15 @@ export function HomePage() {
   useEffect(() => {
     if (!searchQuery.trim() || FuseCtor) return;
     let active = true;
-    void import("fuse.js").then((mod) => {
-      if (active) setFuseCtor(mod.default);
-    });
+    // A failure here (most commonly a stale chunk hash after a deploy) is
+    // handled globally by the vite:preloadError listener in main.tsx, which
+    // reloads the page — this catch just prevents the resulting rejection
+    // from also surfacing as an unhandled-promise console error.
+    import("fuse.js")
+      .then((mod) => {
+        if (active) setFuseCtor(mod.default);
+      })
+      .catch(() => {});
     return () => {
       active = false;
     };

@@ -11,34 +11,46 @@ import type { CurrentUser, Listing, NotificationDto } from "@/lib/types";
 function mergeThread(oldThread: Conversation | undefined, newThread: Conversation): Conversation {
   if (!oldThread) return newThread;
 
-  // A send still in flight when this thread refreshes (e.g. a realtime ping
-  // for someone else's message landing mid-send) would otherwise vanish
-  // once replaced by the server's message list — keep it as "pending" until
-  // its own request resolves and gets folded in for real.
-  const oldOptimistic = oldThread.messages.filter((m) => m.isOptimistic);
+  // Do not let a response that started before a send erase a bubble that is
+  // already visible locally. Match confirmed server messages back to their
+  // browser identity so React keeps the same bubble mounted across refreshes.
+  const trackedLocalMessages = oldThread.messages.filter((m) => m.isOptimistic || m.clientId);
   const serverMessages = [...newThread.messages];
   const matchedIndexes = new Set<number>();
-  const pendingOptimistic: Message[] = [];
+  const localOnlyMessages: Message[] = [];
 
-  for (const opt of oldOptimistic) {
+  for (const localMessage of trackedLocalMessages) {
     let matched = false;
     for (let i = serverMessages.length - 1; i >= 0; i--) {
       if (matchedIndexes.has(i)) continue;
-      const sm = serverMessages[i];
-      if (sm.sent === true && sm.text === opt.text) {
+      const serverMessage = serverMessages[i];
+      if (serverMessage.sent === true && serverMessage.text === localMessage.text) {
         matchedIndexes.add(i);
+        serverMessages[i] = {
+          ...serverMessage,
+          clientId: localMessage.clientId,
+          isOptimistic: false,
+        };
         matched = true;
         break;
       }
     }
     if (!matched) {
-      pendingOptimistic.push(opt);
+      localOnlyMessages.push(localMessage);
     }
   }
 
+  const localLastMessage = oldThread.messages.at(-1);
+  const serverLastTime = new Date(newThread.lastTimestamp).getTime();
+  const keepLocalPreview =
+    localLastMessage && new Date(localLastMessage.timestamp).getTime() > serverLastTime;
+
   return {
     ...newThread,
-    messages: [...serverMessages, ...pendingOptimistic].sort(
+    ...(keepLocalPreview
+      ? { lastMsg: oldThread.lastMsg, lastTimestamp: oldThread.lastTimestamp }
+      : {}),
+    messages: [...serverMessages, ...localOnlyMessages].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     ),
   };
@@ -69,6 +81,14 @@ function persistThreadsCache(convs: Conversation[]): void {
 let unsubscribeInbox: (() => void) | null = null;
 let unsubscribeListings: (() => void) | null = null;
 const typingTimeouts = new Map<number, ReturnType<typeof setTimeout>>();
+let threadsLoadVersion = 0;
+const threadMutationVersions = new Map<number, number>();
+
+function markThreadMutated(threadId: number): number {
+  const version = (threadMutationVersions.get(threadId) ?? 0) + 1;
+  threadMutationVersions.set(threadId, version);
+  return version;
+}
 
 function loadSaved(): Set<string> {
   try {
@@ -326,7 +346,14 @@ export const useMarketStore = create<MarketState>((set, get) => {
       };
       saveUser(updated);
       set({ user: updated });
-    } catch {
+    } catch (err) {
+      // The cached profile no longer exists on the backend (DB reset, account
+      // deleted) — the session is a dead end, so log out instead of keeping
+      // the ghost user around.
+      if (err instanceof Error && err.message.includes("User not found")) {
+        get().logout();
+        return;
+      }
       // backend unreachable — keep the cached user
     }
   },
@@ -384,7 +411,18 @@ export const useMarketStore = create<MarketState>((set, get) => {
     const { inputText, activeConvId, user } = get();
     const text = inputText.trim();
     if (!text) return;
-    const newMsg = { id: Date.now(), text, sent: true, timestamp: new Date().toISOString(), isOptimistic: true };
+
+    markThreadMutated(activeConvId);
+    const optimisticId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const optimisticTimestamp = new Date().toISOString();
+    const newMsg: Message & { clientId: string } = {
+      id: Date.now(),
+      clientId: optimisticId,
+      text,
+      sent: true,
+      timestamp: optimisticTimestamp,
+      isOptimistic: true,
+    };
     set((state) => ({
       convs: state.convs.map((c) =>
         c.id === activeConvId
@@ -392,23 +430,38 @@ export const useMarketStore = create<MarketState>((set, get) => {
               ...c,
               messages: [...c.messages, newMsg],
               lastMsg: text,
-              lastTimestamp: newMsg.timestamp,
+              lastTimestamp: optimisticTimestamp,
               unread: 0,
             }
           : c
       ),
       inputText: "",
     }));
-    if (user) {
-      void api
-        .sendThreadMessage(user.id, activeConvId, text)
-        .then((thread) =>
-          set((state) => ({
-            convs: state.convs.map((c) => (c.id === thread.id ? mergeThread(c, thread) : c)),
-          }))
-        )
-        .catch(() => {});
-    }
+
+    if (!user) return;
+
+    void api
+      .sendThreadMessage(user.id, activeConvId, text)
+      .then((thread) => {
+        set((state) => ({
+          convs: state.convs.map((c) => (c.id === thread.id ? mergeThread(c, thread) : c)),
+        }));
+      })
+      .catch(() => {
+        set((state) => ({
+          convs: state.convs.map((conversation) => {
+            if (conversation.id !== activeConvId) return conversation;
+            const messages = conversation.messages.filter((m) => m.clientId !== optimisticId);
+            const lastMessage = messages.at(-1);
+            return {
+              ...conversation,
+              messages,
+              lastMsg: lastMessage?.text ?? "",
+              lastTimestamp: lastMessage?.timestamp ?? conversation.lastTimestamp,
+            };
+          }),
+        }));
+      });
   },
 
   openConversationForListing: (listingId) => {
@@ -483,9 +536,11 @@ export const useMarketStore = create<MarketState>((set, get) => {
   loadThreads: async () => {
     const user = get().user;
     if (!user) return;
+    const loadVersion = ++threadsLoadVersion;
     set({ threadsLoading: true });
     try {
       const list = await api.getThreads(user.id);
+      if (loadVersion !== threadsLoadVersion || get().user?.id !== user.id) return;
       const { messagesOpen, activeConvId } = get();
       const active = list.find((c) => c.id === activeConvId);
       if (messagesOpen && active && active.unread > 0) {
@@ -494,9 +549,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
       set((state) => {
         // A conversation just opened locally (e.g. from an offer notification
         // or "Message Seller") may not have finished being created on the
-        // backend yet. Keep it instead of letting this refresh wipe it out —
-        // it'll be replaced once its own create-thread call resolves, or
-        // matched here on a later poll once the server catches up.
+        // backend yet. Keep it instead of letting this refresh wipe it out.
         const findLocal = (server: Conversation) =>
           state.convs.find(
             (local) =>
@@ -504,22 +557,16 @@ export const useMarketStore = create<MarketState>((set, get) => {
               (!local.other_user_id || server.other_user_id === local.other_user_id)
           );
         const pending = state.convs.filter((local) => !list.some((server) => findLocal(server) === local));
-        // Merge each server thread against its local counterpart instead of
-        // replacing it outright — otherwise this poll (every 4s while the
-        // overlay is open) can race a message that was just sent but hasn't
-        // landed in the DB yet, wiping the optimistic bubble until the send's
-        // own response re-adds it a moment later (a visible send/unsend/resend
-        // flicker).
-        const merged = [...pending, ...list.map((server) => mergeThread(findLocal(server), server))];
+        const merged = [...pending, ...list.map((server) => {
+          const local = findLocal(server);
+          const mutationVersion = threadMutationVersions.get(server.id) ?? 0;
+          return mutationVersion > 0 && local ? mergeThread(local, server) : server;
+        })];
         persistThreadsCache(merged);
         return {
           convs: messagesOpen
             ? merged.map((c) => (c.id === state.activeConvId ? { ...c, unread: 0 } : c))
             : merged,
-          // activeConvId defaults to a placeholder that never corresponds to a
-          // real thread. If it's still not pointing at anything real once
-          // threads load, point it at the first one so sending a message
-          // targets an actual conversation instead of a stale/bogus id.
           activeConvId: merged.some((c) => c.id === state.activeConvId)
             ? state.activeConvId
             : merged[0]?.id ?? state.activeConvId,
@@ -528,7 +575,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
     } catch {
       // Keep whatever's already shown when the backend is unavailable.
     } finally {
-      set({ threadsLoading: false });
+      if (loadVersion === threadsLoadVersion) set({ threadsLoading: false });
     }
   },
 
@@ -637,6 +684,13 @@ export const useMarketStore = create<MarketState>((set, get) => {
       void get().loadNotifications();
     }, 0);
   }
+
+  // The api layer clears the token and fires this when the backend rejects the
+  // saved session (expired, or the user no longer exists server-side). Log out
+  // so the stale cached profile stops driving endless failing requests.
+  window.addEventListener("ninermarket:session-invalid", () => {
+    get().logout();
+  });
 
   return state;
 });

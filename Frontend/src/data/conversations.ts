@@ -10,6 +10,8 @@ export interface Message {
   sent: boolean;
   timestamp: string;
   isOptimistic?: boolean;
+  // Stable browser-side identity so a confirmed send does not remount the bubble.
+  clientId?: string;
 }
 
 export interface Conversation {

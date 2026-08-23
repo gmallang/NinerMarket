@@ -206,7 +206,10 @@ export function MessagingPage({
                 const read =
                   activeConv.other_read_cursor != null && msg.id <= activeConv.other_read_cursor;
                 return (
-                  <div key={msg.id} className={`${m.msgRow} ${msg.sent ? m.msgRowSent : ""}`}>
+                  <div
+                    key={msg.clientId ?? msg.id}
+                    className={`${m.msgRow} ${msg.sent ? m.msgRowSent : ""}`}
+                  >
                     <div className={m.msgBubbleRow}>
                       {!msg.sent && (
                         <img

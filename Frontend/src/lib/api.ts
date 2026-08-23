@@ -40,6 +40,15 @@ export function clearToken(): void {
   }
 }
 
+// Endpoints whose own failures return 401 by design (wrong password, etc.) —
+// a 401 from these must not be treated as "your saved session died".
+const AUTH_ENDPOINTS = ["/users/login", "/users/google", "/users/verify", "/users/resend"];
+
+function isAuthEndpoint(path: string): boolean {
+  const base = path.split("?")[0];
+  return AUTH_ENDPOINTS.some((ep) => base === ep || base.startsWith(`${ep}/`));
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getToken();
   const res = await fetch(`${API_BASE_URL}${path}`, {
@@ -58,6 +67,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       }
     } catch {
       // ignore parse errors
+    }
+    // A rejected bearer token means the cached session is dead (backend
+    // restarted with a new secret, DB was reset, token expired). Clear it and
+    // let the store log out instead of letting every call keep failing.
+    if (res.status === 401 && !isAuthEndpoint(path)) {
+      clearToken();
+      window.dispatchEvent(new CustomEvent("ninermarket:session-invalid"));
     }
     throw new Error(detail);
   }

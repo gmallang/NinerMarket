@@ -190,7 +190,9 @@ export function ListingDetail({
             alt={item.title}
             className={s.detailMainImg}
             decoding="async"
-            fetchPriority="high"
+            // React 18 only accepts the all-lowercase form; the camelCase
+            // alias logs a DOM warning.
+            {...({ fetchpriority: "high" } as object)}
           />
           {photos.length > 1 && (
             <span className={s.detailImgCounter} aria-label={`Image ${activeImg + 1} of ${photos.length}`}>
@@ -357,14 +359,14 @@ export function ListingDetail({
               )}
               <button className={`${shared.btnPrimary} ${s.detailPrimaryBtn}`} onClick={onMessage}>
                 <MessageCircle size={16} />
-                Message Seller
+                Message
               </button>
             </div>
           </>
         )}
       </div>
       <ReportModal
-        key={reportOpen ? "open" : "closed"}
+        key={reportOpen ? "report-open" : "report-closed"}
         open={reportOpen}
         onOpenChange={(open) => {
           if (!open) closeReport();
@@ -375,7 +377,7 @@ export function ListingDetail({
         done={reportDone}
       />
       <OfferModal
-        key={offerOpen ? "open" : "closed"}
+        key={offerOpen ? "offer-open" : "offer-closed"}
         open={offerOpen}
         onOpenChange={(open) => {
           if (!open) closeOffer();

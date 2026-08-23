@@ -48,6 +48,22 @@ describe("fromDto", () => {
     expect(listing.sellerPayments).toEqual(["Venmo"]);
   });
 
+  it("normalizes seller payment methods before rendering", () => {
+    const listing = fromDto(
+      makeDto({
+        seller: {
+          id: "u-1",
+          display_name: "Nadia W.",
+          school_year: "Junior",
+          payment_methods: [" Venmo ", "Cash", "Venmo", ""],
+          rating_avg: 4.8,
+          rating_count: 12,
+        },
+      }),
+    );
+    expect(listing.sellerPayments).toEqual(["Venmo", "Cash"]);
+  });
+
   it("falls back to a placeholder image and unknown seller", () => {
     const listing = fromDto(makeDto({ photos: [] }));
     expect(listing.image).toMatch(/placehold\.co/);

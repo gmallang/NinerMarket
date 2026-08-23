@@ -1,1 +1,55 @@
-bash: line 1: cd: /home/kankroid/NinerMarket/frontend: No such file or directory
+
+> ninermarket-frontend@0.1.0 dev
+> vite
+
+
+  VITE v6.4.3  ready in 163 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+7:38:20 PM [vite] (client) hmr update /src/styles/index.css
+7:38:26 PM [vite] (client) hmr update /src/styles/index.css
+7:43:25 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+7:43:34 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+7:43:48 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+7:43:53 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+7:44:41 PM [vite] (client) page reload src/main.tsx
+7:52:26 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+7:52:32 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+7:52:47 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+7:53:16 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+7:53:27 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+7:53:32 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+7:53:40 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+7:53:51 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+7:54:15 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+7:54:23 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+7:58:45 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+8:00:55 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+8:01:02 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+8:01:16 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+8:01:34 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+8:02:24 PM [vite] (client) hmr update /src/pages/AboutPage.tsx
+8:02:37 PM [vite] (client) hmr update /src/pages/AboutPage.tsx
+8:02:45 PM [vite] (client) hmr update /src/pages/AboutPage.tsx
+8:08:59 PM [vite] (client) hmr update /src/pages/AboutPage.tsx
+8:09:05 PM [vite] (client) hmr update /src/pages/AboutPage.tsx
+8:09:14 PM [vite] (client) hmr update /src/pages/AboutPage.tsx
+8:09:18 PM [vite] (client) hmr update /src/pages/AboutPage.tsx
+8:09:29 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+8:09:40 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+8:10:58 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+8:11:15 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+8:11:20 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+8:11:35 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+8:11:44 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+8:11:50 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+8:12:01 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+8:12:13 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+8:12:59 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+8:20:47 PM [vite] (client) hmr update /src/app/guards.tsx, /src/app/AppLayout.tsx, /src/pages/HomePage.tsx, /src/features/listings/ListingOverlay.tsx, /src/features/messaging/MessagesOverlay.tsx, /src/pages/LoginPage.tsx, /src/pages/SetupPage.tsx, /src/features/sell/SellForm.tsx
+8:20:52 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+8:21:05 PM [vite] (client) hmr update /src/app/guards.tsx, /src/app/AppLayout.tsx, /src/pages/HomePage.tsx, /src/features/listings/ListingOverlay.tsx, /src/features/messaging/MessagesOverlay.tsx, /src/pages/LoginPage.tsx, /src/pages/SetupPage.tsx, /src/features/sell/SellForm.tsx
+8:36:04 PM [vite] (client) hmr update /src/features/listings/ListingDetail.tsx
+8:36:27 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx
+8:37:05 PM [vite] (client) hmr update /src/features/listings/ListingOverlay.tsx, /src/features/listings/ListingDetail.tsx

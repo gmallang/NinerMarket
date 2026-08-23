@@ -3,6 +3,15 @@ import { formatRelativeTime } from "./format";
 
 const PLACEHOLDER_IMG = "https://placehold.co/400x400/e8f5e9/1a7a3c?text=NinerMarket";
 
+function normalizePaymentMethods(methods: unknown): string[] {
+  if (!Array.isArray(methods)) return [];
+  const cleaned = methods
+    .filter((method): method is string => typeof method === "string")
+    .map((method) => method.trim())
+    .filter(Boolean);
+  return [...new Set(cleaned)];
+}
+
 export function fromDto(d: ListingDto): Listing {
   return {
     id: d.id,
@@ -19,7 +28,7 @@ export function fromDto(d: ListingDto): Listing {
     sellerRating: d.seller?.rating_avg ?? 0,
     sellerRatingCount: d.seller?.rating_count ?? 0,
     sellerYear: d.seller?.school_year,
-    sellerPayments: d.seller?.payment_methods,
+    sellerPayments: normalizePaymentMethods(d.seller?.payment_methods),
     description: d.description,
     photos: d.photos ?? [],
     status: d.status,

@@ -21,10 +21,10 @@ export function listingImageUrl(url: string, width: number): string {
     return `${renderUrl}${sep}width=${width}&quality=75`;
   }
   if (url.startsWith("https://images.unsplash.com/")) {
+    // Width only — no forced h/fit=crop, which pre-cropped photos to squares
+    // at the CDN and made subjects look zoomed-in. Containers crop via CSS.
     const u = new URL(url);
     u.searchParams.set("w", String(width));
-    u.searchParams.set("h", String(width));
-    u.searchParams.set("fit", "crop");
     u.searchParams.set("auto", "format");
     return u.toString();
   }

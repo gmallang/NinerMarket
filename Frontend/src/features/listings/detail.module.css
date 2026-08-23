@@ -45,11 +45,18 @@
   position: relative;
 }
 
-.detailClose {
+/* Top chrome cluster (kebab + close) — one corner, one visual group. */
+.detailTopActions {
   position: absolute;
   top: 12px;
   right: 12px;
-  z-index: 2;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.detailClose {
   width: 30px;
   height: 30px;
   border-radius: var(--radius-full);
@@ -86,13 +93,33 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
+
+.detailImgCounter {
+  position: absolute;
+  bottom: var(--space-2);
+  left: var(--space-2);
+  z-index: 1;
+  background: rgba(17, 24, 21, 0.55);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  pointer-events: none;
+}
+
 
 .detailMainImg {
   width: 100%;
   flex: 1;
   min-height: 0;
-  object-fit: cover;
+  /* contain, not cover — cover crops photos whose aspect ratio doesn't match
+     the gallery box, which reads as a zoomed-in image. The gallery's muted
+     background fills any letterbox bands. */
+  object-fit: contain;
   display: block;
 }
 
@@ -145,11 +172,14 @@
   border-radius: var(--radius-full);
 }
 
+/* One tag system: colored pill = condition, neutral pill = category. Same
+   shape/size so they read as a single row of tags. */
 .detailCategory {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  color: var(--color-primary);
-  background: var(--color-accent);
+  color: var(--color-fg-muted);
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
   padding: 2px 10px;
   border-radius: var(--radius-full);
 }
@@ -188,21 +218,17 @@
   flex-shrink: 0;
 }
 
+/* Compact single-line seller strip — no bordered card. */
 .detailSeller {
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
   margin-top: var(--space-4);
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-accent);
 }
 
 .sellerLink {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
+  min-width: 0;
   text-align: left;
 }
 
@@ -212,31 +238,43 @@
 }
 
 .detailSellerAvatar {
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-full);
   object-fit: cover;
   flex-shrink: 0;
 }
 
 .detailSellerName {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--color-fg);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .detailSellerRating {
   font-size: 0.75rem;
   color: var(--color-primary);
   font-weight: 600;
-  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.detailSellerCount {
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+  flex-shrink: 0;
 }
 
 .detailSellerYear {
   font-size: 0.75rem;
   color: var(--color-fg-muted);
   font-weight: 600;
-  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .detailPayments {
@@ -289,12 +327,100 @@
 .detailFooter {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: var(--space-2);
   padding: var(--space-4) var(--space-5);
   border-top: 1px solid var(--color-border);
   background: var(--color-card);
   flex-shrink: 0;
+}
+
+/* All buyer actions live together: save is the quiet left-most control,
+   followed by the transactional Offer and Message actions. */
+.detailFooterActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.detailSaveBtn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-fg-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  cursor: pointer;
+  transition:
+    color var(--duration) var(--ease),
+    border-color var(--duration) var(--ease),
+    background var(--duration) var(--ease);
+}
+
+.detailSaveBtn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary-light);
+  background: var(--color-accent);
+}
+
+.detailSaveBtnActive {
+  color: #ef4444;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.detailMenuWrap {
+  position: relative;
+}
+
+.detailMenuBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.detailMenu {
+  position: absolute;
+  /* Drops DOWN from the kebab, right-aligned — the cluster sits at the
+     modal's top edge, so opening upward gets clipped by overflow:hidden. */
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 10;
+  min-width: 180px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+}
+
+.detailMenuItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.detailMenuItem:hover {
+  background: var(--color-muted);
+}
+
+.detailMenuItemDanger {
+  color: var(--color-danger);
 }
 
 .detailGhostBtn {
@@ -311,29 +437,45 @@
 }
 
 @media (max-width: 640px) {
+  /* Keep the close button in the modal's familiar top-right position with
+     the kebab immediately beside it. */
+  .detailTopActions {
+    left: auto;
+    right: 12px;
+  }
+
   .detailFooter {
     flex-wrap: wrap;
-    justify-content: stretch;
   }
 
-  .detailFooter > button {
-    flex: 1 1 auto;
+  /* Keep the light save action compact while Offer and Message share the
+     remaining width. */
+  .detailFooterActions {
+    margin-left: 0;
+    order: -1;
+    flex: 1 1 100%;
+  }
+
+  .detailFooterActions > button {
     min-width: 0;
     min-height: 44px;
-  }
-
-  .detailGhostBtn {
     justify-content: center;
-    padding: 12px 10px;
-    font-size: 0.8125rem;
     white-space: nowrap;
   }
 
+  .detailFooterActions > .detailSaveBtn {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .detailFooterActions > .detailGhostBtn,
+  .detailFooterActions > .detailPrimaryBtn {
+    flex: 1 1 0;
+  }
+
   .detailPrimaryBtn {
-    flex: 1 1 100%;
-    order: -1;
-    justify-content: center;
-    padding: 12px 20px;
+    padding: 12px 16px;
     font-size: 0.9375rem;
   }
 }

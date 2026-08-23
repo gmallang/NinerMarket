@@ -9,6 +9,9 @@ const VALUES = [
   { icon: Heart, title: "Free Forever", text: "No fees, no catch" },
 ];
 
+/* Pillar icon treatment — flip to "circle" for the tinted-coin variant. */
+const ICON_VARIANT: "bare" | "circle" = "bare";
+
 export function AboutPage() {
   return (
     <div className={s.aPage}>
@@ -32,9 +35,12 @@ export function AboutPage() {
             const Icon = value.icon;
             return (
               <div key={value.title} className={s.aValue}>
-                <div className={s.aValueIcon}>
-                  <Icon size={22} />
-                </div>
+                <span
+                  className={ICON_VARIANT === "bare" ? s.aValueIcon : s.aValueIconCircle}
+                  aria-hidden="true"
+                >
+                  <Icon size={ICON_VARIANT === "bare" ? 28 : 24} />
+                </span>
                 <h2 className={s.aValueTitle}>{value.title}</h2>
                 <p className={s.aValueText}>{value.text}</p>
               </div>

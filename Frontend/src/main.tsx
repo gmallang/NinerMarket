@@ -19,7 +19,9 @@ window.addEventListener("vite:preloadError", () => {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
-    <Analytics />
+    {/* The insights script only exists on Vercel deploys with Web Analytics
+        enabled — loading it in dev just produces a console 404. */}
+    {import.meta.env.PROD && <Analytics />}
   </StrictMode>
 );
 

@@ -91,16 +91,27 @@
   padding: var(--space-6) var(--space-5);
 }
 
+/* Pillar icons — one library, one stroke, one brand color, one treatment.
+   Option A (applied): bare icon, brand green.
+   Option B: same icon on a light mint coin (.aValueIconCircle). */
 .aValueIcon {
-  width: 48px;
-  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0 auto var(--space-3);
+  color: var(--color-primary);
+}
+
+.aValueIconCircle {
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-full);
   background: var(--color-accent);
   color: var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0 auto var(--space-4);
 }
 
 .aValueTitle {
@@ -231,7 +242,8 @@
     padding: var(--space-3) var(--space-2);
   }
 
-  .aValueIcon {
+  .aValueIcon,
+  .aValueIconCircle {
     margin: 0;
     flex-shrink: 0;
   }

@@ -12,8 +12,16 @@
   transition: box-shadow var(--duration) var(--ease);
 }
 
-.row:hover {
-  box-shadow: var(--shadow-md);
+/* Hover effects are gated behind (hover: hover) so touch devices don't get a
+   sticky zoom state after tapping (no mouse-out fires on touch). */
+@media (hover: hover) {
+  .row:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .row:hover .rowImage {
+    transform: scale(1.05);
+  }
 }
 
 .rowImageWrap {
@@ -33,10 +41,6 @@
   height: 100%;
   object-fit: cover;
   transition: transform 320ms var(--ease);
-}
-
-.row:hover .rowImage {
-  transform: scale(1.05);
 }
 
 .soldOverlay {

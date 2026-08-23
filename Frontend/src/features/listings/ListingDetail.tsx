@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2, Flag, HandCoins, Heart, MapPin, MessageCircle, Pencil, X } from "lucide-react";
+import { Check, CheckCircle2, Flag, HandCoins, Heart, MapPin, MessageCircle, MoreVertical, Pencil, Share2, X } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
 import { listingImageUrl } from "@/lib/image";
@@ -49,7 +49,10 @@ export function ListingDetail({
   const [offerSubmitting, setOfferSubmitting] = useState(false);
   const [offerError, setOfferError] = useState<string | null>(null);
   const [offerDone, setOfferDone] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
   const categoryLabel = CATEGORIES.find((x) => x.id === item.category)?.label ?? item.category;
+  const payments = (item.sellerPayments ?? []).filter(Boolean);
   const isSold = item.status === "sold";
   const isFlagged = item.status === "flagged";
   const isActive = item.status === "active";
@@ -107,11 +110,79 @@ export function ListingDetail({
     setOfferError(null);
   };
 
+  const handleShare = async () => {
+    const url = `${window.location.origin}/listing/${item.id}`;
+    if (navigator.share) {
+      setActionsOpen(false);
+      try {
+        await navigator.share({
+          title: item.title,
+          text: `${item.title} — $${item.price.toLocaleString()} on NinerMarket`,
+          url,
+        });
+      } catch {
+        // User dismissed the share sheet — nothing to do.
+      }
+      return;
+    }
+    // Clipboard fallback: keep the menu open briefly so the copied state is
+    // visible where the tap happened.
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      window.setTimeout(() => {
+        setShareCopied(false);
+        setActionsOpen(false);
+      }, 1400);
+    } catch {
+      setActionsOpen(false);
+    }
+  };
+
   return (
     <div className={s.detailModal} role="dialog" aria-modal="true" aria-label={item.title}>
-      <button className={s.detailClose} onClick={onClose} aria-label="Close">
-        <X size={18} />
-      </button>
+      <div className={s.detailTopActions}>
+        {!isOwner && (
+          <div className={s.detailMenuWrap}>
+            <button
+              className={s.detailClose}
+              onClick={() => setActionsOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={actionsOpen}
+              aria-label="More actions"
+            >
+              <MoreVertical size={17} />
+            </button>
+            {actionsOpen && (
+              <>
+                <div className={s.detailMenuBackdrop} onClick={() => setActionsOpen(false)} />
+                <div className={s.detailMenu} role="menu">
+                  <button role="menuitem" className={s.detailMenuItem} onClick={() => void handleShare()}>
+                    {shareCopied ? <Check size={15} /> : <Share2 size={15} />}
+                    {shareCopied ? "Link copied" : "Share listing"}
+                  </button>
+                  {!isSold && onReport && (
+                    <button
+                      role="menuitem"
+                      className={`${s.detailMenuItem} ${s.detailMenuItemDanger}`}
+                      onClick={() => {
+                        setActionsOpen(false);
+                        setReportOpen(true);
+                      }}
+                    >
+                      <Flag size={15} />
+                      Report listing
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        <button className={s.detailClose} onClick={onClose} aria-label="Close">
+          <X size={18} />
+        </button>
+      </div>
       <div className={s.detailBody}>
         <div className={s.detailGallery}>
           <img
@@ -121,6 +192,11 @@ export function ListingDetail({
             decoding="async"
             fetchPriority="high"
           />
+          {photos.length > 1 && (
+            <span className={s.detailImgCounter} aria-label={`Image ${activeImg + 1} of ${photos.length}`}>
+              {activeImg + 1} / {photos.length}
+            </span>
+          )}
           {photos.length > 1 && (
             <div className={s.detailThumbs}>
               {photos.map((p, i) => (
@@ -181,16 +257,14 @@ export function ListingDetail({
                   loading="lazy"
                   decoding="async"
                 />
-                <div>
-                  <p className={s.detailSellerName}>{item.seller}</p>
-                  <p className={s.detailSellerRating}>
-                    ★ {item.sellerRating.toFixed(1)}{" "}
-                    {item.sellerRatingCount != null && item.sellerRatingCount > 0
-                      ? `(${item.sellerRatingCount} rating${item.sellerRatingCount === 1 ? "" : "s"})`
-                      : "no ratings"}
-                  </p>
-                  {item.sellerYear && <p className={s.detailSellerYear}>{item.sellerYear}</p>}
-                </div>
+                <span className={s.detailSellerName}>{item.seller}</span>
+                <span className={s.detailSellerRating}>★ {item.sellerRating.toFixed(1)}</span>
+                {item.sellerRatingCount != null && item.sellerRatingCount > 0 && (
+                  <span className={s.detailSellerCount}>
+                    ({item.sellerRatingCount})
+                  </span>
+                )}
+                {item.sellerYear && <span className={s.detailSellerYear}>{item.sellerYear}</span>}
               </button>
             ) : (
               <>
@@ -201,24 +275,22 @@ export function ListingDetail({
                   loading="lazy"
                   decoding="async"
                 />
-                <div>
-                  <p className={s.detailSellerName}>{item.seller}</p>
-                  <p className={s.detailSellerRating}>
-                    ★ {item.sellerRating.toFixed(1)}{" "}
-                    {item.sellerRatingCount != null && item.sellerRatingCount > 0
-                      ? `(${item.sellerRatingCount} rating${item.sellerRatingCount === 1 ? "" : "s"})`
-                      : "no ratings"}
-                  </p>
-                  {item.sellerYear && <p className={s.detailSellerYear}>{item.sellerYear}</p>}
-                </div>
+                <span className={s.detailSellerName}>{item.seller}</span>
+                <span className={s.detailSellerRating}>★ {item.sellerRating.toFixed(1)}</span>
+                {item.sellerRatingCount != null && item.sellerRatingCount > 0 && (
+                  <span className={s.detailSellerCount}>
+                    ({item.sellerRatingCount})
+                  </span>
+                )}
+                {item.sellerYear && <span className={s.detailSellerYear}>{item.sellerYear}</span>}
               </>
             )}
           </div>
-          {item.sellerPayments && item.sellerPayments.length > 0 && (
+          {payments.length > 0 && (
             <div className={s.detailPayments}>
               <span className={s.detailPaymentsLabel}>Accepted payment methods</span>
               <div className={s.detailPaymentsList}>
-                {item.sellerPayments.map((p) => (
+                {payments.map((p) => (
                   <span key={p} className={s.detailPayTag}>
                     {p}
                   </span>
@@ -265,32 +337,29 @@ export function ListingDetail({
           </>
         ) : (
           <>
-            <button className={`${shared.btnGhost} ${s.detailGhostBtn}`} onClick={onToggleSave}>
-              <Heart size={15} fill={saved ? "currentColor" : "none"} />
-              {saved ? "Saved" : "Save"}
-            </button>
-            {!isSold && onReport && (
+            <div className={s.detailFooterActions}>
               <button
-                className={`${shared.btnGhost} ${s.detailGhostBtn}`}
-                onClick={() => setReportOpen(true)}
+                className={`${s.detailSaveBtn} ${saved ? s.detailSaveBtnActive : ""}`}
+                onClick={onToggleSave}
+                aria-pressed={saved}
+                aria-label={saved ? "Remove from saved" : "Save listing"}
               >
-                <Flag size={15} />
-                Report
+                <Heart size={16} fill={saved ? "currentColor" : "none"} />
               </button>
-            )}
-            {isActive && onMakeOffer && (
-              <button
-                className={`${shared.btnGhost} ${s.detailGhostBtn}`}
-                onClick={() => setOfferOpen(true)}
-              >
-                <HandCoins size={15} />
-                Make an offer
+              {isActive && onMakeOffer && (
+                <button
+                  className={`${shared.btnGhost} ${s.detailGhostBtn}`}
+                  onClick={() => setOfferOpen(true)}
+                >
+                  <HandCoins size={15} />
+                  Offer
+                </button>
+              )}
+              <button className={`${shared.btnPrimary} ${s.detailPrimaryBtn}`} onClick={onMessage}>
+                <MessageCircle size={16} />
+                Message Seller
               </button>
-            )}
-            <button className={`${shared.btnPrimary} ${s.detailPrimaryBtn}`} onClick={onMessage}>
-              <MessageCircle size={16} />
-              Message Seller
-            </button>
+            </div>
           </>
         )}
       </div>

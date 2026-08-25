@@ -25,8 +25,9 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>
 );
 
-// Reaching this point means the current build loaded fine — clear the guard
-// so a later deploy (while this tab is still open) can trigger the
-// self-heal reload again instead of being permanently silenced for the
-// rest of this tab's session.
+// Reaching this point means the current build loaded fine — clear both
+// reload guards so a later deploy or a later dead session (while this tab
+// is still open) can trigger the self-heal reload again instead of being
+// permanently silenced for the rest of this tab's session.
 sessionStorage.removeItem("nmk-chunk-reload");
+sessionStorage.removeItem("nmk-session-reload");

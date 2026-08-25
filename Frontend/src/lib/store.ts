@@ -686,10 +686,19 @@ export const useMarketStore = create<MarketState>((set, get) => {
   }
 
   // The api layer clears the token and fires this when the backend rejects the
-  // saved session (expired, or the user no longer exists server-side). Log out
-  // so the stale cached profile stops driving endless failing requests.
+  // saved session (expired, resigned with a new secret, or the user no longer
+  // exists server-side). Log out so the stale cached profile stops driving
+  // endless failing requests, then force a real reload rather than just
+  // re-rendering in place — a browser that's been open across a deploy may
+  // also be holding a stale cached bundle, and a plain client-side state
+  // clear wouldn't replace that. Guarded so a persistently broken backend
+  // can't reload-loop the tab.
   window.addEventListener("ninermarket:session-invalid", () => {
     get().logout();
+    const key = "nmk-session-reload";
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    window.location.reload();
   });
 
   return state;

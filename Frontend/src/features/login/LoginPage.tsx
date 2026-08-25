@@ -220,10 +220,6 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
       setError("Please enter your full name.");
       return;
     }
-    if (mode === "signup" && !schoolYear) {
-      setError("Please select your school year.");
-      return;
-    }
     if (mode === "signup" && password.length < 8) {
       setError("Password must be at least 8 characters.");
       return;

@@ -8,6 +8,15 @@ import { enablePush, getExistingPushSubscription } from "@/lib/push";
 import { clearUser, loadUser, saveUser } from "@/lib/user";
 import type { CurrentUser, Listing, NotificationDto } from "@/lib/types";
 
+/**
+ * Outcome of the Web Push opt-in so the UI can tell the user *why* it failed:
+ *  - "ok"      -> subscribed and saved
+ *  - "denied"  -> browser permission explicitly blocked
+ *  - "nokey"   -> backend returned no VAPID public key (server misconfigured)
+ *  - "failed"  -> registration/subscribe threw for another reason
+ */
+export type PushEnableResult = "ok" | "denied" | "nokey" | "failed";
+
 function mergeThread(oldThread: Conversation | undefined, newThread: Conversation): Conversation {
   if (!oldThread) return newThread;
 
@@ -90,7 +99,7 @@ function markThreadMutated(threadId: number): number {
   return version;
 }
 
-function loadSaved(): Set<string> {
+function loadSavedLocal(): Set<string> {
   try {
     const raw = localStorage.getItem(SAVED_KEY);
     return new Set(raw ? (JSON.parse(raw) as string[]) : []);
@@ -105,7 +114,7 @@ function latestMsgId(conv: Conversation): number {
   return conv.messages.at(-1)?.id ?? 0;
 }
 
-function persistSaved(items: Set<string>): void {
+function persistSavedLocal(items: Set<string>): void {
   try {
     localStorage.setItem(SAVED_KEY, JSON.stringify([...items]));
   } catch {
@@ -137,7 +146,7 @@ interface MarketState {
   sendTypingSignal: (isTyping: boolean) => void;
   updateProfile: (year: string, payments: string[]) => Promise<void>;
   refreshProfile: () => Promise<void>;
-  loadListings: (silent?: boolean) => Promise<void>;
+  loadListings: (silent?: boolean, q?: string) => void;
   addListing: (listing: Listing) => void;
   updateListing: (listing: Listing) => void;
   sellModal: { mode: "create" } | { mode: "edit"; listing: Listing } | null;
@@ -146,6 +155,7 @@ interface MarketState {
   closeSellForm: () => void;
   toggleSave: (id: string) => void;
   isSaved: (id: string) => boolean;
+  loadSaved: () => Promise<void>;
   setActiveConvId: (id: number) => void;
   setInputText: (text: string) => void;
   sendMessage: () => void;
@@ -169,7 +179,7 @@ interface MarketState {
   reportListing: (listingId: string, reason: string, details: string) => Promise<void>;
   makeOffer: (listingId: string, price: number) => Promise<void>;
   checkPushEnabled: () => Promise<void>;
-  enablePushNotifications: () => Promise<boolean>;
+  enablePushNotifications: () => Promise<PushEnableResult>;
   dismissPushPrompt: () => void;
 }
 
@@ -179,7 +189,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
   listings: [],
   loading: true,
   listingsError: null,
-  savedItems: loadSaved(),
+  savedItems: loadSavedLocal(),
   convs: loadThreadsCache(),
   threadsLoading: false,
   activeConvId: 1,
@@ -194,6 +204,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
 
   signIn: (user) => {
     set({ user });
+    void get().loadSaved();
     void get().loadNotifications();
     void get().loadThreads();
   },
@@ -207,7 +218,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
     } catch {
       // ignore storage errors
     }
-    set({ user: null, convs: [], activeConvId: 1 });
+    set({ user: null, convs: [], activeConvId: 1, savedItems: new Set() });
   },
 
   startRealtimeInbox: () => {
@@ -358,17 +369,20 @@ export const useMarketStore = create<MarketState>((set, get) => {
     }
   },
 
-  loadListings: async (silent?: boolean) => {
+  loadListings: (silent?: boolean, q?: string) => {
     if (!get().user) return;
     if (!silent) set({ loading: true });
-    try {
-      const dtos = await api.listListings();
-      set({ listings: dtos.map(fromDto), loading: false, listingsError: null });
-    } catch (err) {
-      if (silent) return;
-      const message = err instanceof Error ? err.message : "Failed to load listings";
-      set({ loading: false, listingsError: message });
-    }
+    const params = q?.trim() ? { q: q.trim() } : {};
+    return api
+      .listListings(params)
+      .then((dtos) => {
+        set({ listings: dtos.map(fromDto), loading: false, listingsError: null });
+      })
+      .catch((err) => {
+        if (silent) return;
+        const message = err instanceof Error ? err.message : "Failed to load listings";
+        set({ loading: false, listingsError: message });
+      });
   },
 
   addListing: (listing) => set((state) => ({ listings: [listing, ...state.listings] })),
@@ -384,16 +398,58 @@ export const useMarketStore = create<MarketState>((set, get) => {
 
   closeSellForm: () => set({ sellModal: null }),
 
-  toggleSave: (id) =>
-    set((state) => {
-      const next = new Set(state.savedItems);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      persistSaved(next);
+  toggleSave: (id) => {
+    const user = get().user;
+    const state = get();
+    const nowSaved = !state.savedItems.has(id);
+
+    // Optimistic update — flip the heart immediately, roll back if the API fails.
+    set((s) => {
+      const next = new Set(s.savedItems);
+      if (nowSaved) next.add(id);
+      else next.delete(id);
       return { savedItems: next };
-    }),
+    });
+
+    if (!user) {
+      // Not signed in — fall back to local-only so the UI still works, but
+      // nothing is synced. (Real saves require an account.)
+      return;
+    }
+
+    void (nowSaved ? api.saveListing(user.id, id) : api.unsaveListing(user.id, id)).catch(() => {
+      // Roll back the optimistic update on failure.
+      set((s) => {
+        const next = new Set(s.savedItems);
+        if (nowSaved) next.delete(id);
+        else next.add(id);
+        return { savedItems: next };
+      });
+    });
+  },
 
   isSaved: (id) => get().savedItems.has(id),
+
+  loadSaved: async () => {
+    const user = get().user;
+    if (!user) return;
+    try {
+      // First load for an account: fold any legacy localStorage-saved ids into
+      // the server store (and sync back), then use the server as the source of
+      // truth so saves follow the user across devices.
+      const legacy = loadSavedLocal();
+      if (legacy.size > 0) {
+        const ids = await api.replaceSaved(user.id, [...legacy]);
+        persistSavedLocal(new Set(ids));
+        set({ savedItems: new Set(ids) });
+        return;
+      }
+      const ids = await api.getSaved(user.id);
+      set({ savedItems: new Set(ids) });
+    } catch {
+      // Keep whatever we already have if the backend is unavailable.
+    }
+  },
 
   setActiveConvId: (id) => {
     const user = get().user;
@@ -595,18 +651,21 @@ export const useMarketStore = create<MarketState>((set, get) => {
     set({ pushEnabled: !!sub });
   },
 
-  enablePushNotifications: async () => {
+  enablePushNotifications: async (): Promise<PushEnableResult> => {
     const user = get().user;
-    if (!user) return false;
+    if (!user) return "failed";
     try {
       const { key } = await api.getVapidPublicKey();
+      if (!key) return "nokey";
       const subscription = await enablePush(key);
-      if (!subscription) return false;
+      if (!subscription) {
+        return Notification.permission === "denied" ? "denied" : "failed";
+      }
       await api.subscribePush(user.id, subscription.toJSON());
       set({ pushEnabled: true });
-      return true;
+      return "ok";
     } catch {
-      return false;
+      return "failed";
     }
   },
 

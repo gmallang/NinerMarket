@@ -51,6 +51,15 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   const [pwdError, setPwdError] = useState("");
   const [pwdSaving, setPwdSaving] = useState(false);
 
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotCode, setForgotCode] = useState("");
+  const [forgotNewPwd, setForgotNewPwd] = useState("");
+  const [forgotConfirmPwd, setForgotConfirmPwd] = useState("");
+  const [forgotStep, setForgotStep] = useState<"email" | "reset">("email");
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSending, setForgotSending] = useState(false);
+
   const [agree, setAgreeState] = useState(() => {
     try {
       return sessionStorage.getItem("nm-terms-agreed") === "1";
@@ -301,7 +310,63 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   };
 
   const forgotPassword = () => {
-    setError("Password reset isn't available right now. Sign in with Google to continue.");
+    setForgotEmail(email.trim().toLowerCase());
+    setForgotCode("");
+    setForgotNewPwd("");
+    setForgotConfirmPwd("");
+    setForgotError("");
+    setForgotStep("email");
+    setForgotOpen(true);
+  };
+
+  const sendResetCode = async (target: string) => {
+    setForgotError("");
+    setForgotSending(true);
+    try {
+      await api.forgotPassword(target.trim().toLowerCase());
+      setForgotCode("");
+      setForgotStep("reset");
+    } catch (err) {
+      setForgotError(err instanceof Error ? err.message : "Couldn't send a reset code.");
+    } finally {
+      setForgotSending(false);
+    }
+  };
+
+  const requestResetCode = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!isCharlotteEmail(forgotEmail)) {
+      setForgotError("Enter your @charlotte.edu email to reset your password.");
+      return;
+    }
+    setForgotError("");
+    await sendResetCode(forgotEmail);
+  };
+
+  const submitReset = async (e: FormEvent) => {
+    e.preventDefault();
+    if (forgotNewPwd.length < 8) {
+      setForgotError("Password must be at least 8 characters.");
+      return;
+    }
+    if (forgotNewPwd !== forgotConfirmPwd) {
+      setForgotError("Passwords do not match.");
+      return;
+    }
+    setForgotError("");
+    setForgotSending(true);
+    try {
+      await api.resetPassword(forgotEmail.trim().toLowerCase(), forgotCode.trim(), forgotNewPwd);
+      setForgotOpen(false);
+      // Pre-fill the email on the sign-in form so they can log straight in.
+      setEmail(forgotEmail.trim().toLowerCase());
+      setPassword("");
+      if (formOpen !== "signin") openForm("signin");
+    } catch (err) {
+      setForgotError(err instanceof Error ? err.message : "Couldn't reset your password.");
+    } finally {
+      setForgotSending(false);
+    }
   };
 
   const setPwdSubmit = async (e: FormEvent) => {
@@ -635,6 +700,98 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
             Skip for now
           </button>
         </form>
+      </Modal>
+
+      <Modal
+        open={forgotOpen}
+        onOpenChange={(open) => !open && setForgotOpen(false)}
+        ariaLabel="Reset your password"
+      >
+        <div className={s.xModalHeader}>
+          <button
+            className={s.xModalClose}
+            onClick={() => setForgotOpen(false)}
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
+          <h2 className={s.xModalTitle}>Reset your password</h2>
+        </div>
+        {forgotStep === "email" ? (
+          <form onSubmit={requestResetCode} className={s.xForm}>
+            <p className={s.xVerifyNote}>
+              Enter your @charlotte.edu email and we&rsquo;ll send you a 6-digit reset code.
+            </p>
+            <input
+              className={s.xInput}
+              type="email"
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+              placeholder="you@charlotte.edu"
+              autoFocus
+            />
+            {forgotError && <p className={s.xError}>{forgotError}</p>}
+            <button type="submit" className={s.xSubmitBtn} disabled={forgotSending}>
+              {forgotSending ? "Sending…" : "Send reset code"}
+            </button>
+            <button
+              type="button"
+              className={s.xDemoHint}
+              onClick={() => setForgotOpen(false)}
+            >
+              Back to sign in
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={submitReset} className={s.xForm}>
+            <p className={s.xVerifyNote}>
+              We emailed a 6-digit code to <strong>{forgotEmail}</strong>.
+            </p>
+            <p className={s.xSpamNote}>
+              Don&apos;t see it? Check your <strong>spam/junk folder</strong>. The code expires in
+              15 minutes.
+            </p>
+            <input
+              className={s.xInput}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={forgotCode}
+              onChange={(e) => setForgotCode(e.target.value.replace(/\D/g, ""))}
+              placeholder="6-digit code"
+              autoFocus
+            />
+            <div className={s.xPasswordWrap}>
+              <input
+                className={s.xInput}
+                type="password"
+                value={forgotNewPwd}
+                onChange={(e) => setForgotNewPwd(e.target.value)}
+                placeholder="New password (min 8 characters)"
+              />
+            </div>
+            <div className={s.xPasswordWrap}>
+              <input
+                className={s.xInput}
+                type="password"
+                value={forgotConfirmPwd}
+                onChange={(e) => setForgotConfirmPwd(e.target.value)}
+                placeholder="Confirm new password"
+              />
+            </div>
+            {forgotError && <p className={s.xError}>{forgotError}</p>}
+            <button type="submit" className={s.xSubmitBtn} disabled={forgotSending}>
+              {forgotSending ? "Resetting…" : "Reset password"}
+            </button>
+            <button
+              type="button"
+              className={s.xDemoHint}
+              onClick={() => sendResetCode(forgotEmail)}
+            >
+              Resend code
+            </button>
+          </form>
+        )}
       </Modal>
 
       {googleOpen && (

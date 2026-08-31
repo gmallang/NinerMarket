@@ -114,23 +114,27 @@ def code_is_valid(code: str, stored: str, expires: datetime | None) -> bool:
     return hmac.compare_digest(code.strip(), stored)
 
 
-def send_verification_email(to: str, code: str) -> bool:
-    """Sends the 6-digit code via Resend. Returns True when delivered."""
+def send_verification_email(
+    to: str, code: str, subject: str | None = None, intro: str | None = None
+) -> bool:
+    """Sends a 6-digit code via Resend. Returns True when delivered."""
     api_key = os.getenv("RESEND_API_KEY")
     if not api_key:
         return False
+
+    subject = subject or "Your NinerMarket verification code"
+    intro = intro or "Enter this code to finish setting up your account. It expires in 15 minutes."
 
     payload = json.dumps(
         {
             "from": os.getenv("EMAIL_FROM", "NinerMarket <onboarding@resend.dev>"),
             "to": [to],
-            "subject": "Your NinerMarket verification code",
+            "subject": subject,
             "html": (
                 "<div style=\"font-family:Arial,sans-serif;color:#0b2418\">"
-                "<h2>Verify your NinerMarket account</h2>"
-                f"<p>Your verification code is:</p>"
+                "<h2>NinerMarket</h2>"
+                f"<p style=\"font-size:18px;background:#e8f5e9;padding:16px;border-radius:8px\">{intro}</p>"
                 f"<p style=\"font-size:32px;font-weight:700;letter-spacing:4px\">{code}</p>"
-                "<p>Enter this code to finish setting up your account. It expires in 15 minutes.</p>"
                 "<p>If you didn't request this, you can safely ignore this email.</p>"
                 "</div>"
             ),

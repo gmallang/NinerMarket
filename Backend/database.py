@@ -18,6 +18,7 @@ notifications = {}
 reports = {}
 offers = {}
 push_subscriptions = {}
+saved = {}  # user_id -> set of listing_ids
 
 if SUPABASE_URL and SUPABASE_KEY:
     from supabase import create_client

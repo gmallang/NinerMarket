@@ -1,6 +1,7 @@
 import { Heart, MapPin } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { listingImageUrl, listingSrcSet } from "@/lib/image";
+import { ProgressiveImage } from "@/components/shared/ProgressiveImage";
 import { CONDITION_CLASS } from "./condition";
 import s from "./row.module.css";
 import c from "./condition.module.css";
@@ -25,7 +26,7 @@ export function ListingRow({
   return (
     <div className={s.row} onClick={onOpen}>
       <div className={s.rowImageWrap}>
-        <img
+        <ProgressiveImage
           src={listingImageUrl(item.image, 400)}
           srcSet={listingSrcSet(item.image)}
           sizes="140px"
@@ -33,17 +34,18 @@ export function ListingRow({
           className={s.rowImage}
           loading="lazy"
           decoding="async"
-        />
-        {item.status === "sold" && (
-          <div className={s.soldOverlay}>
-            <span className={s.soldTag}>Sold</span>
-          </div>
-        )}
-        {item.status === "flagged" && (
-          <div className={s.flaggedOverlay}>
-            <span className={s.flaggedTag}>Under Review</span>
-          </div>
-        )}
+        >
+          {item.status === "sold" && (
+            <div className={s.soldOverlay}>
+              <span className={s.soldTag}>Sold</span>
+            </div>
+          )}
+          {item.status === "flagged" && (
+            <div className={s.flaggedOverlay}>
+              <span className={s.flaggedTag}>Under Review</span>
+            </div>
+          )}
+        </ProgressiveImage>
       </div>
       <div className={s.rowBody}>
         <div className={s.rowTop}>

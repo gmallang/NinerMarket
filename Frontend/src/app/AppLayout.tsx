@@ -78,6 +78,7 @@ export function AppLayout() {
   const closeSellForm = useMarketStore((s) => s.closeSellForm);
   const messagesOpen = useMarketStore((s) => s.messagesOpen);
   const openMessagesOverlay = useMarketStore((s) => s.openMessagesOverlay);
+  const loadSaved = useMarketStore((s) => s.loadSaved);
 
   const [q, setQ] = useState(params.get("q") ?? "");
   const [prevPathname, setPrevPathname] = useState(pathname);
@@ -109,13 +110,14 @@ export function AppLayout() {
 
   useEffect(() => {
     if (user) {
+      void loadSaved();
       void loadNotifications();
       void loadThreads();
       void checkPushEnabled();
       startRealtimeInbox();
       startRealtimeListings();
     }
-  }, [user, loadNotifications, loadThreads, checkPushEnabled, startRealtimeInbox, startRealtimeListings]);
+  }, [user, loadSaved, loadNotifications, loadThreads, checkPushEnabled, startRealtimeInbox, startRealtimeListings]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -332,13 +334,15 @@ export function AppLayout() {
                             onClick={(e) => {
                               e.preventDefault();
                               setPushError("");
-                              void enablePushNotifications().then((ok) => {
-                                if (ok) return;
+                              void enablePushNotifications().then((status) => {
+                                if (status === "ok") return;
                                 void checkPushEnabled();
                                 setPushError(
-                                  Notification.permission === "denied"
-                                    ? "Blocked — enable notifications for this site in your browser settings."
-                                    : "Not available yet — check back soon."
+                                  status === "nokey"
+                                    ? "Push isn't configured on the server yet — try again later."
+                                    : status === "denied"
+                                      ? "Blocked — enable notifications for this site in your browser settings."
+                                      : "Not available yet — check back soon."
                                 );
                               });
                             }}

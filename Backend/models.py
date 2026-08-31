@@ -15,6 +15,8 @@ class User(BaseModel):
     email_verified: bool = False
     verification_code: str = ""
     verification_expires: datetime | None = None
+    password_reset_code: str = ""
+    password_reset_expires: datetime | None = None
 
 
 class UserCreate(BaseModel):
@@ -59,6 +61,16 @@ class VerifyRequest(BaseModel):
 
 class ResendRequest(BaseModel):
     email: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    code: str
+    password: str = Field(min_length=8)
 
 
 class Listing(BaseModel):

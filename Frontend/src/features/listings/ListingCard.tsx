@@ -2,6 +2,7 @@ import { Heart, MapPin } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
 import { listingImageUrl, listingSrcSet } from "@/lib/image";
+import { ProgressiveImage } from "@/components/shared/ProgressiveImage";
 import { CONDITION_CLASS } from "./condition";
 import s from "./card.module.css";
 import c from "./condition.module.css";
@@ -24,7 +25,7 @@ export function ListingCard({
   return (
     <div className={s.card} onClick={onOpen}>
       <div className={s.cardImageWrap}>
-        <img
+        <ProgressiveImage
           src={listingImageUrl(item.image, 400)}
           srcSet={listingSrcSet(item.image)}
           sizes="(max-width: 480px) 50vw, (max-width: 900px) 33vw, 240px"
@@ -32,29 +33,30 @@ export function ListingCard({
           className={s.cardImage}
           loading="lazy"
           decoding="async"
-        />
-        <button
-          className={`${s.saveBtn} ${saved ? s.saveBtnActive : ""}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleSave();
-          }}
         >
-          <Heart size={14} fill={saved ? "currentColor" : "none"} />
-        </button>
-        <span className={`${c.condBadge} ${CONDITION_CLASS[item.condition]}`}>
-          {item.condition}
-        </span>
-        {item.status === "sold" && (
-          <div className={s.soldOverlay}>
-            <span className={s.soldTag}>Sold</span>
-          </div>
-        )}
-        {item.status === "flagged" && (
-          <div className={s.flaggedOverlay}>
-            <span className={s.flaggedTag}>Under Review</span>
-          </div>
-        )}
+          <button
+            className={`${s.saveBtn} ${saved ? s.saveBtnActive : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSave();
+            }}
+          >
+            <Heart size={14} fill={saved ? "currentColor" : "none"} />
+          </button>
+          <span className={`${c.condBadge} ${CONDITION_CLASS[item.condition]}`}>
+            {item.condition}
+          </span>
+          {item.status === "sold" && (
+            <div className={s.soldOverlay}>
+              <span className={s.soldTag}>Sold</span>
+            </div>
+          )}
+          {item.status === "flagged" && (
+            <div className={s.flaggedOverlay}>
+              <span className={s.flaggedTag}>Under Review</span>
+            </div>
+          )}
+        </ProgressiveImage>
       </div>
       <div className={s.cardBody}>
         <p className={s.cardPrice}>${item.price.toLocaleString()}</p>

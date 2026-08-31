@@ -17,8 +17,14 @@ create table if not exists users (
   password_hash         text not null default '',
   email_verified        boolean not null default false,
   verification_code     text not null default '',
-  verification_expires  timestamptz
+  verification_expires  timestamptz,
+  password_reset_code   text not null default '',
+  password_reset_expires timestamptz
 );
+
+-- Migration for databases created before the password-reset fields existed.
+alter table users add column if not exists password_reset_code text not null default '';
+alter table users add column if not exists password_reset_expires timestamptz;
 
 create table if not exists listings (
   id               text primary key,
@@ -127,6 +133,16 @@ create table if not exists offers (
   status      text not null default 'pending',
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
+);
+
+-- A user's saved/wishlist items. One row per (user, listing); a composite
+-- primary key keeps duplicates impossible and makes toggle lookups a point
+-- query. Listed items can be deleted, so cascade removes stale saves too.
+create table if not exists saved_listings (
+  user_id     text not null references users(id) on delete cascade,
+  listing_id  text not null references listings(id) on delete cascade,
+  created_at  timestamptz not null default now(),
+  primary key (user_id, listing_id)
 );
 
 create index if not exists idx_listings_seller_id on listings (seller_id);

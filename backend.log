@@ -1,102 +1,127 @@
-INFO:     Will watch for changes in these directories: ['/home/kankroid/NinerMarket/Backend']
-INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [2330720] using StatReload
-INFO:     Started server process [2330749]
+INFO:     Started server process [1889842]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     127.0.0.1:36442 - "GET /docs HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48652 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:48656 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:48662 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:46134 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:46132 - "GET /listings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46148 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:46150 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:46160 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:46176 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:46184 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:60102 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34332 - "POST /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34334 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:54520 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:54530 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:53898 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:53910 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:53920 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:39750 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:39756 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:54226 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:54228 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:54234 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:50062 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:50072 - "GET /push/vapid-public-key HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48820 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:48828 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:48834 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:48848 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:48854 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:48870 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:48884 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:48886 - "GET /listings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:48900 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:45436 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:45446 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:44450 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:44466 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:44480 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:44474 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:44500 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:44492 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:44506 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:44518 - "GET /listings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:44532 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:32866 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:32864 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:32888 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:32872 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:32898 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:32912 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:32918 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:32934 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34904 - "GET /listings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34912 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:34914 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34916 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34934 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34918 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:34942 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34438 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34446 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34460 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34458 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34470 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34476 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34480 - "GET /listings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:34492 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:34508 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34516 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34532 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:34538 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:34550 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:55862 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:55876 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:55890 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:55902 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:55910 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:55914 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:55920 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:55932 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:55930 - "GET /listings HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55942 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:55952 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:55962 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:55964 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:53838 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:53852 - "GET /users/u-ksaifeld/notifications HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:40066 - "GET /users/u-ksaifeld/threads HTTP/1.1" 401 Unauthorized
-INFO:     127.0.0.1:43302 - "GET /ratings/u-ksaifeld HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43318 - "GET /users/u-ksaifeld/listings?status=active HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43334 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:43336 - "GET /users/u-ksaifeld HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:43358 - "GET /users/u-ksaifeld/listings?status=active HTTP/1.1" 200 OK
-INFO:     127.0.0.1:43350 - "GET /ratings/u-ksaifeld HTTP/1.1" 200 OK
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:50532 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50538 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38004 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38012 - "POST /users/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39146 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59872 - "POST /users/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59876 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59892 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59908 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59896 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59938 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59922 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59952 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59964 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59966 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59976 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59992 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59990 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60004 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60018 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60034 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60042 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60050 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60054 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58306 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58318 - "POST /users/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33648 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33664 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55514 - "PATCH /users/u-anna/notifications/n-1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55528 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55544 - "PATCH /users/u-anna/threads/1/read HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57430 - "POST /listings/11/offers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37250 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37254 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37264 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57216 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57228 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57244 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57250 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57238 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57234 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57260 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57280 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57266 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57306 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57290 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57318 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57332 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57320 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57338 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57346 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57358 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39922 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40936 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38764 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57438 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57446 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57458 - "GET /push/vapid-public-key HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57466 - "GET /push/vapid-public-key HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57480 - "GET /push/vapid-public-key HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57492 - "GET /push/vapid-public-key HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43092 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41906 - "GET /users/u-anna/threads HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:37594 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37580 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37616 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37630 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37602 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37614 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37634 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37642 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37668 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37646 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37656 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37684 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37704 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37694 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37732 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37728 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37720 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37742 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45760 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45762 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45788 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45774 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45802 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45780 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45804 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45808 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45810 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45822 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38240 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38230 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38250 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38274 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38258 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38252 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38286 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38298 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38302 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38314 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38318 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38326 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38332 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38342 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38346 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38362 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38370 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38378 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36982 - "GET /users/u-anna HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37014 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36998 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36992 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37004 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37024 - "GET /users/u-anna/saved HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37036 - "GET /users/u-anna/notifications HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37050 - "GET /users/u-anna/threads HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41208 - "GET /listings HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41224 - "GET /push/vapid-public-key HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1889842]

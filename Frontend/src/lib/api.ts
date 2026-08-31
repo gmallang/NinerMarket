@@ -85,6 +85,7 @@ export interface ListParams {
   min_price?: number;
   max_price?: number;
   status?: string;
+  q?: string;
 }
 
 export const api = {
@@ -94,6 +95,7 @@ export const api = {
     if (params.min_price != null) q.set("min_price", String(params.min_price));
     if (params.max_price != null) q.set("max_price", String(params.max_price));
     if (params.status) q.set("status", params.status);
+    if (params.q?.trim()) q.set("q", params.q.trim());
     const qs = q.toString();
     return request<ListingDto[]>(`/listings${qs ? `?${qs}` : ""}`);
   },
@@ -162,6 +164,35 @@ export const api = {
     request<UserDto>("/users/password", {
       method: "POST",
       body: JSON.stringify({ password, ...(idToken ? { id_token: idToken } : {}) }),
+    }),
+
+  forgotPassword: (email: string) =>
+    request<{ ok: boolean }>("/users/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
+  resetPassword: (email: string, code: string, password: string) =>
+    request<UserDto>("/users/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ email, code, password }),
+    }),
+
+  getSaved: (userId: string) => request<string[]>(`/users/${userId}/saved`),
+
+  saveListing: (userId: string, listingId: string) =>
+    request<string[]>(`/users/${userId}/saved`, {
+      method: "POST",
+      body: JSON.stringify({ listing_id: listingId }),
+    }),
+
+  unsaveListing: (userId: string, listingId: string) =>
+    request<string[]>(`/users/${userId}/saved/${listingId}`, { method: "DELETE" }),
+
+  replaceSaved: (userId: string, listingIds: string[]) =>
+    request<string[]>(`/users/${userId}/saved`, {
+      method: "PUT",
+      body: JSON.stringify({ listing_ids: listingIds }),
     }),
 
   getMe: () => request<UserDto>("/users/me"),

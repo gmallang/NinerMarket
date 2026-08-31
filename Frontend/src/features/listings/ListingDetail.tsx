@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Check, CheckCircle2, Flag, HandCoins, Heart, MapPin, MessageCircle, MoreVertical, Pencil, Share2, X } from "lucide-react";
+import { Check, CheckCircle2, ChevronLeft, ChevronRight, Flag, HandCoins, Heart, MapPin, MessageCircle, MoreVertical, Pencil, Share2, X } from "lucide-react";
+import { ProgressiveImage } from "@/components/shared/ProgressiveImage";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
 import { listingImageUrl } from "@/lib/image";
@@ -56,6 +57,9 @@ export function ListingDetail({
   const isSold = item.status === "sold";
   const isFlagged = item.status === "flagged";
   const isActive = item.status === "active";
+
+  const prevImage = () => setActiveImg((i) => (i === 0 ? photos.length - 1 : i - 1));
+  const nextImage = () => setActiveImg((i) => (i === photos.length - 1 ? 0 : i + 1));
 
   const handleMarkSold = async () => {
     if (!onMarkSold) return;
@@ -185,20 +189,58 @@ export function ListingDetail({
       </div>
       <div className={s.detailBody}>
         <div className={s.detailGallery}>
-          <img
-            src={photos[activeImg]}
-            alt={item.title}
-            className={s.detailMainImg}
-            decoding="async"
-            // React 18 only accepts the all-lowercase form; the camelCase
-            // alias logs a DOM warning.
-            {...({ fetchpriority: "high" } as object)}
-          />
-          {photos.length > 1 && (
-            <span className={s.detailImgCounter} aria-label={`Image ${activeImg + 1} of ${photos.length}`}>
-              {activeImg + 1} / {photos.length}
-            </span>
-          )}
+          <div className={s.detailMain}>
+            <ProgressiveImage
+              key={activeImg}
+              src={listingImageUrl(photos[activeImg], 1200)}
+              alt={item.title}
+              className={s.detailMainImg}
+              decoding="async"
+              // React 18 only accepts the all-lowercase form; the camelCase
+              // alias logs a DOM warning. The active photo is served as a
+              // responsive downscale so the pretty first paint is instant,
+              // then faded in over the shimmer instead of a blank box.
+              {...({ fetchpriority: activeImg === 0 ? "high" : "auto" } as object)}
+            />
+            {photos.length > 1 && (
+              <>
+                <span
+                  className={s.detailImgCounter}
+                  aria-label={`Image ${activeImg + 1} of ${photos.length}`}
+                >
+                  {activeImg + 1} / {photos.length}
+                </span>
+                <button
+                  className={`${s.detailArrow} ${s.detailArrowPrev}`}
+                  onClick={prevImage}
+                  aria-label="Previous image"
+                  disabled={activeImg === 0}
+                >
+                  <ChevronLeft size={22} />
+                </button>
+                <button
+                  className={`${s.detailArrow} ${s.detailArrowNext}`}
+                  onClick={nextImage}
+                  aria-label="Next image"
+                  disabled={activeImg === photos.length - 1}
+                >
+                  <ChevronRight size={22} />
+                </button>
+                <div className={s.detailDots} role="tablist" aria-label={`Image gallery (${photos.length})`}>
+                  {photos.map((_, i) => (
+                    <button
+                      key={i}
+                      role="tab"
+                      aria-selected={i === activeImg}
+                      aria-label={`Go to image ${i + 1}`}
+                      className={`${s.detailDot} ${i === activeImg ? s.detailDotActive : ""}`}
+                      onClick={() => setActiveImg(i)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
           {photos.length > 1 && (
             <div className={s.detailThumbs}>
               {photos.map((p, i) => (

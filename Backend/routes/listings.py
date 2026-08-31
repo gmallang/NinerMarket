@@ -64,12 +64,29 @@ def list_listings(
     min_price: float | None = Query(default=None, ge=0),
     max_price: float | None = Query(default=None, ge=0),
     status: str | None = Query(default=None),
+    q: str | None = Query(default=None, max_length=120),
 ):
     # Public, unauthenticated, not personalized — safe to cache briefly.
     # Real-time freshness for changes (new/sold/edited listings) is already
     # handled by the "listings" broadcast channel triggering a client refetch,
     # so this short window only cuts down on redundant polling/reloads.
     response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=60"
+
+    def _match_search(row: dict) -> bool:
+        """Simple relevance-friendly substring match across title, description
+        and pickup location. Case-insensitive so "macbook" finds "MacBook"."""
+        if not q or not q.strip():
+            return True
+        needle = q.strip().lower()
+        haystack = (
+            str(row.get("name", ""))
+            + " "
+            + str(row.get("description", ""))
+            + " "
+            + str(row.get("pickup_location", ""))
+        ).lower()
+        return needle in haystack
+
     if db:
         query = db.table("listings").select("*")
         if category:
@@ -80,7 +97,21 @@ def list_listings(
             query = query.lte("price", max_price)
         if status:
             query = query.eq("status", status)
+        if q and q.strip():
+            needle = q.strip()
+            # Match across name and description (and pickup location) with
+            # two OR'd ilike filters — PostgREST can't OR across columns
+            # without the or() helper, so build it explicitly.
+            or_parts = [
+                f"name.ilike.*{needle}*",
+                f"description.ilike.*{needle}*",
+                f"pickup_location.ilike.*{needle}*",
+            ]
+            query = query.or_(",".join(or_parts))
         rows = query.order("created_at", desc=True).execute().data
+
+        if q and q.strip():
+            rows = [r for r in rows if _match_search(r)]
 
         seller_ids = {r.get("seller_id") for r in rows if r.get("seller_id")}
         sellers = {}
@@ -100,6 +131,7 @@ def list_listings(
         results = [l for l in results if l.price <= max_price]
     if status:
         results = [l for l in results if l.status == status]
+    results = [l for l in results if _match_search(l.model_dump(mode="json"))]
     results = sorted(results, key=lambda l: l.created_at, reverse=True)
     return [_with_seller(l) for l in results]
 

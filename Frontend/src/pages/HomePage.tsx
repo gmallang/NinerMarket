@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import type Fuse from "fuse.js";
 import { Search, Grid, List } from "lucide-react";
 import { useMarketStore } from "@/lib/store";
 import { CATEGORIES } from "@/data/categories";
@@ -47,83 +46,35 @@ export function HomePage() {
       ? "Saved Items"
       : (CATEGORIES.find((c) => c.id === activeCategory)?.label ?? "All Categories");
 
-  // fuse.js is only needed once someone actually searches, so it's kept out
-  // of the main bundle and loaded on first use instead of on every page load.
-  const [FuseCtor, setFuseCtor] = useState<typeof Fuse | null>(null);
+  // Keyword search is handled server-side (the /listings?q= endpoint). When the
+  // query in the URL changes, refetch from the backend with it; category, price,
+  // location and condition filters all still run client-side over the loaded set.
+  const prevQ = useRef(searchQuery);
   useEffect(() => {
-    if (!searchQuery.trim() || FuseCtor) return;
-    let active = true;
-    // A failure here (most commonly a stale chunk hash after a deploy) is
-    // handled globally by the vite:preloadError listener in main.tsx, which
-    // reloads the page — this catch just prevents the resulting rejection
-    // from also surfacing as an unhandled-promise console error.
-    import("fuse.js")
-      .then((mod) => {
-        // setFuseCtor(mod.default) would pass the Fuse class itself, and
-        // React's setState treats a function argument as a functional
-        // updater (state => newState) and calls it — which for a class
-        // means calling it without `new`, throwing exactly that error.
-        // Wrapping in a function stores the class as the value instead.
-        if (active) setFuseCtor(() => mod.default);
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [searchQuery, FuseCtor]);
-
-  const fuse = useMemo(
-    () =>
-      FuseCtor
-        ? new FuseCtor(listings, {
-            keys: [
-              { name: "title", weight: 0.6 },
-              { name: "campus", weight: 0.25 },
-              { name: "description", weight: 0.15 },
-            ],
-            threshold: 0.4,
-            ignoreLocation: true,
-          })
-        : null,
-    [FuseCtor, listings]
-  );
-
-  const searchMatches = useMemo(
-    () => (searchQuery.trim() && fuse ? fuse.search(searchQuery.trim()) : null),
-    [fuse, searchQuery]
-  );
-  // Wrap in useMemo so these Sets/Maps are only rebuilt when searchMatches
-  // actually changes, not on every render of HomePage.
-  const matchedIds = useMemo(
-    () => searchMatches && new Set(searchMatches.map((r) => r.item.id)),
-    [searchMatches]
-  );
-  const relevanceRank = useMemo(
-    () => searchMatches && new Map(searchMatches.map((r, i) => [r.item.id, i])),
-    [searchMatches]
-  );
+    if (viewSaved || viewMine || prevQ.current === searchQuery) return;
+    prevQ.current = searchQuery;
+    // Silent refetch — keep showing the current grid rather than flashing the
+    // loading spinner on every keystroke.
+    void loadListings(true, searchQuery);
+  }, [searchQuery, loadListings, viewSaved, viewMine]);
 
   const filtered = useMemo(
     () =>
-      listings
-        .filter((l) => {
-          if (viewMine) return !!user && l.sellerId === user.id;
-          if (viewSaved) return savedItems.has(l.id);
-          if (l.status === "sold" || l.status === "flagged") return false;
-          const matchCat = activeCategory === "all" || l.category === activeCategory;
-          const matchSearch = !matchedIds || matchedIds.has(l.id);
-          const matchMin = !minPrice || l.price >= Number(minPrice);
-          const matchMax = !maxPrice || l.price <= Number(maxPrice);
-          const matchLocation =
-            !locationFilter || l.campus.toLowerCase().includes(locationFilter.toLowerCase());
-          const matchCondition =
-            activeConditions.length === 0 || activeConditions.includes(l.condition);
-          return matchCat && matchSearch && matchMin && matchMax && matchLocation && matchCondition;
-        })
-        .sort((a, b) => {
+      listings.filter((l) => {
+        if (viewMine) return !!user && l.sellerId === user.id;
+        if (viewSaved) return savedItems.has(l.id);
+        if (l.status === "sold" || l.status === "flagged") return false;
+        const matchCat = activeCategory === "all" || l.category === activeCategory;
+        const matchMin = !minPrice || l.price >= Number(minPrice);
+        const matchMax = !maxPrice || l.price <= Number(maxPrice);
+        const matchLocation =
+          !locationFilter || l.campus.toLowerCase().includes(locationFilter.toLowerCase());
+        const matchCondition =
+          activeConditions.length === 0 || activeConditions.includes(l.condition);
+        return matchCat && matchMin && matchMax && matchLocation && matchCondition;
+      }).sort((a, b) => {
           if (sortBy === "price-asc") return a.price - b.price;
           if (sortBy === "price-desc") return b.price - a.price;
-          if (relevanceRank) return (relevanceRank.get(a.id) ?? 0) - (relevanceRank.get(b.id) ?? 0);
           // ISO 8601 strings sort lexicographically, so direct string comparison
           // is equivalent to comparing timestamps without creating Date objects.
           return b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0;
@@ -135,13 +86,11 @@ export function HomePage() {
       user,
       savedItems,
       activeCategory,
-      matchedIds,
       minPrice,
       maxPrice,
       locationFilter,
       activeConditions,
       sortBy,
-      relevanceRank,
     ]
   );
 

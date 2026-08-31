@@ -5,10 +5,9 @@ import App from "./app/App";
 import "./styles/index.css";
 
 // A tab left open across a deploy holds chunk hashes that no longer exist
-// on the server (every lazy-loaded route, plus dynamic imports like the
-// search bar's fuse.js) — Vite fires this event when such a fetch fails.
-// Reload once to pick up the current build instead of surfacing the error
-// boundary or leaving a feature silently broken.
+// on the server (every lazy-loaded route) — Vite fires this event when such
+// a fetch fails. Reload once to pick up the current build instead of
+// surfacing the error boundary or leaving a feature silently broken.
 window.addEventListener("vite:preloadError", () => {
   const key = "nmk-chunk-reload";
   if (sessionStorage.getItem(key)) return;

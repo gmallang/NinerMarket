@@ -91,31 +91,43 @@
 .detailGallery {
   background: var(--color-muted);
   min-width: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
 }
 
-.detailImgCounter {
-  position: absolute;
-  bottom: var(--space-2);
-  left: var(--space-2);
-  z-index: 1;
-  background: rgba(17, 24, 21, 0.55);
-  color: #fff;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  pointer-events: none;
+/* The main image area fills the gallery column so the photo renders as large as
+   possible; object-fit: contain keeps it proportional (no distortion, just a
+   letterbox band on the mismatched axis). It's the positioning context for the
+   FB-style arrows / counter / dots. */
+.detailMain {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--color-muted);
 }
 
+.detailImgCounter {
+  position: absolute;
+  bottom: var(--space-3);
+  right: var(--space-3);
+  z-index: 2;
+  background: rgba(17, 24, 21, 0.6);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
 
 .detailMainImg {
   width: 100%;
-  flex: 1;
-  min-height: 0;
+  height: 100%;
   /* contain, not cover — cover crops photos whose aspect ratio doesn't match
      the gallery box, which reads as a zoomed-in image. The gallery's muted
      background fills any letterbox bands. */
@@ -123,11 +135,106 @@
   display: block;
 }
 
+/* FB-style prev/next arrows, overlaid on either edge of the image. Always
+   visible on touch so the gallery is browsable without a hover; on hover-
+   capable devices they fade out until the gallery is hovered so they don't
+   sit over the photo while reading. */
+.detailArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-fg);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    background var(--duration) var(--ease),
+    color var(--duration) var(--ease),
+    opacity var(--duration) var(--ease);
+}
+
+.detailArrow:hover:not(:disabled) {
+  background: #fff;
+}
+
+.detailArrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.detailArrowPrev {
+  left: var(--space-3);
+}
+
+.detailArrowNext {
+  right: var(--space-3);
+}
+
+@media (hover: hover) {
+  .detailArrow {
+    opacity: 0;
+  }
+
+  .detailGallery:hover .detailArrow:not(:disabled),
+  .detailArrow:focus-visible {
+    opacity: 1;
+  }
+}
+
+/* Priority dots — a compact, always-on indicator that doesn't require reading
+   a counter; the numbered counter pill still shows the exact position. */
+.detailDots {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-3);
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  backdrop-filter: blur(4px);
+}
+
+.detailDot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: rgba(255, 255, 255, 0.45);
+  padding: 0;
+  cursor: pointer;
+  transition:
+    background var(--duration) var(--ease),
+    width var(--duration) var(--ease);
+}
+
+.detailDotActive {
+  background: #fff;
+  width: 16px;
+}
+
+/* The thumbnail selector is its own box below the main image — its own
+   background, top border and padding — so it doesn't visually merge with the
+   photo area above it. */
 .detailThumbs {
   display: flex;
   gap: var(--space-2);
-  padding: var(--space-2);
+  padding: var(--space-3);
   overflow-x: auto;
+  background: var(--color-card);
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
 }
 
 .detailThumb {
@@ -136,7 +243,8 @@
   border-radius: var(--radius-md);
   object-fit: cover;
   flex-shrink: 0;
-  border: 2px solid transparent;
+  border: 2px solid var(--color-border);
+  box-sizing: border-box;
   cursor: pointer;
   opacity: 0.7;
   transition:
@@ -151,6 +259,7 @@
 .detailThumbActive {
   border-color: var(--color-primary);
   opacity: 1;
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 
 .detailInfo {

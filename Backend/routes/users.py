@@ -21,8 +21,10 @@ from auth import (
 )
 from database import db, listings, users
 from models import (
+    ForgotPasswordRequest,
     GoogleLoginRequest,
     LoginRequest,
+    ResetPasswordRequest,
     ResendRequest,
     SetPasswordRequest,
     User,
@@ -58,10 +60,13 @@ def _frontend_url() -> str:
     return os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
 
+def _parse_dt(value):
+    if isinstance(value, str):
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    return value
+
+
 def _row_to_user(row: dict) -> User:
-    expires = row.get("verification_expires")
-    if isinstance(expires, str):
-        expires = datetime.fromisoformat(expires.replace("Z", "+00:00"))
     return User(
         id=row["id"],
         email=row.get("email", ""),
@@ -73,7 +78,9 @@ def _row_to_user(row: dict) -> User:
         password_hash=row.get("password_hash", ""),
         email_verified=row.get("email_verified", False),
         verification_code=row.get("verification_code", ""),
-        verification_expires=expires,
+        verification_expires=_parse_dt(row.get("verification_expires")),
+        password_reset_code=row.get("password_reset_code", ""),
+        password_reset_expires=_parse_dt(row.get("password_reset_expires")),
     )
 
 
@@ -162,6 +169,59 @@ def resend_code(body: ResendRequest, request: Request):
     user.verification_expires = code_expiry()
     _save_user(user)
     send_verification_email(email, code)
+    return {"user": _to_public(user)}
+
+
+@router.post("/users/forgot-password")
+def forgot_password(body: ForgotPasswordRequest, request: Request):
+    """Requests a password-reset code for an existing, verified account. The
+    code is emailed to them; it's stored in a field separate from the
+    signup-verification code so the two flows can't clobber each other."""
+    email = body.email.strip().lower()
+    rate_limit(f"forgot:{client_ip(request)}", max_attempts=10, window_seconds=15 * 60)
+    rate_limit(f"forgot:{email}", max_attempts=3, window_seconds=15 * 60)
+
+    user = _find_user(email)
+    # Don't reveal whether the account exists — always report success so an
+    # attacker can't enumerate which @charlotte.edu addresses are registered.
+    if not user:
+        return {"ok": True}
+    if not user.email_verified:
+        return {"ok": True}
+
+    user.password_reset_code = generate_code()
+    user.password_reset_expires = code_expiry()
+    _save_user(user)
+    send_verification_email(
+        email,
+        user.password_reset_code,
+        subject="Your NinerMarket password reset code",
+        intro="We got a request to reset your NinerMarket password. Your reset code is:",
+    )
+    return {"ok": True}
+
+
+@router.post("/users/reset-password")
+def reset_password(body: ResetPasswordRequest, request: Request):
+    """Sets a new password using the emailed reset code. Replaces the password
+    hash only when the code is valid and unexpired, then clears it."""
+    email = body.email.strip().lower()
+    rate_limit(f"reset:{client_ip(request)}", max_attempts=15, window_seconds=15 * 60)
+    rate_limit(f"reset:{email}", max_attempts=8, window_seconds=15 * 60)
+
+    user = _find_user(email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not user.email_verified:
+        raise HTTPException(status_code=400, detail="Account not verified")
+
+    if not code_is_valid(body.code, user.password_reset_code, user.password_reset_expires):
+        raise HTTPException(status_code=400, detail="Invalid or expired code")
+
+    user.password_hash = hash_password(body.password)
+    user.password_reset_code = ""
+    user.password_reset_expires = None
+    _save_user(user)
     return {"user": _to_public(user)}
 
 

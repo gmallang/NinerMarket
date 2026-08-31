@@ -117,10 +117,32 @@ def seed_dev_store(
     hours_map = {"h": 1, "d": 24}
     seller_listing_ids: dict[str, list[str]] = {}
 
-    for _, name, price, category, condition, campus, image, seller_id, ago in demo:
+    # Extra picsum seeds used only to build multi-photo galleries on the stock
+    # listings, so the detail page's prev/next arrows, dots and counter are
+    # testable without uploading custom photos.
+    gallery_extra = [
+        "photo-1523275335684-37898b6baf30",
+        "photo-1550259979-ed79b48d2a30",
+        "photo-1542291026-7eec264c27ff",
+        "photo-1496181133206-80ce9b88a853",
+        "photo-1505740420928-5e560c06d30e",
+        "photo-1526170375885-4d8ecf77b99f",
+        "photo-1493666438817-866a91353ca9",
+        "photo-1523192191542-242acc4e7396",
+    ]
+
+    for idx, (_, name, price, category, condition, campus, image, seller_id, ago) in enumerate(demo):
         n = int(ago[:-1])
         # Use picsum.photos for actual photography placeholders instead of text
         photo = f"https://picsum.photos/seed/{image}/800/800"
+        # Primary photo first, then 2–4 gallery images from the extra pool
+        # (rotated per listing so adjacent cards differ). Kept under 5 so the
+        # thumbnails strip doesn't force itself to the URL-list only.
+        extras = [
+            f"https://picsum.photos/seed/{gallery_extra[(idx + j) % len(gallery_extra)]}/800/800"
+            for j in range(2 + (idx % 3))
+        ]
+        photos = [photo, *extras]
         listing = Listing(
             id=str(_),
             seller_id=seller_id,
@@ -130,8 +152,8 @@ def seed_dev_store(
             condition=condition,
             description=name,
             status="active",
-            photos=[photo],
-            photos_small=[photo],
+            photos=photos,
+            photos_small=photos,
             pickup_location=campus,
             created_at=now - timedelta(hours=n * hours_map[ago[-1]]),
         )

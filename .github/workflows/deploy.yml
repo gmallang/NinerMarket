@@ -22,7 +22,13 @@ jobs:
             echo "::error::Secret is empty or missing for branch '${{ github.ref_name }}'. Check that the repo secret name exactly matches VERCEL_DEPLOY_HOOK_FRONTEND_$( [ '${{ github.ref_name }}' = 'main' ] && echo PROD || echo DEV )."
             exit 1
           fi
-          curl -fsS -X POST "$HOOK_URL"
+          # Diagnostics that don't reveal the secret value itself, so we can
+          # tell what's wrong with it without printing it.
+          echo "length: ${#HOOK_URL}"
+          echo "starts with https: $([[ "$HOOK_URL" == https* ]] && echo yes || echo no)"
+          echo "contains whitespace: $(printf '%s' "$HOOK_URL" | grep -qE '[[:space:]]' && echo yes || echo no)"
+          CLEAN_URL="$(printf '%s' "$HOOK_URL" | tr -d '[:space:]')"
+          curl -fsS -X POST "$CLEAN_URL"
 
   deploy-backend:
     runs-on: ubuntu-latest
@@ -35,4 +41,8 @@ jobs:
             echo "::error::Secret is empty or missing for branch '${{ github.ref_name }}'. Check that the repo secret name exactly matches VERCEL_DEPLOY_HOOK_BACKEND_$( [ '${{ github.ref_name }}' = 'main' ] && echo PROD || echo DEV )."
             exit 1
           fi
-          curl -fsS -X POST "$HOOK_URL"
+          echo "length: ${#HOOK_URL}"
+          echo "starts with https: $([[ "$HOOK_URL" == https* ]] && echo yes || echo no)"
+          echo "contains whitespace: $(printf '%s' "$HOOK_URL" | grep -qE '[[:space:]]' && echo yes || echo no)"
+          CLEAN_URL="$(printf '%s' "$HOOK_URL" | tr -d '[:space:]')"
+          curl -fsS -X POST "$CLEAN_URL"

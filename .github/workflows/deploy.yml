@@ -15,20 +15,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Vercel frontend deploy hook
+        env:
+          HOOK_URL: ${{ github.ref_name == 'main' && secrets.VERCEL_DEPLOY_HOOK_FRONTEND_PROD || secrets.VERCEL_DEPLOY_HOOK_FRONTEND_DEV }}
         run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_FRONTEND_PROD }}"
-          else
-            curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_FRONTEND_DEV }}"
+          if [ -z "$HOOK_URL" ]; then
+            echo "::error::Secret is empty or missing for branch '${{ github.ref_name }}'. Check that the repo secret name exactly matches VERCEL_DEPLOY_HOOK_FRONTEND_$( [ '${{ github.ref_name }}' = 'main' ] && echo PROD || echo DEV )."
+            exit 1
           fi
+          curl -fsS -X POST "$HOOK_URL"
 
   deploy-backend:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Vercel backend deploy hook
+        env:
+          HOOK_URL: ${{ github.ref_name == 'main' && secrets.VERCEL_DEPLOY_HOOK_BACKEND_PROD || secrets.VERCEL_DEPLOY_HOOK_BACKEND_DEV }}
         run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_BACKEND_PROD }}"
-          else
-            curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_BACKEND_DEV }}"
+          if [ -z "$HOOK_URL" ]; then
+            echo "::error::Secret is empty or missing for branch '${{ github.ref_name }}'. Check that the repo secret name exactly matches VERCEL_DEPLOY_HOOK_BACKEND_$( [ '${{ github.ref_name }}' = 'main' ] && echo PROD || echo DEV )."
+            exit 1
           fi
+          curl -fsS -X POST "$HOOK_URL"

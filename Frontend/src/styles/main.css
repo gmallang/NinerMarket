@@ -24,8 +24,12 @@
 
   /* Text */
   --color-fg: #1c1e1c;
-  --color-fg-muted: #6b7a6b;
-  --color-fg-subtle: #9daa9d;
+  /* Darkened from the original #6b7a6b/#9daa9d — those sat right at (muted)
+     or well under (subtle, 2.4:1) the WCAG AA minimum of 4.5:1 for normal
+     text, which read as barely-visible gray across timestamps, labels, and
+     secondary copy throughout the app. */
+  --color-fg-muted: #556655;
+  --color-fg-subtle: #6b786b;
   --color-fg-inverse: #ffffff;
 
   /* Borders */

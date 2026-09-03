@@ -33,7 +33,11 @@
 .cardImage {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* contain, not cover — cover crops a non-square photo down to the box's
+     forced 1:1 aspect ratio, which reads as a zoomed-in/cropped photo for
+     anything wider or taller than square (the common case for real listing
+     photos). The muted background fills any letterbox bands. */
+  object-fit: contain;
   transition: transform 320ms var(--ease);
 }
 

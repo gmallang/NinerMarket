@@ -243,13 +243,19 @@
   gap: var(--space-1);
   background: #fff;
   color: var(--color-primary);
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 6px 14px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  padding: 10px 20px;
   border-radius: var(--radius-full);
   margin-left: var(--space-1);
   text-decoration: none;
-  transition: background var(--duration) var(--ease);
+  transition:
+    background var(--duration) var(--ease),
+    transform var(--duration) var(--ease);
+}
+
+.sellBtn:active {
+  transform: scale(0.96);
 }
 
 .sellBtn:hover {
@@ -887,5 +893,44 @@
     height: 8px;
     border-radius: var(--radius-full);
     background: #f87171;
+  }
+}
+
+/* ── Sell success toast ── */
+.sellSuccessToast {
+  position: fixed;
+  top: calc(var(--nav-h) + 12px);
+  left: 50%;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 12px 22px;
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  animation: sellSuccessPop 2.6s ease forwards;
+}
+
+@keyframes sellSuccessPop {
+  0% {
+    transform: translate(-50%, -16px) scale(0.9);
+    opacity: 0;
+  }
+  12% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+  85% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -10px) scale(0.96);
+    opacity: 0;
   }
 }

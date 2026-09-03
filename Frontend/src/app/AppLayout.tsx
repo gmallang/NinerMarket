@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Home,
+  CheckCircle2,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import ninerLogo from "@/assets/NinerMarket.png";
@@ -88,6 +89,7 @@ export function AppLayout() {
   const [maxPriceInput, setMaxPriceInput] = useState(params.get("maxPrice") ?? "");
   const [showScrollFade, setShowScrollFade] = useState(false);
   const [pushError, setPushError] = useState("");
+  const [sellSuccess, setSellSuccess] = useState(false);
   const fadeSentinelRef = useRef<HTMLDivElement | null>(null);
   const totalUnread = convs.reduce((n, c) => n + c.unread, 0);
   const unreadNotifs = notifications.filter((n) => !n.read).length;
@@ -428,7 +430,7 @@ export function AppLayout() {
               aria-label="Sell an item"
               title="Sell an item"
             >
-              <Plus size={14} />
+              <Plus size={17} />
               <span className={s.sellBtnLabel}>Sell</span>
             </button>
 
@@ -618,12 +620,24 @@ export function AppLayout() {
           listing={sellModal?.mode === "edit" ? sellModal.listing : undefined}
           onClose={closeSellForm}
           onSaved={(listing) => {
-            if (sellModal?.mode === "edit") updateListing(listing);
-            else addListing(listing);
+            if (sellModal?.mode === "edit") {
+              updateListing(listing);
+            } else {
+              addListing(listing);
+              setSellSuccess(true);
+              window.setTimeout(() => setSellSuccess(false), 2600);
+            }
             closeSellForm();
           }}
         />
       </Modal>
+
+      {sellSuccess && (
+        <div className={s.sellSuccessToast} role="status">
+          <CheckCircle2 size={18} />
+          Listing posted!
+        </div>
+      )}
 
       <MessagesOverlay />
       <ListingOverlay />

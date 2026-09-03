@@ -22,7 +22,7 @@ def _toggle(user_id: str, listing_id: str, should_save: bool) -> list[str]:
     if db:
         existing = (
             db.table("saved_listings")
-            .select("id")
+            .select("user_id")
             .eq("user_id", user_id)
             .eq("listing_id", listing_id)
             .execute()

@@ -8,17 +8,27 @@ name: Deploy to Vercel
 # of who pushed) triggers them directly instead.
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Vercel frontend deploy hook
-        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_FRONTEND }}"
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_FRONTEND_PROD }}"
+          else
+            curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_FRONTEND_DEV }}"
+          fi
 
   deploy-backend:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Vercel backend deploy hook
-        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_BACKEND }}"
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_BACKEND_PROD }}"
+          else
+            curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_BACKEND_DEV }}"
+          fi

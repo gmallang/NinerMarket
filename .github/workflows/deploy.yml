@@ -1,0 +1,24 @@
+name: Deploy to Vercel
+
+# Vercel's own GitHub integration blocks deploys from commits authored by
+# anyone who isn't a collaborator on the connected Vercel account (Hobby
+# plan has no concept of team members at all). Deploy Hooks don't check
+# authorship — they just build whatever is currently on the branch — so
+# this workflow (which runs under the repo's own permissions, regardless
+# of who pushed) triggers them directly instead.
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel frontend deploy hook
+        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_FRONTEND }}"
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel backend deploy hook
+        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_BACKEND }}"

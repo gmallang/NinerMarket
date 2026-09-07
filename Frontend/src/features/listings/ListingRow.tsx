@@ -1,6 +1,6 @@
 import { Heart, MapPin } from "lucide-react";
 import type { Listing } from "@/lib/types";
-import { listingImageUrl, listingSrcSet } from "@/lib/image";
+import { listingImageUrl } from "@/lib/image";
 import { ProgressiveImage } from "@/components/shared/ProgressiveImage";
 import { CONDITION_CLASS } from "./condition";
 import s from "./row.module.css";
@@ -27,8 +27,7 @@ export function ListingRow({
     <div className={s.row} onClick={onOpen}>
       <div className={s.rowImageWrap}>
         <ProgressiveImage
-          src={listingImageUrl(item.image, 400)}
-          srcSet={listingSrcSet(item.image)}
+          src={listingImageUrl(item.thumbnail ?? item.image, 400)}
           sizes="140px"
           alt={item.title}
           className={s.rowImage}

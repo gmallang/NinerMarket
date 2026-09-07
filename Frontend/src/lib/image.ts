@@ -31,13 +31,6 @@ export function listingImageUrl(url: string, width: number): string {
   return url;
 }
 
-/** Width-candidate list for a photo's srcset. Data URLs would only repeat the
- * same embedded image, so they're excluded and the src alone is used. */
-export function listingSrcSet(url: string): string | undefined {
-  if (url.startsWith("data:")) return undefined;
-  return [400, 800, 1280].map((w) => `${listingImageUrl(url, w)} ${w}w`).join(", ");
-}
-
 /** Downscales and re-encodes an image file to a JPEG data URL, keeping the
  * longest edge at or under MAX_DIMENSION. Cuts typical phone-camera photos
  * (several MB) down to a few hundred KB before they hit storage/bandwidth. */

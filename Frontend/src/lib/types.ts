@@ -35,6 +35,7 @@ export interface ListingDto {
   status: string;
   flag_reason?: string;
   photos: string[];
+  photos_small?: string[];
   pickup_location: string;
   created_at: string;
   sold_at?: string | null;
@@ -51,6 +52,7 @@ export interface Listing {
   createdAt: string;
   condition: string;
   image: string;
+  thumbnail?: string;
   seller: string;
   sellerId?: string;
   sellerRating: number;

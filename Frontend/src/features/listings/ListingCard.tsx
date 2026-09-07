@@ -1,7 +1,7 @@
 import { Heart, MapPin } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
-import { listingImageUrl, listingSrcSet } from "@/lib/image";
+import { listingImageUrl } from "@/lib/image";
 import { ProgressiveImage } from "@/components/shared/ProgressiveImage";
 import { CONDITION_CLASS } from "./condition";
 import s from "./card.module.css";
@@ -26,8 +26,7 @@ export function ListingCard({
     <div className={s.card} onClick={onOpen}>
       <div className={s.cardImageWrap}>
         <ProgressiveImage
-          src={listingImageUrl(item.image, 400)}
-          srcSet={listingSrcSet(item.image)}
+          src={listingImageUrl(item.thumbnail ?? item.image, 400)}
           sizes="(max-width: 480px) 50vw, (max-width: 900px) 33vw, 240px"
           alt={item.title}
           className={s.cardImage}

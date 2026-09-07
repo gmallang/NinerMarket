@@ -23,6 +23,7 @@ export function fromDto(d: ListingDto): Listing {
     createdAt: d.created_at,
     condition: d.condition,
     image: d.photos?.[0] ?? PLACEHOLDER_IMG,
+    thumbnail: d.photos_small?.[0] ?? d.photos?.[0] ?? PLACEHOLDER_IMG,
     seller: d.seller?.display_name ?? "Unknown seller",
     sellerId: d.seller?.id ?? d.seller_id,
     sellerRating: d.seller?.rating_avg ?? 0,

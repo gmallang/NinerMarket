@@ -30,26 +30,10 @@
   overflow: hidden;
 }
 
-/* A blurred, scaled-up copy of the same photo fills the box behind the real
-   (uncropped) image — see ListingCard.tsx. Neither cover (hard-crops a
-   tall/narrow photo, reading as zoomed-in) nor contain alone (flat empty
-   gutters around it) looks right for a photo far from square; this avoids
-   both. scale(1.15) keeps the blur's soft edge from showing an unblurred
-   sliver at the box edge. */
-.cardImageBackdrop {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  filter: blur(18px) brightness(0.88) saturate(1.05);
-  transform: scale(1.15);
-}
-
 .cardImage {
-  position: relative;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   transition: transform 320ms var(--ease);
 }
 

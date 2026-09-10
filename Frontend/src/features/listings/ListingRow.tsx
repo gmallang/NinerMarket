@@ -26,6 +26,14 @@ export function ListingRow({
   return (
     <div className={s.row} onClick={onOpen}>
       <div className={s.rowImageWrap}>
+        {/* See ListingCard for why: a blurred, scaled-up copy of the same
+            photo fills the box behind it instead of cropping or leaving an
+            empty gutter for a far-from-square photo. */}
+        <div
+          className={s.rowImageBackdrop}
+          style={{ backgroundImage: `url(${listingImageUrl(item.thumbnail ?? item.image, 60)})` }}
+          aria-hidden="true"
+        />
         <ProgressiveImage
           src={listingImageUrl(item.thumbnail ?? item.image, 400)}
           sizes="140px"

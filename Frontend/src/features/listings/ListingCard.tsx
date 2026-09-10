@@ -25,6 +25,16 @@ export function ListingCard({
   return (
     <div className={s.card} onClick={onOpen}>
       <div className={s.cardImageWrap}>
+        {/* A blurred, scaled-up copy of the same photo fills the box behind
+            it — for a photo whose aspect ratio is far from square (e.g. a
+            tall stack of book spines), this avoids both hard-cropping the
+            subject (object-fit: cover) and leaving a flat empty gutter
+            (object-fit: contain) around it. */}
+        <div
+          className={s.cardImageBackdrop}
+          style={{ backgroundImage: `url(${listingImageUrl(item.thumbnail ?? item.image, 60)})` }}
+          aria-hidden="true"
+        />
         <ProgressiveImage
           src={listingImageUrl(item.thumbnail ?? item.image, 400)}
           sizes="(max-width: 480px) 50vw, (max-width: 900px) 33vw, 240px"

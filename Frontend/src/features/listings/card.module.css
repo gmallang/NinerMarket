@@ -33,11 +33,12 @@
 .cardImage {
   width: 100%;
   height: 100%;
-  /* contain, not cover — cover crops a non-square photo down to the box's
-     forced 1:1 aspect ratio, which reads as a zoomed-in/cropped photo for
-     anything wider or taller than square (the common case for real listing
-     photos). The muted background fills any letterbox bands. */
-  object-fit: contain;
+  /* cover, not contain — contain leaves large empty gutters on a tall/narrow
+     photo in this square box, which reads as broken/unfinished in a dense
+     grid (worse than a modest crop). Cropping-to-fill is the standard for
+     grid thumbnails generally; the single large detail-view image is a
+     different context and keeps contain. */
+  object-fit: cover;
   transition: transform 320ms var(--ease);
 }
 

@@ -1,9 +1,12 @@
 import base64
 import io
+import logging
 import mimetypes
 import uuid
 
 from database import db
+
+logger = logging.getLogger("uvicorn.error")
 
 BUCKET = "listing-photos"
 MAX_BYTES = 6 * 1024 * 1024  # frontend already caps original files at 5MB; this is headroom
@@ -36,11 +39,17 @@ def _ensure_bucket() -> None:
 
 
 def _make_thumb(raw: bytes) -> tuple[bytes, str] | None:
-    """Downscales an image to a small WebP thumbnail (longest edge <= 400px).
+    """Downscales an image to a small JPEG thumbnail (longest edge <= 400px).
 
     Returns (bytes, mime-type), or None when Pillow can't process the image
-    (e.g. animated GIFs, which we pass through untouched). WebP keeps alpha
-    for PNGs and is far smaller than JPEG for photo tiles."""
+    (e.g. animated GIFs, which we pass through untouched). JPEG rather than
+    WebP: the deployed serverless environment's Pillow build turned out to
+    lack libwebp, so every save(..., "WEBP") call was silently failing and
+    falling through to the broad except below — every thumbnail in
+    production was actually just the full-size original the whole time.
+    JPEG has no such system-library dependency. It can't carry an alpha
+    channel, so transparent PNGs are flattened onto white for the thumbnail
+    only — the full-size original photo is untouched."""
     try:
         from PIL import Image
 
@@ -48,18 +57,18 @@ def _make_thumb(raw: bytes) -> tuple[bytes, str] | None:
         if getattr(img, "format", "").upper() == "GIF":
             return None
         img.thumbnail((THUMB_MAX_DIMENSION, THUMB_MAX_DIMENSION))
-        if img.mode in ("RGBA", "LA", "PA"):
-            has_alpha = True
-        elif img.mode == "P" and "transparency" in img.info:
-            has_alpha = True
+        if img.mode in ("RGBA", "LA", "PA") or (img.mode == "P" and "transparency" in img.info):
+            rgba = img.convert("RGBA")
+            flattened = Image.new("RGB", rgba.size, (255, 255, 255))
+            flattened.paste(rgba, mask=rgba.split()[3])
+            img = flattened
         else:
-            has_alpha = False
-        img = img.convert("RGBA" if has_alpha else "RGB")
+            img = img.convert("RGB")
         buf = io.BytesIO()
-        img.save(buf, "WEBP", quality=THUMB_QUALITY)
-        return buf.getvalue(), "image/webp"
+        img.save(buf, "JPEG", quality=THUMB_QUALITY)
+        return buf.getvalue(), "image/jpeg"
     except Exception:
-        # Pillow missing or the format is unsupported — degrade gracefully.
+        logger.exception("thumbnail generation failed, falling back to the full-size original")
         return None
 
 
@@ -77,10 +86,10 @@ def _put(path: str, raw: bytes, content_type: str) -> str:
 
 def upload_photo(user_id: str, data_url: str) -> dict:
     """Decodes a `data:image/...;base64,...` URL and uploads it to Supabase
-    Storage as a WebP-friendly master plus a small generated thumbnail,
-    returning `{"url", "thumb_url"}`. Falls back to returning the original
-    data URL unchanged (for both fields) when Supabase isn't configured
-    (local dev)."""
+    Storage as the full-size original plus a small generated JPEG
+    thumbnail, returning `{"url", "thumb_url"}`. Falls back to returning the
+    original data URL unchanged (for both fields) when Supabase isn't
+    configured (local dev)."""
     if not data_url.startswith("data:image/"):
         raise ValueError("Only image uploads are allowed")
 
@@ -107,7 +116,7 @@ def upload_photo(user_id: str, data_url: str) -> dict:
     thumb = _make_thumb(raw)
     if thumb:
         thumb_bytes, thumb_mime = thumb
-        thumb_url = _put(f"{user_id}/{uuid.uuid4()}.webp", thumb_bytes, thumb_mime)
+        thumb_url = _put(f"{user_id}/{uuid.uuid4()}.jpg", thumb_bytes, thumb_mime)
 
     return {"url": url, "thumb_url": thumb_url}
 

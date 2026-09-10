@@ -13,12 +13,21 @@ export function listingImageUrl(url: string, width: number): string {
     // Plain object URLs are served as-is with no resizing — Supabase only
     // transforms images requested through the separate /render/image/
     // endpoint, so the width/quality params have to be applied there.
+    //
+    // height + resize=contain must both be passed alongside width: Supabase's
+    // transform, given width alone, doesn't scale proportionally — it forces
+    // the requested width but leaves height at the original source value,
+    // returning a distorted (squished/stretched) file. Passing an explicit
+    // height with resize=contain fixes that; contain bounds it to width×width
+    // without cropping, matching the aspect ratio Supabase should have used
+    // by default. The actual crop-to-fit for display is CSS's job
+    // (object-fit) once the source itself is no longer corrupted.
     const renderUrl = url.replace(
       "/storage/v1/object/public/",
       "/storage/v1/render/image/public/"
     );
     const sep = renderUrl.includes("?") ? "&" : "?";
-    return `${renderUrl}${sep}width=${width}&quality=75`;
+    return `${renderUrl}${sep}width=${width}&height=${width}&resize=contain&quality=75`;
   }
   if (url.startsWith("https://images.unsplash.com/")) {
     // Width only — no forced h/fit=crop, which pre-cropped photos to squares

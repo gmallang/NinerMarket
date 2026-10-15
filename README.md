@@ -1,6 +1,6 @@
 # NinerMarket
 
-**A campus marketplace for UNC Charlotte — buy, sell, and trade with students on campus.**
+**A campus marketplace for UNC Charlotte, buy, sell, and trade with students on campus.**
 
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
@@ -11,11 +11,14 @@
 
 ---
 
+<img width="2558" height="1599" alt="image" src="https://github.com/user-attachments/assets/a07ee414-2bf3-4942-b10b-77632c8fc19d" />
+
+
 ## What it does
 
 NinerMarket is a Facebook-Marketplace-style app for the campus community. Students
 post listings with photos and a pickup location, browse and search the marketplace,
-message sellers, make offers, and save items — all tied to their account.
+message sellers, make offers, and save items, all tied to their account.
 
 ---
 

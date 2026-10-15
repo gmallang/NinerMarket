@@ -68,6 +68,10 @@ function mergeThread(oldThread: Conversation | undefined, newThread: Conversatio
 const SAVED_KEY = "ninermarket-saved";
 const THREADS_KEY = "ninermarket-threads";
 
+// Listings are paged from the server. This is both the page size we request
+// and the "was this the last page?" test (a short page means the end).
+const LISTINGS_PAGE_SIZE = 60;
+
 function loadThreadsCache(): Conversation[] {
   try {
     const raw = localStorage.getItem(THREADS_KEY);
@@ -92,6 +96,11 @@ let unsubscribeListings: (() => void) | null = null;
 const typingTimeouts = new Map<number, ReturnType<typeof setTimeout>>();
 let threadsLoadVersion = 0;
 const threadMutationVersions = new Map<number, number>();
+
+// How many server rows we've fetched for the current listings query. Tracked
+// separately from `listings.length` because realtime inserts prepend to the
+// list and would otherwise drift the next page's offset.
+let listingsOffset = 0;
 
 function markThreadMutated(threadId: number): number {
   const version = (threadMutationVersions.get(threadId) ?? 0) + 1;
@@ -126,6 +135,8 @@ interface MarketState {
   user: CurrentUser | null;
   listings: Listing[];
   loading: boolean;
+  loadingMore: boolean;
+  hasMoreListings: boolean;
   listingsError: string | null;
   savedItems: Set<string>;
   convs: Conversation[];
@@ -147,6 +158,7 @@ interface MarketState {
   updateProfile: (year: string, payments: string[]) => Promise<void>;
   refreshProfile: () => Promise<void>;
   loadListings: (silent?: boolean, q?: string) => void;
+  loadMoreListings: () => void;
   addListing: (listing: Listing) => void;
   updateListing: (listing: Listing) => void;
   sellModal: { mode: "create" } | { mode: "edit"; listing: Listing } | null;
@@ -188,6 +200,8 @@ export const useMarketStore = create<MarketState>((set, get) => {
   user: loadUser(),
   listings: [],
   loading: true,
+  loadingMore: false,
+  hasMoreListings: false,
   listingsError: null,
   savedItems: loadSavedLocal(),
   convs: loadThreadsCache(),
@@ -218,7 +232,15 @@ export const useMarketStore = create<MarketState>((set, get) => {
     } catch {
       // ignore storage errors
     }
-    set({ user: null, convs: [], activeConvId: 1, savedItems: new Set() });
+    listingsOffset = 0;
+    set({
+      user: null,
+      convs: [],
+      activeConvId: 1,
+      savedItems: new Set(),
+      hasMoreListings: false,
+      loadingMore: false,
+    });
   },
 
   startRealtimeInbox: () => {
@@ -372,17 +394,49 @@ export const useMarketStore = create<MarketState>((set, get) => {
   loadListings: (silent?: boolean, q?: string) => {
     if (!get().user) return;
     if (!silent) set({ loading: true });
-    const params = q?.trim() ? { q: q.trim() } : {};
+    const params = {
+      limit: LISTINGS_PAGE_SIZE,
+      offset: 0,
+      ...(q?.trim() ? { q: q.trim() } : {}),
+    };
     return api
       .listListings(params)
       .then((dtos) => {
-        set({ listings: dtos.map(fromDto), loading: false, listingsError: null });
+        listingsOffset = dtos.length;
+        set({
+          listings: dtos.map(fromDto),
+          loading: false,
+          listingsError: null,
+          hasMoreListings: dtos.length === LISTINGS_PAGE_SIZE,
+        });
       })
       .catch((err) => {
         if (silent) return;
         const message = err instanceof Error ? err.message : "Failed to load listings";
         set({ loading: false, listingsError: message });
       });
+  },
+
+  loadMoreListings: () => {
+    const { user, hasMoreListings, loadingMore } = get();
+    if (!user || !hasMoreListings || loadingMore) return;
+    set({ loadingMore: true });
+    return api
+      .listListings({ limit: LISTINGS_PAGE_SIZE, offset: listingsOffset })
+      .then((dtos) => {
+        listingsOffset += dtos.length;
+        set((state) => {
+          // Realtime may have already prepended some of these — dedupe by id.
+          const seen = new Set(state.listings.map((l) => l.id));
+          const fresh = dtos.map(fromDto).filter((l) => !seen.has(l.id));
+          return {
+            listings: [...state.listings, ...fresh],
+            loadingMore: false,
+            hasMoreListings: dtos.length === LISTINGS_PAGE_SIZE,
+          };
+        });
+      })
+      .catch(() => set({ loadingMore: false }));
   },
 
   addListing: (listing) => set((state) => ({ listings: [listing, ...state.listings] })),

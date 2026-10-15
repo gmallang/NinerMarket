@@ -1,4 +1,4 @@
-# NinerMarket — Developer Guide
+# NinerMarket Developer Guide
 
 Setup, testing, and deployment for NinerMarket.
 
@@ -22,7 +22,7 @@ npm run dev                    # http://localhost:5173
 ```
 
 The Vite proxy (`Frontend/vite.config.ts`) targets `http://localhost:8001`. Port 8000
-is often occupied by an unrelated project — don't kill it.
+is often occupied by an unrelated project; don't kill it.
 
 Seeded login: `anna@charlotte.edu` / `ninermarket-demo` (all seed users share it).
 
@@ -54,19 +54,19 @@ python Backend/migrate_photos.py
 
 - **Service role vs anon key.** The backend uses the `service_role` key (`SUPABASE_KEY`)
   for DB writes (no RLS). The anon key (`SUPABASE_ANON_KEY`) is used only for Realtime
-  broadcasts — broadcasting with the service_role key returns 202 but is never delivered.
+  broadcasts; broadcasting with the service_role key returns 202 but is never delivered.
   Never expose the service role key to the frontend.
 - **Sessions** are signed with `SESSION_SECRET`; the frontend sends `Authorization: Bearer …`.
   Set a stable value in prod or sessions won't survive redeploys.
 - **Rate limiting:** login is limited (6 per email per 15 min, in-memory). Repeated failed
-  logins return HTTP 429 — restart the backend to clear it.
+  logins return HTTP 429. Restart the backend to clear it.
 - **Local dev is `.env`-less:** don't expect Supabase behavior locally unless you add `Backend/.env`.
 
 ## Supabase schema
 
 Apply `Backend/schema.sql` in the Supabase SQL Editor. It is idempotent. It creates/updates
 `users` (incl. password-reset columns), `listings`, `saved_listings`, `notifications`,
-`push_subscriptions`, `offers`, and the rest — required or the corresponding features 500 in prod.
+`push_subscriptions`, `offers`, and the rest, required or the corresponding features 500 in prod.
 
 ## Environment variables
 

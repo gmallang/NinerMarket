@@ -160,6 +160,108 @@ def seed_dev_store(
         listings[listing.id] = listing
         seller_listing_ids.setdefault(seller_id, []).append(listing.id)
 
+    # Generated bulk listings so the browse page has enough rows to page
+    # through (frontend page size is 60). Deterministic: stable ids/prices.
+    mock_items = [
+        ("Campbell Biology 12th Edition", 55, "textbooks"),
+        ("Physics 211 Lab Manual", 18, "textbooks"),
+        ("Introduction to Java Programming (Liang)", 42, "textbooks"),
+        ("Microeconomics: Principles & Policy", 38, "textbooks"),
+        ("Organic Chemistry Model Kit", 24, "textbooks"),
+        ("Statistics: The Art of Learning", 44, "textbooks"),
+        ("Spanish-English College Dictionary", 14, "textbooks"),
+        ("Data Structures & Algorithms in Python", 50, "textbooks"),
+        ("Bose SoundLink Mini II Speaker", 85, "electronics"),
+        ("TI-84 Plus CE Graphing Calculator", 60, "electronics"),
+        ("Anker 20000mAh Power Bank", 28, "electronics"),
+        ("Logitech MX Master 3 Mouse", 55, "electronics"),
+        ('Dell 24" IPS Monitor', 95, "electronics"),
+        ("Kindle Paperwhite (11th Gen)", 70, "electronics"),
+        ("Beats Studio3 Headphones", 110, "electronics"),
+        ("Ring Light with Tripod", 22, "electronics"),
+        ("Nintendo Switch Lite", 130, "electronics"),
+        ("HDMI Capture Card", 35, "electronics"),
+        ("JBL Flip Bluetooth Speaker", 45, "electronics"),
+        ("IKEA MALM Desk (White)", 60, "furniture"),
+        ("Ergonomic Mesh Office Chair", 75, "furniture"),
+        ("2-Drawer File Cabinet", 30, "furniture"),
+        ("Futon Sofa (Gray)", 120, "furniture"),
+        ("Foldable Bookshelf 5-Tier", 40, "furniture"),
+        ("Floor Lamp with Shelves", 32, "furniture"),
+        ("Memory Foam Pillow (Queen)", 20, "furniture"),
+        ("Patagonia Fleece Jacket (M)", 65, "clothing"),
+        ("Nike Air Force 1 (10.5)", 55, "clothing"),
+        ("Levi's 511 Jeans (32x32)", 25, "clothing"),
+        ("North Face Backpack", 45, "clothing"),
+        ("Ugg Boots (W 8)", 60, "clothing"),
+        ("Formal Blazer (40R)", 40, "clothing"),
+        ("Vintage Denim Jacket (L)", 38, "clothing"),
+        ("Ski Jacket (Women's M)", 70, "clothing"),
+        ("Schwinn GTX 2 Hybrid Bike", 210, "bikes"),
+        ("Segway Ninebot Electric Scooter", 240, "bikes"),
+        ("Bike U-Lock + Cable", 25, "bikes"),
+        ("Adult Bike Helmet (M)", 30, "bikes"),
+        ("Bike Repair Stand", 65, "bikes"),
+        ("Keurig K-Mini Coffee Maker", 45, "movein"),
+        ("Brita Water Pitcher", 15, "movein"),
+        ("Microwave 0.7 cu ft", 50, "movein"),
+        ("Full-Length Mirror", 28, "movein"),
+        ("Storage Bins (Set of 4)", 22, "movein"),
+        ("Quiet Tower Fan", 30, "movein"),
+        ("Electric Kettle (Stainless)", 18, "movein"),
+        ("Shower Caddy Set", 12, "movein"),
+        ("Mattress Protector (Twin XL)", 16, "movein"),
+        ("Command Hooks Bulk Pack", 10, "movein"),
+        ("Levoit Air Purifier", 55, "movein"),
+        ("Steam Iron", 15, "movein"),
+        ("1BR Apartment Sublet — Summer", 800, "housing"),
+        ("Room in 4BR House — Fall", 625, "housing"),
+        ("Studio Near Light Rail", 950, "housing"),
+        ("Move-In Help (Truck + Muscle)", 60, "services"),
+        ("Calculus Tutoring (Hourly)", 25, "services"),
+        ("Resume Review & Mock Interview", 30, "services"),
+        ("Furniture Assembly", 35, "services"),
+        ("Dog Walking (Weekly)", 40, "services"),
+        ("Yoga Mat (Thick, Non-Slip)", 20, "other"),
+        ("Yamaha F310 Acoustic Guitar", 95, "other"),
+        ("Instant Pot Duo 6qt", 55, "other"),
+        ("PlayStation 4 + 2 Controllers", 180, "other"),
+        ("Catan Board Game", 25, "other"),
+        ("Portable Mini Projector", 70, "other"),
+        ("Burr Coffee Grinder", 24, "other"),
+        ("Harry Potter Complete Set", 60, "other"),
+        ("Potted Plants (Set of 3)", 22, "other"),
+        ("Whiteboard 48x36", 30, "other"),
+        ("Yeti Rambler 20oz", 22, "other"),
+    ]
+    campuses = [
+        "North Campus", "South Gate", "East Side", "West Dorms", "Main Quad",
+        "Engineering Hall", "Greek Row", "Off-Campus Ave", "UWalk", "Social Sciences",
+    ]
+    conditions = ["Like New", "Excellent", "Good", "Fair"]
+    seller_ids = [f"seller-{i}" for i in range(1, 15)]
+
+    for idx, (name, price, category) in enumerate(mock_items):
+        next_id = str(101 + idx)
+        seller_id = seller_ids[idx % len(seller_ids)]
+        photo = f"https://picsum.photos/seed/mock-{next_id}/800/800"
+        listing = Listing(
+            id=next_id,
+            seller_id=seller_id,
+            name=name,
+            price=price,
+            category=category,
+            condition=conditions[idx % len(conditions)],
+            description=name,
+            status="active",
+            photos=[photo],
+            photos_small=[photo],
+            pickup_location=campuses[idx % len(campuses)],
+            created_at=now - timedelta(hours=idx + 1),
+        )
+        listings[listing.id] = listing
+        seller_listing_ids.setdefault(seller_id, []).append(listing.id)
+
     rater_pool = [sid for sid in sellers if sid != "u-anna"] + ["u-anna"]
     for seller_id, seller in sellers.items():
         raters = [r for r in rater_pool if r != seller_id]

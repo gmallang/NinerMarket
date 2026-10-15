@@ -86,6 +86,8 @@ export interface ListParams {
   max_price?: number;
   status?: string;
   q?: string;
+  limit?: number;
+  offset?: number;
 }
 
 export const api = {
@@ -96,6 +98,8 @@ export const api = {
     if (params.max_price != null) q.set("max_price", String(params.max_price));
     if (params.status) q.set("status", params.status);
     if (params.q?.trim()) q.set("q", params.q.trim());
+    if (params.limit != null) q.set("limit", String(params.limit));
+    if (params.offset != null) q.set("offset", String(params.offset));
     const qs = q.toString();
     return request<ListingDto[]>(`/listings${qs ? `?${qs}` : ""}`);
   },

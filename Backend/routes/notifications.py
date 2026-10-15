@@ -3,9 +3,9 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from auth import require_user
+from auth import notification_email, require_user
 from broadcast import broadcast
-from database import db, notifications
+from database import db, notifications, users
 from models import NotificationCreate
 from push import send_push
 
@@ -15,6 +15,16 @@ router = APIRouter()
 def _check_caller(user_id: str, caller_id: str) -> None:
     if caller_id != user_id:
         raise HTTPException(status_code=403, detail="You can only access your own notifications")
+
+
+def user_email(user_id: str) -> str:
+    """Looks up a user's email address, for the email fallback on notifications
+    and messages. Returns "" when the user can't be found."""
+    if db:
+        res = db.table("users").select("email").eq("id", user_id).execute()
+        return res.data[0]["email"] if res.data else ""
+    user = users.get(user_id)
+    return getattr(user, "email", "") if user else ""
 
 
 def _new_notification(
@@ -61,6 +71,16 @@ def create_notification(
     # Also reaches devices with no tab open at all, if they've granted
     # notification permission.
     send_push(user_id, "NinerMarket", text, f"/listing/{listing_id}" if listing_id else "/")
+    # Email fallback: works even when the user never enabled web push, which
+    # is the common case. Best-effort — a missing RESEND_API_KEY just no-ops.
+    to = user_email(user_id)
+    if to:
+        notification_email(
+            to,
+            "New activity on NinerMarket",
+            text,
+            f"/listing/{listing_id}" if listing_id else "/",
+        )
     return notification
 
 

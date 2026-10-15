@@ -8,6 +8,7 @@ from broadcast import broadcast
 from database import db, listings, offers, users
 from models import OfferCreate
 from ratelimit import client_ip, rate_limit
+from routes.messaging import start_deal_thread
 from routes.notifications import create_notification
 
 router = APIRouter()
@@ -269,6 +270,16 @@ def accept_offer(offer_id: str, user_id: str = Depends(require_user)):
     broadcast("listings", "listing_changed", {"id": offer["listing_id"]})
 
     seller_name = _user_name(user_id)
+    # Open the buyer<->seller conversation right away so the two can arrange
+    # the handoff, seeded with a message from the seller. Reuses an existing
+    # thread if they were already chatting about this listing.
+    start_deal_thread(
+        offer["listing_id"],
+        offer["buyer_id"],
+        user_id,
+        f'Accepted your offer of ${offer["price"]:,.2f} for '
+        f'"{_listing_attr(listing, "name")}" — let\'s arrange pickup.',
+    )
     create_notification(
         offer["buyer_id"],
         f'Your offer of ${offer["price"]:,.2f} for '

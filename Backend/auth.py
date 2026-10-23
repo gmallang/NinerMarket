@@ -6,6 +6,7 @@ import random
 import re
 import secrets
 from datetime import datetime, timedelta, timezone
+from html import escape
 from urllib.request import Request, urlopen
 
 from fastapi import Header, HTTPException
@@ -114,30 +115,20 @@ def code_is_valid(code: str, stored: str, expires: datetime | None) -> bool:
     return hmac.compare_digest(code.strip(), stored)
 
 
-def send_verification_email(
-    to: str, code: str, subject: str | None = None, intro: str | None = None
-) -> bool:
-    """Sends a 6-digit code via Resend. Returns True when delivered."""
+def send_email(to: str, subject: str, html: str) -> bool:
+    """Sends an HTML email via Resend. Best-effort: returns False (never raises)
+    when the API key is missing or the send fails, so a failed email can't break
+    the request that triggered it."""
     api_key = os.getenv("RESEND_API_KEY")
     if not api_key:
         return False
-
-    subject = subject or "Your NinerMarket verification code"
-    intro = intro or "Enter this code to finish setting up your account. It expires in 15 minutes."
 
     payload = json.dumps(
         {
             "from": os.getenv("EMAIL_FROM", "NinerMarket <onboarding@resend.dev>"),
             "to": [to],
             "subject": subject,
-            "html": (
-                "<div style=\"font-family:Arial,sans-serif;color:#0b2418\">"
-                "<h2>NinerMarket</h2>"
-                f"<p style=\"font-size:18px;background:#e8f5e9;padding:16px;border-radius:8px\">{intro}</p>"
-                f"<p style=\"font-size:32px;font-weight:700;letter-spacing:4px\">{code}</p>"
-                "<p>If you didn't request this, you can safely ignore this email.</p>"
-                "</div>"
-            ),
+            "html": html,
         }
     ).encode()
     req = Request(
@@ -155,6 +146,46 @@ def send_verification_email(
             return 200 <= resp.status < 300
     except Exception:
         return False
+
+
+def send_verification_email(
+    to: str, code: str, subject: str | None = None, intro: str | None = None
+) -> bool:
+    """Sends a 6-digit code via Resend. Returns True when delivered."""
+    subject = subject or "Your NinerMarket verification code"
+    intro = intro or "Enter this code to finish setting up your account. It expires in 15 minutes."
+    html = (
+        "<div style=\"font-family:Arial,sans-serif;color:#0b2418\">"
+        "<h2>NinerMarket</h2>"
+        f"<p style=\"font-size:18px;background:#e8f5e9;padding:16px;border-radius:8px\">{intro}</p>"
+        f"<p style=\"font-size:32px;font-weight:700;letter-spacing:4px\">{code}</p>"
+        "<p>If you didn't request this, you can safely ignore this email.</p>"
+        "</div>"
+    )
+    return send_email(to, subject, html)
+
+
+def notification_email(to: str, subject: str, message: str, path: str = "") -> bool:
+    """Sends a plain notification email (new message, offer, etc.). The message
+    body is escaped — it routinely carries user-supplied text (names, listing
+    titles, chat messages) and must not be rendered as raw HTML in the inbox."""
+    base = os.getenv("FRONTEND_URL", "").rstrip("/")
+    link = (
+        f'<p><a href="{base}{path}" style="color:#1a7a3c">Open NinerMarket</a></p>'
+        if base and path
+        else ""
+    )
+    html = (
+        "<div style=\"font-family:Arial,sans-serif;color:#0b2418\">"
+        "<h2>NinerMarket</h2>"
+        f"<p style=\"font-size:16px\">{escape(message)}</p>"
+        f"{link}"
+        "<p style=\"color:#6b7280;font-size:12px\">"
+        "You're getting this because you have a NinerMarket account."
+        "</p>"
+        "</div>"
+    )
+    return send_email(to, subject, html)
 
 
 def make_user_id(email: str) -> str:

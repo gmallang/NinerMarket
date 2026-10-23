@@ -148,3 +148,33 @@
   flex-direction: column;
   gap: var(--space-3);
 }
+
+/* ── Load more (server pagination) ── */
+.loadMoreWrap {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-5) 0 var(--space-3);
+}
+
+.loadMoreBtn {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 8px 20px;
+  transition:
+    background var(--duration) var(--ease),
+    border-color var(--duration) var(--ease);
+}
+
+.loadMoreBtn:hover:not(:disabled) {
+  background: var(--color-muted);
+  border-color: var(--color-primary);
+}
+
+.loadMoreBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

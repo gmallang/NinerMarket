@@ -11,6 +11,9 @@
 
 ---
 
+<img width="2558" height="1599" alt="image" src="https://github.com/user-attachments/assets/a07ee414-2bf3-4942-b10b-77632c8fc19d" />
+
+
 ## What it does
 
 NinerMarket is a Facebook-Marketplace-style app for the campus community. Students

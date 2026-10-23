@@ -398,11 +398,14 @@ def me(user_id: str = Depends(require_user)):
 
 
 @router.get("/users/{id}")
-def get_user(id: str):
+def get_user(id: str, authorization: str | None = Header(default=None)):
     user = get_user_by_id(id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return _to_public(user)
+    public = _to_public(user)
+    if not authorization or verify_session_token(authorization.removeprefix("Bearer ").strip()) != id:
+        public.email = ""
+    return public
 
 
 @router.patch("/users/{id}")

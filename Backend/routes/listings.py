@@ -65,6 +65,8 @@ def list_listings(
     max_price: float | None = Query(default=None, ge=0),
     status: str | None = Query(default=None),
     q: str | None = Query(default=None, max_length=120),
+    limit: int = Query(default=60, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
 ):
     # Public, unauthenticated, not personalized — safe to cache briefly.
     # Real-time freshness for changes (new/sold/edited listings) is already
@@ -108,7 +110,7 @@ def list_listings(
                 f"pickup_location.ilike.*{needle}*",
             ]
             query = query.or_(",".join(or_parts))
-        rows = query.order("created_at", desc=True).execute().data
+        rows = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute().data
 
         if q and q.strip():
             rows = [r for r in rows if _match_search(r)]
@@ -133,7 +135,7 @@ def list_listings(
         results = [l for l in results if l.status == status]
     results = [l for l in results if _match_search(l.model_dump(mode="json"))]
     results = sorted(results, key=lambda l: l.created_at, reverse=True)
-    return [_with_seller(l) for l in results]
+    return [_with_seller(l) for l in results[offset : offset + limit]]
 
 
 @router.post("/listings")

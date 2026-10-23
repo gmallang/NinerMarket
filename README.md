@@ -1,6 +1,6 @@
 # NinerMarket
 
-**A campus marketplace for UNC Charlotte, buy, sell, and trade with students on campus.**
+**A campus marketplace for UNC Charlotte. Buy, sell, and trade with students on campus.**
 
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
@@ -24,9 +24,9 @@ message sellers, make offers, and save items, all tied to their account.
 
 ## How it works
 
-1. **Frontend** — React + TypeScript SPA with live search, filters, listing galleries, and an inbox
-2. **Backend** — FastAPI REST API: auth, listings, saved items, offers, messaging, ratings, notifications, and photo uploads
-3. **Data & realtime** — Supabase provides Postgres, Storage (listing photos), and Realtime (live badge updates); web push delivers notifications to closed tabs
+1. **Frontend:** React + TypeScript SPA with live search, filters, listing galleries, and an inbox
+2. **Backend:** FastAPI REST API: auth, listings, saved items, offers, messaging, ratings, notifications, and photo uploads
+3. **Data & realtime:** Supabase provides Postgres, Storage (listing photos), and Realtime (live badge updates); web push delivers notifications to closed tabs
 
 ---
 

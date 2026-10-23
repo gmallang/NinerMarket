@@ -32,8 +32,11 @@ export function HomePage() {
 
   const listings = useMarketStore((s) => s.listings);
   const loading = useMarketStore((s) => s.loading);
+  const loadingMore = useMarketStore((s) => s.loadingMore);
+  const hasMoreListings = useMarketStore((s) => s.hasMoreListings);
   const listingsError = useMarketStore((s) => s.listingsError);
   const loadListings = useMarketStore((s) => s.loadListings);
+  const loadMoreListings = useMarketStore((s) => s.loadMoreListings);
   const savedItems = useMarketStore((s) => s.savedItems);
   const user = useMarketStore((s) => s.user);
   const toggleSave = useMarketStore((s) => s.toggleSave);
@@ -195,6 +198,19 @@ export function HomePage() {
               />
             );
           })}
+        </div>
+      )}
+
+      {hasMoreListings && !viewSaved && !viewMine && (
+        <div className={s.loadMoreWrap}>
+          <button
+            type="button"
+            className={s.loadMoreBtn}
+            onClick={() => loadMoreListings()}
+            disabled={loadingMore}
+          >
+            {loadingMore ? "Loading\u2026" : "Load more"}
+          </button>
         </div>
       )}
     </div>

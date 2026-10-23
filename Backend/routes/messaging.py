@@ -2,11 +2,12 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from auth import require_user
+from auth import notification_email, require_user
 from database import db, listings, threads, users
 from models import MarkReadRequest, OpenThreadRequest, SendMessageRequest
 from broadcast import broadcast
 from push import send_push
+from routes.notifications import user_email
 
 router = APIRouter()
 
@@ -130,6 +131,23 @@ def _unread_for(thread_id: int, user_id: str) -> int:
     return sum(1 for m in thread.get("messages", []) if m["id"] > cursor) if thread else 0
 
 
+def _notify_new_message(recipient_id: str, sender_id: str, text: str, thread_id: int) -> None:
+    """Tells the other participant a message arrived: live inbox signal for open
+    tabs, web push for subscribed devices, and an email fallback. The email is
+    only sent when this is the recipient's first unread message in the thread
+    (unread went 0 -> 1), so an active back-and-forth doesn't email on every
+    line — the next message after they read emails again."""
+    if not recipient_id:
+        return
+    broadcast(f"inbox:{recipient_id}", "new_message", {"thread_id": thread_id})
+    sender_name = _display_name(sender_id)
+    send_push(recipient_id, sender_name, text, "/")
+    if _unread_for(thread_id, recipient_id) == 1:
+        to = user_email(recipient_id)
+        if to:
+            notification_email(to, f"New message from {sender_name}", text, "/")
+
+
 def _viewer_relative(row: dict, msgs: list[dict], viewer_id: str) -> dict:
     """Threads are stored from the opener's point of view: name/avatar show
     the seller, and each message's `sent` means "sent by the opener". When
@@ -205,6 +223,89 @@ def _thread_dict(thread_id: int, user_id: str, listing_id: str, name: str) -> di
 def _next_id() -> int:
     ids = [int(t["id"]) for t in threads.values()] if threads else []
     return (max(ids) + 1) if ids else 1
+
+
+def start_deal_thread(
+    listing_id: str, buyer_id: str, seller_id: str, seed_text: str
+) -> int | None:
+    """Opens (or reuses) the buyer<->seller conversation for a listing and posts
+    a first message from the seller — used when a seller accepts an offer, so
+    the two can arrange the handoff immediately instead of having to open a
+    chat by hand. The buyer-facing notification for the acceptance is sent
+    separately by the caller, so this only emits the live inbox signal (no
+    duplicate push/email). Returns the thread id, or None if unresolvable."""
+    if db:
+        existing = (
+            db.table("threads")
+            .select("id")
+            .eq("user_id", buyer_id)
+            .eq("listingId", listing_id)
+            .execute()
+        )
+        if existing.data:
+            thread_id = int(existing.data[0]["id"])
+        else:
+            name = _display_name(seller_id)
+            tid = str(int(datetime.now(timezone.utc).timestamp() * 1000))
+            db.table("threads").insert(
+                {
+                    "id": tid,
+                    "user_id": buyer_id,
+                    "listingId": listing_id,
+                    "name": name,
+                    "avatar": _avatar_url(name),
+                    "online": True,
+                    "unread": 0,
+                    "lastMsg": "",
+                    "lastTimestamp": _now(),
+                }
+            ).execute()
+            thread_id = int(tid)
+
+        msg_id = int(datetime.now().timestamp() * 1000)
+        # sent=False: messages are stored from the opener's point of view and the
+        # opener is the buyer, so a seller-authored message is "not sent by opener".
+        db.table("messages").insert(
+            {
+                "id": msg_id,
+                "thread_id": str(thread_id),
+                "text": seed_text,
+                "sent": False,
+                "timestamp": _now(),
+            }
+        ).execute()
+        db.table("threads").update(
+            {"lastMsg": seed_text, "lastTimestamp": _now()}
+        ).eq("id", str(thread_id)).execute()
+        # The seller authored it, so advance their cursor past it.
+        _advance_cursor(thread_id, seller_id, msg_id)
+        broadcast(f"inbox:{buyer_id}", "new_message", {"thread_id": thread_id})
+        return thread_id
+
+    thread = next(
+        (
+            t
+            for t in threads.values()
+            if t.get("user_id") == buyer_id and t.get("listingId") == listing_id
+        ),
+        None,
+    )
+    if thread is None:
+        thread = _thread_dict(_next_id(), buyer_id, listing_id, _display_name(seller_id))
+        threads[thread["id"]] = thread
+    thread_id = thread["id"]
+    msg = {
+        "id": int(datetime.now().timestamp() * 1000),
+        "text": seed_text,
+        "sent": False,
+        "timestamp": _now(),
+    }
+    thread.setdefault("messages", []).append(msg)
+    thread["lastMsg"] = seed_text
+    thread["lastTimestamp"] = msg["timestamp"]
+    _advance_cursor(thread_id, seller_id, msg["id"])
+    broadcast(f"inbox:{buyer_id}", "new_message", {"thread_id": thread_id})
+    return thread_id
 
 
 @router.get("/users/{user_id}/threads")
@@ -446,9 +547,7 @@ def send_thread_message(
         recipient_id = (
             _listing_seller_id(thread_row["listingId"]) if sent_by_opener else thread_row["user_id"]
         )
-        if recipient_id:
-            broadcast(f"inbox:{recipient_id}", "new_message", {"thread_id": thread_id})
-            send_push(recipient_id, _display_name(user_id), msg["text"], "/")
+        _notify_new_message(recipient_id, user_id, msg["text"], thread_id)
         return _viewer_relative(thread_row, existing_msgs, user_id)
 
     thread = threads.get(thread_id)
@@ -470,9 +569,7 @@ def send_thread_message(
     recipient_id = (
         _listing_seller_id(thread["listingId"]) if sent_by_opener else thread["user_id"]
     )
-    if recipient_id:
-        broadcast(f"inbox:{recipient_id}", "new_message", {"thread_id": thread_id})
-        send_push(recipient_id, _display_name(user_id), msg["text"], "/")
+    _notify_new_message(recipient_id, user_id, msg["text"], thread_id)
     return _viewer_relative(thread, thread["messages"], user_id)
 
 

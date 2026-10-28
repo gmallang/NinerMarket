@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NinerMarket</string>
+    <string name="title_activity_main">NinerMarket</string>
+    <string name="package_name">com.ninermarket.app</string>
+    <string name="custom_url_scheme">com.ninermarket.app</string>
+</resources>

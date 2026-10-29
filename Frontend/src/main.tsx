@@ -1,8 +1,30 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Analytics } from "@vercel/analytics/react";
+import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 import App from "./app/App";
 import "./styles/index.css";
+
+// Google's redirect-mode OAuth callback (see LoginPage's `login_uri`) bounces
+// the system browser back to a custom-scheme deep link when we're inside the
+// native app, since there's no page for the backend to redirect a bare
+// website URL to — the app isn't a browser tab. Capacitor hands us that URL
+// here; turn its fragment into a same-origin navigation to /login so the
+// existing hash-based token handling in LoginPage picks it up exactly like
+// it does for the plain website redirect.
+if (Capacitor.isNativePlatform()) {
+  CapacitorApp.addListener("appUrlOpen", ({ url }) => {
+    const hash = url.includes("#") ? url.slice(url.indexOf("#")) : "";
+    // The app is very often already sitting on /login when this fires (it's
+    // where an unauthenticated user starts). Navigating to the same path
+    // with only the hash changed is a same-document navigation — it updates
+    // the URL bar but doesn't reload, so LoginPage's mount-time token read
+    // never re-runs. A changing query param forces a real distinct URL, so
+    // this always triggers a full reload regardless of the current path.
+    window.location.href = `${window.location.origin}/login?dl=${Date.now()}${hash}`;
+  });
+}
 
 // A tab left open across a deploy holds chunk hashes that no longer exist
 // on the server (every lazy-loaded route) — Vite fires this event when such

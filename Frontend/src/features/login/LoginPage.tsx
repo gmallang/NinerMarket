@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { ShieldCheck, ShoppingBag, MapPin, X, ChevronDown, Eye, EyeOff } from "lucide-react";
 import ninerLogo from "@/assets/NinerMarket.png";
 import { SCHOOL_YEARS } from "@/lib/user";
@@ -100,7 +101,9 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
         client_id: GOOGLE_CLIENT_ID,
         hd: "charlotte.edu",
         ux_mode: IS_MOBILE ? "redirect" : "popup",
-        login_uri: IS_MOBILE ? `${API_BASE_URL}/users/google/callback` : undefined,
+        login_uri: IS_MOBILE
+          ? `${API_BASE_URL}/users/google/callback${Capacitor.isNativePlatform() ? "?target=app" : ""}`
+          : undefined,
         callback: async (resp) => {
           if (!resp.credential) return;
           if (!agreeRef.current) {

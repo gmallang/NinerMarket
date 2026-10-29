@@ -299,8 +299,16 @@ async def google_callback(request: Request):
     rate_limit(f"google:{client_ip(request)}", max_attempts=30, window_seconds=15 * 60)
     form = await request.form()
     credential = (form.get("credential") or "").strip()
+    is_native_app = request.query_params.get("target") == "app"
 
     def _back(suffix: str) -> RedirectResponse:
+        if is_native_app:
+            # The native app isn't a browser tab, so there's no website page
+            # to send this browser back to — redirect to the app's own
+            # custom URL scheme instead; Capacitor/Android and iOS hand that
+            # back to the app via an appUrlOpen event (see main.tsx).
+            scheme = os.getenv("APP_URL_SCHEME", "com.ninermarket.app")
+            return RedirectResponse(f"{scheme}://auth#{suffix}", status_code=302)
         return RedirectResponse(f"{_frontend_url()}/login#{suffix}", status_code=302)
 
     if not credential:

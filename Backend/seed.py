@@ -48,8 +48,87 @@ def _make_ratings(
     return out
 
 
+def _seed_demo_requests(requests: dict, now: datetime) -> None:
+    """A handful of "Looking For" posts so the feed isn't empty on a fresh
+    install. Times are relative to seed time like the listings."""
+
+    def hours_ago(n: int) -> str:
+        return (now - timedelta(hours=n)).isoformat()
+
+    def expires_in(days: int) -> str:
+        return (now + timedelta(days=days)).isoformat()
+
+    rows = [
+        {
+            "user_id": "seller-8",
+            "title": "Mini Fridge for My Dorm",
+            "description": (
+                "Need one before move-in — anything 3 cu ft or larger. I can pick it up "
+                "from any residence hall."
+            ),
+            "category": "movein",
+            "budget_min": 40,
+            "budget_max": 60,
+            "preferred_location": "UNC Charlotte Campus",
+            "status": "active",
+            "created_at": hours_ago(2),
+            "expires_at": expires_in(30),
+        },
+        {
+            "user_id": "seller-11",
+            "title": "ITSC 1213 Textbook",
+            "description": "Preferably used and in good condition. Any edition from the last two years works.",
+            "category": "textbooks",
+            "budget_min": None,
+            "budget_max": 35,
+            "preferred_location": "Atkins Library",
+            "status": "active",
+            "created_at": hours_ago(6),
+            "expires_at": expires_in(14),
+        },
+        {
+            "user_id": "seller-9",
+            "title": "Bike U-Lock or Heavy Chain",
+            "description": "Someone took mine last week. Happy to meet at the East Deck bike racks.",
+            "category": "bikes",
+            "budget_min": 15,
+            "budget_max": 25,
+            "preferred_location": "East Deck",
+            "status": "active",
+            "created_at": hours_ago(20),
+            "expires_at": expires_in(20),
+        },
+        {
+            "user_id": "seller-2",
+            "title": "Desk Chair for My Dorm",
+            "description": "Something with back support — my current one is a plastic folding chair.",
+            "category": "furniture",
+            "budget_min": 50,
+            "budget_max": 80,
+            "preferred_location": "Wallis Hall",
+            "status": "fulfilled",
+            "created_at": hours_ago(72),
+            "expires_at": expires_in(10),
+        },
+    ]
+
+    for index, row in enumerate(rows, start=1):
+        request_id = f"req-{index}"
+        requests[request_id] = {
+            "id": request_id,
+            "photos": [],
+            "updated_at": row["created_at"],
+            **row,
+        }
+
+
 def seed_dev_store(
-    users: dict, listings: dict, ratings: dict, threads: dict, notifications: dict
+    users: dict,
+    listings: dict,
+    ratings: dict,
+    threads: dict,
+    notifications: dict,
+    requests: dict | None = None,
 ) -> None:
     if users or listings:
         return
@@ -117,32 +196,14 @@ def seed_dev_store(
     hours_map = {"h": 1, "d": 24}
     seller_listing_ids: dict[str, list[str]] = {}
 
-    # Extra picsum seeds used only to build multi-photo galleries on the stock
-    # listings, so the detail page's prev/next arrows, dots and counter are
-    # testable without uploading custom photos.
-    gallery_extra = [
-        "photo-1523275335684-37898b6baf30",
-        "photo-1550259979-ed79b48d2a30",
-        "photo-1542291026-7eec264c27ff",
-        "photo-1496181133206-80ce9b88a853",
-        "photo-1505740420928-5e560c06d30e",
-        "photo-1526170375885-4d8ecf77b99f",
-        "photo-1493666438817-866a91353ca9",
-        "photo-1523192191542-242acc4e7396",
-    ]
-
-    for idx, (_, name, price, category, condition, campus, image, seller_id, ago) in enumerate(demo):
+    for _, name, price, category, condition, campus, image, seller_id, ago in demo:
         n = int(ago[:-1])
-        # Use picsum.photos for actual photography placeholders instead of text
-        photo = f"https://picsum.photos/seed/{image}/800/800"
-        # Primary photo first, then 2–4 gallery images from the extra pool
-        # (rotated per listing so adjacent cards differ). Kept under 5 so the
-        # thumbnails strip doesn't force itself to the URL-list only.
-        extras = [
-            f"https://picsum.photos/seed/{gallery_extra[(idx + j) % len(gallery_extra)]}/800/800"
-            for j in range(2 + (idx % 3))
-        ]
-        photos = [photo, *extras]
+        # Each demo row above carries the Unsplash id of a photo that actually
+        # matches the item. Render that exact photo — seeding used to point at
+        # picsum.photos, which ignores the seed and returned unrelated
+        # imagery (textbooks showing landscapes). One photo per row: sticking
+        # unrelated gallery shots onto a listing is worse than having none.
+        photos = [f"https://images.unsplash.com/{image}?w=800&h=800&fit=crop&auto=format"]
         listing = Listing(
             id=str(_),
             seller_id=seller_id,
@@ -244,7 +305,9 @@ def seed_dev_store(
     for idx, (name, price, category) in enumerate(mock_items):
         next_id = str(101 + idx)
         seller_id = seller_ids[idx % len(seller_ids)]
-        photo = f"https://picsum.photos/seed/mock-{next_id}/800/800"
+        # These generated rows have no real photo of their own, so they keep an
+        # empty photo list and render the branded placeholder. Inventing one
+        # from stock photography would show buyers a product that isn't there.
         listing = Listing(
             id=next_id,
             seller_id=seller_id,
@@ -254,8 +317,8 @@ def seed_dev_store(
             condition=conditions[idx % len(conditions)],
             description=name,
             status="active",
-            photos=[photo],
-            photos_small=[photo],
+            photos=[],
+            photos_small=[],
             pickup_location=campuses[idx % len(campuses)],
             created_at=now - timedelta(hours=idx + 1),
         )
@@ -277,6 +340,8 @@ def seed_dev_store(
 
     _seed_demo_threads(threads, now)
     _seed_demo_notifications(notifications, now)
+    if requests is not None:
+        _seed_demo_requests(requests, now)
 
 
 def _seed_demo_threads(threads: dict, now: datetime) -> None:
@@ -398,7 +463,8 @@ def seed_supabase_store(db) -> None:
     states can be completed by running again.
     """
     users, listings, ratings, threads, notifications = {}, {}, {}, {}, {}
-    seed_dev_store(users, listings, ratings, threads, notifications)
+    requests: dict = {}
+    seed_dev_store(users, listings, ratings, threads, notifications, requests)
 
     def table_empty(table: str) -> bool:
         return not db.table(table).select("id").limit(1).execute().data
@@ -429,3 +495,6 @@ def seed_supabase_store(db) -> None:
     if notifications and table_empty("notifications"):
         for uid, items in notifications.items():
             db.table("notifications").insert(items).execute()
+
+    if requests and table_empty("wanted_requests"):
+        db.table("wanted_requests").insert(list(requests.values())).execute()

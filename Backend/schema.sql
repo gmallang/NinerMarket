@@ -145,6 +145,36 @@ create table if not exists saved_listings (
   primary key (user_id, listing_id)
 );
 
+-- "Looking For" requests. Kept separate from listings: a request has a budget
+-- range and expires, and must never show up in the marketplace grid.
+create table if not exists wanted_requests (
+  id                  text primary key,
+  user_id             text not null references users(id) on delete cascade,
+  title               text not null,
+  description         text not null default '',
+  category            text not null,
+  budget_min          double precision,
+  budget_max          double precision,
+  preferred_location  text not null default '',
+  photos              jsonb not null default '[]'::jsonb,
+  -- active | fulfilled. Expiry is derived from expires_at, not stored, so a
+  -- stale row can never look active just because a cron job didn't run.
+  status              text not null default 'active',
+  expires_at          timestamptz not null default (now() + interval '30 days'),
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now()
+);
+
+-- One row per (requester, responder, request): responding twice reuses the
+-- first row instead of piling up duplicates.
+create table if not exists wanted_request_responses (
+  id             text primary key,
+  request_id     text not null references wanted_requests(id) on delete cascade,
+  responder_id   text not null references users(id) on delete cascade,
+  conversation_id text not null default '',
+  created_at     timestamptz not null default now()
+);
+
 create index if not exists idx_listings_seller_id on listings (seller_id);
 create index if not exists idx_listings_category on listings (category);
 create index if not exists idx_listings_status on listings (status);
@@ -169,4 +199,12 @@ create index if not exists idx_offers_buyer_id on offers (buyer_id);
 create index if not exists idx_offers_status on offers (status);
 -- Composite index for the common "does buyer have a pending offer on this listing?" check.
 create index if not exists idx_offers_listing_buyer_status on offers (listing_id, buyer_id, status);
+-- Feed query: active requests in a category, newest first.
+create index if not exists idx_wanted_requests_feed on wanted_requests (status, category, created_at desc);
+create index if not exists idx_wanted_requests_user_id on wanted_requests (user_id);
+create index if not exists idx_wanted_requests_expires_at on wanted_requests (expires_at);
+-- Response dedupe + "how many people responded" badge lookups.
+create unique index if not exists idx_wanted_response_pair
+  on wanted_request_responses (request_id, responder_id);
+create index if not exists idx_wanted_response_request_id on wanted_request_responses (request_id);
 

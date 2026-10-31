@@ -109,6 +109,32 @@ class OfferCreate(BaseModel):
     price: float = Field(gt=0)
 
 
+class WantedRequestCreate(BaseModel):
+    """A "Looking For" post. Kept separate from Listing on purpose: a request
+    has no price/condition and carries a budget range and an expiry instead."""
+
+    title: str = Field(min_length=3, max_length=120)
+    category: str = Field(min_length=1, max_length=40)
+    description: str = Field(min_length=1, max_length=2000)
+    budget_min: float | None = Field(default=None, ge=0)
+    budget_max: float | None = Field(default=None, ge=0)
+    preferred_location: str = Field(default="", max_length=120)
+    photos: list[str] = []
+    expires_at: datetime | None = None
+
+
+class WantedRequestUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=3, max_length=120)
+    category: str | None = Field(default=None, min_length=1, max_length=40)
+    description: str | None = Field(default=None, min_length=1, max_length=2000)
+    budget_min: float | None = Field(default=None, ge=0)
+    budget_max: float | None = Field(default=None, ge=0)
+    preferred_location: str | None = Field(default=None, max_length=120)
+    photos: list[str] | None = None
+    expires_at: datetime | None = None
+    status: str | None = None
+
+
 class NotificationCreate(BaseModel):
     text: str
     listing_id: str = ""

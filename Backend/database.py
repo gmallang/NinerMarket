@@ -19,6 +19,8 @@ reports = {}
 offers = {}
 push_subscriptions = {}
 saved = {}  # user_id -> set of listing_ids
+wanted_requests = {}  # request_id -> WantedRequest
+wanted_request_responses = {}  # request_id -> list of response dicts
 
 if SUPABASE_URL and SUPABASE_KEY:
     from supabase import create_client
@@ -32,4 +34,4 @@ else:
         )
     from seed import seed_dev_store
 
-    seed_dev_store(users, listings, ratings, threads, notifications)
+    seed_dev_store(users, listings, ratings, threads, notifications, wanted_requests)

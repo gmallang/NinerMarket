@@ -1,12 +1,13 @@
 import { create } from "zustand";
 import type { Conversation, Message } from "@/data/conversations";
 import { api, clearToken } from "@/lib/api";
+import type { ListParams } from "@/lib/api";
 import { avatarUrl } from "@/lib/avatar";
 import { fromDto } from "@/lib/listings";
 import { broadcastTyping, subscribeInbox, subscribeListings } from "@/lib/realtime";
 import { enablePush, getExistingPushSubscription } from "@/lib/push";
 import { clearUser, loadUser, saveUser } from "@/lib/user";
-import type { CurrentUser, Listing, NotificationDto } from "@/lib/types";
+import type { CurrentUser, Listing, NotificationDto, WantedRequestDto } from "@/lib/types";
 
 /**
  * Outcome of the Web Push opt-in so the UI can tell the user *why* it failed:
@@ -138,6 +139,7 @@ interface MarketState {
   loadingMore: boolean;
   hasMoreListings: boolean;
   listingsError: string | null;
+  listingsTotal?: number;
   savedItems: Set<string>;
   convs: Conversation[];
   threadsLoading: boolean;
@@ -157,7 +159,7 @@ interface MarketState {
   sendTypingSignal: (isTyping: boolean) => void;
   updateProfile: (year: string, payments: string[]) => Promise<void>;
   refreshProfile: () => Promise<void>;
-  loadListings: (silent?: boolean, q?: string) => void;
+  loadListings: (silent?: boolean, q?: string, filters?: ListParams) => void;
   loadMoreListings: () => void;
   addListing: (listing: Listing) => void;
   updateListing: (listing: Listing) => void;
@@ -165,6 +167,14 @@ interface MarketState {
   openSellForm: () => void;
   openEditListing: (listing: Listing) => void;
   closeSellForm: () => void;
+  requestModal: { mode: "create" } | { mode: "edit"; request: WantedRequestDto } | null;
+  openRequestForm: () => void;
+  openEditRequest: (request: WantedRequestDto) => void;
+  closeRequestForm: () => void;
+  /** Bumped whenever a request is created/edited/removed, so feeds refetch. */
+  requestsVersion: number;
+  markRequestsChanged: () => void;
+  respondToRequest: (request: WantedRequestDto, draft?: string) => Promise<void>;
   toggleSave: (id: string) => void;
   isSaved: (id: string) => boolean;
   loadSaved: () => Promise<void>;
@@ -203,6 +213,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
   loadingMore: false,
   hasMoreListings: false,
   listingsError: null,
+  listingsTotal: undefined,
   savedItems: loadSavedLocal(),
   convs: loadThreadsCache(),
   threadsLoading: false,
@@ -215,6 +226,8 @@ export const useMarketStore = create<MarketState>((set, get) => {
   messagesOpen: false,
   listingOverlayId: null,
   sellModal: null,
+  requestModal: null,
+  requestsVersion: 0,
 
   signIn: (user) => {
     set({ user });
@@ -391,29 +404,42 @@ export const useMarketStore = create<MarketState>((set, get) => {
     }
   },
 
-  loadListings: (silent?: boolean, q?: string) => {
+  loadListings: (silent?: boolean, q?: string, filters?: ListParams) => {
     if (!get().user) return;
     if (!silent) set({ loading: true });
-    const params = {
-      limit: LISTINGS_PAGE_SIZE,
-      offset: 0,
+    const limit = filters?.limit ?? LISTINGS_PAGE_SIZE;
+    const offset = filters?.offset ?? 0;
+    const params: ListParams = {
+      limit,
+      offset,
       ...(q?.trim() ? { q: q.trim() } : {}),
+      ...(filters?.category && filters.category !== "all" ? { category: filters.category } : {}),
+      ...(filters?.min_price != null ? { min_price: filters.min_price } : {}),
+      ...(filters?.max_price != null ? { max_price: filters.max_price } : {}),
+      ...(filters?.condition ? { condition: filters.condition } : {}),
+      ...(filters?.location && filters.location !== "all" ? { location: filters.location } : {}),
+      ...(filters?.sort ? { sort: filters.sort } : {}),
+      ...(filters?.status ? { status: filters.status } : {}),
     };
     return api
       .listListings(params)
-      .then((dtos) => {
-        listingsOffset = dtos.length;
+      .then(({ items, total }) => {
+        listingsOffset = offset + items.length;
         set({
-          listings: dtos.map(fromDto),
+          listings: items.map(fromDto),
           loading: false,
+          loadingMore: false,
           listingsError: null,
-          hasMoreListings: dtos.length === LISTINGS_PAGE_SIZE,
+          // Prefer the server's total: a full last page would otherwise look
+          // like there is another page after it.
+          hasMoreListings: total != null ? offset + items.length < total : items.length === limit,
+          listingsTotal: total,
         });
       })
       .catch((err) => {
         if (silent) return;
         const message = err instanceof Error ? err.message : "Failed to load listings";
-        set({ loading: false, listingsError: message });
+        set({ loading: false, loadingMore: false, listingsError: message });
       });
   },
 
@@ -423,16 +449,16 @@ export const useMarketStore = create<MarketState>((set, get) => {
     set({ loadingMore: true });
     return api
       .listListings({ limit: LISTINGS_PAGE_SIZE, offset: listingsOffset })
-      .then((dtos) => {
-        listingsOffset += dtos.length;
+      .then(({ items, total }) => {
+        listingsOffset += items.length;
         set((state) => {
-          // Realtime may have already prepended some of these — dedupe by id.
           const seen = new Set(state.listings.map((l) => l.id));
-          const fresh = dtos.map(fromDto).filter((l) => !seen.has(l.id));
+          const fresh = items.map(fromDto).filter((l) => !seen.has(l.id));
           return {
             listings: [...state.listings, ...fresh],
             loadingMore: false,
-            hasMoreListings: dtos.length === LISTINGS_PAGE_SIZE,
+            hasMoreListings: items.length === LISTINGS_PAGE_SIZE,
+            listingsTotal: total,
           };
         });
       })
@@ -451,6 +477,36 @@ export const useMarketStore = create<MarketState>((set, get) => {
   openEditListing: (listing) => set({ sellModal: { mode: "edit", listing } }),
 
   closeSellForm: () => set({ sellModal: null }),
+
+  openRequestForm: () => set({ requestModal: { mode: "create" } }),
+
+  openEditRequest: (request) => set({ requestModal: { mode: "edit", request } }),
+
+  closeRequestForm: () => set({ requestModal: null }),
+
+  markRequestsChanged: () => set((state) => ({ requestsVersion: state.requestsVersion + 1 })),
+
+  respondToRequest: async (request, draft) => {
+    const { user } = get();
+    if (!user || !request.requester) return;
+    // Record the response + notify the requester, then land in the existing
+    // messaging flow with a draft that names the request, so the conversation
+    // is clearly about it without the app sending anything on the user's
+    // behalf.
+    try {
+      await api.respondToRequest(request.id);
+    } catch {
+      // Losing the bookkeeping row shouldn't block the conversation.
+    }
+    get().openMessageOverlayWithBuyer(
+      `request:${request.id}`,
+      request.requester.id,
+      request.requester.display_name,
+    );
+    get().setInputText(
+      draft ?? `Hi ${request.requester.display_name.split(" ")[0]} — I saw your request for "${request.title}".`,
+    );
+  },
 
   toggleSave: (id) => {
     const user = get().user;

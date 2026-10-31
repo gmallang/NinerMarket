@@ -65,6 +65,9 @@ def list_listings(
     max_price: float | None = Query(default=None, ge=0),
     status: str | None = Query(default=None),
     q: str | None = Query(default=None, max_length=120),
+    condition: str | None = Query(default=None),
+    location: str | None = Query(default=None),
+    sort: str = Query(default="recent"),
     limit: int = Query(default=60, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ):
@@ -90,8 +93,8 @@ def list_listings(
         return needle in haystack
 
     if db:
-        query = db.table("listings").select("*")
-        if category:
+        query = db.table("listings").select("*", count="exact")
+        if category and category != "all":
             query = query.eq("category", category)
         if min_price is not None:
             query = query.gte("price", min_price)
@@ -99,21 +102,30 @@ def list_listings(
             query = query.lte("price", max_price)
         if status:
             query = query.eq("status", status)
+        else:
+            query = query.eq("status", "active")
+        if condition and condition.strip():
+            conds = [c.strip() for c in condition.split(",") if c.strip()]
+            if conds:
+                query = query.in_("condition", conds)
+        if location and location.strip():
+            query = query.ilike("pickup_location", f"%{location.strip()}%")
         if q and q.strip():
             needle = q.strip()
-            # Match across name and description (and pickup location) with
-            # two OR'd ilike filters — PostgREST can't OR across columns
-            # without the or() helper, so build it explicitly.
             or_parts = [
                 f"name.ilike.*{needle}*",
                 f"description.ilike.*{needle}*",
                 f"pickup_location.ilike.*{needle}*",
             ]
             query = query.or_(",".join(or_parts))
-        rows = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute().data
-
-        if q and q.strip():
-            rows = [r for r in rows if _match_search(r)]
+        if sort == "price-asc":
+            query = query.order("price")
+        elif sort == "price-desc":
+            query = query.order("price", desc=True)
+        else:
+            query = query.order("created_at", desc=True)
+        res = query.range(offset, offset + limit - 1).execute()
+        rows = res.data or []
 
         seller_ids = {r.get("seller_id") for r in rows if r.get("seller_id")}
         sellers = {}
@@ -122,10 +134,12 @@ def list_listings(
             sellers = {s["id"]: s for s in sres.data}
         for r in rows:
             r["seller"] = sellers.get(r.get("seller_id"))
+        total = getattr(res, "count", None)
+        response.headers["X-Total-Count"] = str(total if total is not None else len(rows))
         return rows
 
-    results = listings.values()
-    if category:
+    results = list(listings.values())
+    if category and category != "all":
         results = [l for l in results if l.category == category]
     if min_price is not None:
         results = [l for l in results if l.price >= min_price]
@@ -133,8 +147,24 @@ def list_listings(
         results = [l for l in results if l.price <= max_price]
     if status:
         results = [l for l in results if l.status == status]
+    else:
+        results = [l for l in results if l.status == "active"]
+    if condition and condition.strip():
+        conds = [c.strip() for c in condition.split(",") if c.strip()]
+        if conds:
+            results = [l for l in results if l.condition in conds]
+    if location and location.strip():
+        loc = location.strip().lower()
+        results = [l for l in results if loc in str(getattr(l, "campus", "") or getattr(l, "pickup_location", "") or "").lower()]
     results = [l for l in results if _match_search(l.model_dump(mode="json"))]
-    results = sorted(results, key=lambda l: l.created_at, reverse=True)
+    if sort == "price-asc":
+        results = sorted(results, key=lambda l: l.price)
+    elif sort == "price-desc":
+        results = sorted(results, key=lambda l: l.price, reverse=True)
+    else:
+        results = sorted(results, key=lambda l: l.created_at, reverse=True)
+    total = len(results)
+    response.headers["X-Total-Count"] = str(total)
     return [_with_seller(l) for l in results[offset : offset + limit]]
 
 
@@ -174,6 +204,16 @@ def create_listing(listing: Listing, user_id: str = Depends(require_user)):
         )
 
     broadcast("listings", "listing_changed", {"id": listing.id})
+
+    # Looking For matching: a new listing can be exactly what someone asked
+    # for. Best-effort — a matcher failure must never fail the listing.
+    if not reasons:
+        try:
+            from routes.wanted_requests import notify_request_matches
+
+            notify_request_matches(listing.model_dump(mode="json"), listing.seller_id)
+        except Exception:
+            pass
     return result
 
 

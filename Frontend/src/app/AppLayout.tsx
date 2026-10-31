@@ -6,8 +6,6 @@ import {
   Plus,
   LogOut,
   UserRound,
-  ChevronRight,
-  ChevronDown,
   Heart,
   ShoppingBag,
   Bell,
@@ -15,15 +13,17 @@ import {
   X,
   Home,
   CheckCircle2,
+  Megaphone,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import ninerLogo from "@/assets/NinerMarket.png";
 import { avatarUrl } from "@/lib/avatar";
 import { useMarketStore } from "@/lib/store";
-import { CATEGORIES, CONDITIONS } from "@/data/categories";
+import { CONDITIONS } from "@/data/categories";
 import { LOCATION_GROUPS } from "@/data/locations";
 import { Modal } from "@/components/shared/Modal";
 import { SellForm } from "@/features/sell/SellForm";
+import { RequestForm } from "@/components/requests/RequestForm";
 import { MessagesOverlay } from "@/features/messaging/MessagesOverlay";
 import { ListingOverlay } from "@/features/listings/ListingOverlay";
 import { formatRelativeTime } from "@/lib/format";
@@ -70,20 +70,20 @@ export function AppLayout() {
   const openListingOverlay = useMarketStore((s) => s.openListingOverlay);
   const openMessageOverlayWithBuyer = useMarketStore((s) => s.openMessageOverlayWithBuyer);
   const logout = useMarketStore((s) => s.logout);
-  const loadListings = useMarketStore((s) => s.loadListings);
   const refreshProfile = useMarketStore((s) => s.refreshProfile);
   const addListing = useMarketStore((s) => s.addListing);
   const updateListing = useMarketStore((s) => s.updateListing);
   const sellModal = useMarketStore((s) => s.sellModal);
   const openSellForm = useMarketStore((s) => s.openSellForm);
   const closeSellForm = useMarketStore((s) => s.closeSellForm);
+  const requestModal = useMarketStore((s) => s.requestModal);
+  const closeRequestForm = useMarketStore((s) => s.closeRequestForm);
   const messagesOpen = useMarketStore((s) => s.messagesOpen);
   const openMessagesOverlay = useMarketStore((s) => s.openMessagesOverlay);
   const loadSaved = useMarketStore((s) => s.loadSaved);
 
   const [q, setQ] = useState(params.get("q") ?? "");
   const [prevPathname, setPrevPathname] = useState(pathname);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [minPriceInput, setMinPriceInput] = useState(params.get("minPrice") ?? "");
   const [maxPriceInput, setMaxPriceInput] = useState(params.get("maxPrice") ?? "");
@@ -102,10 +102,8 @@ export function AppLayout() {
     if (pathname !== "/") setQ("");
   }
 
-  useEffect(() => {
-    void loadListings();
-  }, [loadListings]);
-
+  // Listings are loaded by HomePage, which owns the URL-driven filters; a
+  // fetch here would race it and overwrite the filtered page with page one.
   useEffect(() => {
     void refreshProfile();
   }, [refreshProfile]);
@@ -143,6 +141,8 @@ export function AppLayout() {
       const next = new URLSearchParams(params);
       next.delete("saved");
       next.delete("mine");
+      // A changed search always starts from the first page of results.
+      next.delete("page");
       if (q.trim()) next.set("q", q.trim());
       else next.delete("q");
       navigate(`/?${next.toString()}`, { replace: true });
@@ -154,6 +154,7 @@ export function AppLayout() {
     const next = new URLSearchParams(params);
     next.delete("saved");
     next.delete("mine");
+    next.delete("page");
     if (q.trim()) next.set("q", q.trim());
     else next.delete("q");
     navigate(`/?${next.toString()}`);
@@ -163,6 +164,8 @@ export function AppLayout() {
     const next = new URLSearchParams(pathname === "/" ? params : undefined);
     if (value) next.set(key, value);
     else next.delete(key);
+    // Changing a filter invalidates the current page number.
+    next.delete("page");
     navigate(`/?${next.toString()}`);
   };
 
@@ -468,6 +471,12 @@ export function AppLayout() {
                         <ShoppingBag size={14} /> Your Listings
                       </DropdownMenu.Item>
                       <DropdownMenu.Item
+                        className={s.profileMenuItem}
+                        onSelect={() => navigate("/requests/mine")}
+                      >
+                        <Megaphone size={14} /> My Requests
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
                         className={`${s.profileMenuItem} ${s.profileMenuItemDanger}`}
                         onSelect={handleLogout}
                       >
@@ -490,57 +499,19 @@ export function AppLayout() {
             aria-hidden="true"
           />
         )}
-        <aside className={`${s.sidebar} ${mobileSidebarOpen ? s.sidebarOpen : ""}`}>
+        <aside className={`${s.sidebar} ${mobileSidebarOpen ? s.sidebarOpen : ""}`} aria-label="Filters">
           <div className={s.sidebarHeader}>
-            <h3 className={s.sidebarTitle}>Browse</h3>
+            <h3 className={s.sidebarTitle}>Filters</h3>
             <button
               type="button"
               className={s.sidebarClose}
               onClick={() => setMobileSidebarOpen(false)}
-              aria-label="Close menu"
+              aria-label="Close filters"
             >
               <X size={16} />
             </button>
           </div>
-          <div className={s.sidebarInner}>
-            <div className={s.filtersSection}>
-              <button
-                type="button"
-                className={s.filtersHeader}
-                onClick={() => setFiltersOpen((open) => !open)}
-                aria-expanded={filtersOpen}
-              >
-                <h3 className={s.filtersTitle}>Filters</h3>
-                <ChevronDown
-                  size={16}
-                  className={`${s.filtersChevron} ${filtersOpen ? s.filtersChevronOpen : ""}`}
-                />
-              </button>
-
-              {filtersOpen && filterFields}
-            </div>
-
-            <hr className={s.filtersDivider} />
-
-            <nav className={s.catNav}>
-              {CATEGORIES.map((cat) => {
-                const Icon = cat.icon;
-                const active = (params.get("category") ?? "all") === cat.id;
-                return (
-                  <Link
-                    key={cat.id}
-                    to={cat.id === "all" ? "/" : `/?category=${cat.id}`}
-                    onClick={() => setMobileSidebarOpen(false)}
-                    className={`${s.catBtn} ${active ? s.catBtnActive : ""}`}
-                  >
-                    <Icon size={20} className={active ? s.catIconActive : s.catIcon} />
-                    {cat.label}
-                    {active && <ChevronRight size={13} className={s.catChevron} />}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
+          <div className={s.sidebarInner}>{filterFields}</div>
         </aside>
 
         <main className={s.content}>
@@ -638,6 +609,19 @@ export function AppLayout() {
           Listing posted!
         </div>
       )}
+
+      <Modal
+        open={!!requestModal}
+        onOpenChange={(open) => !open && closeRequestForm()}
+        ariaLabel={requestModal?.mode === "edit" ? "Edit request" : "Post a request"}
+        className={s.sellDialog}
+      >
+        <RequestForm
+          key={requestModal?.mode === "edit" ? requestModal.request.id : "create"}
+          request={requestModal?.mode === "edit" ? requestModal.request : undefined}
+          onClose={closeRequestForm}
+        />
+      </Modal>
 
       <MessagesOverlay />
       <ListingOverlay />

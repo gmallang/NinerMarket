@@ -19,6 +19,12 @@ const SetupPage = lazy(() => import("@/pages/SetupPage").then((m) => ({ default:
 const UserProfilePage = lazy(() =>
   import("@/pages/UserProfilePage").then((m) => ({ default: m.UserProfilePage }))
 );
+const RequestsPage = lazy(() =>
+  import("@/pages/RequestsPage").then((m) => ({ default: m.RequestsPage }))
+);
+const MyRequestsPage = lazy(() =>
+  import("@/pages/MyRequestsPage").then((m) => ({ default: m.MyRequestsPage }))
+);
 
 const fallback = (
   <div
@@ -61,6 +67,8 @@ export const router = createBrowserRouter([
               { path: "/", element: <HomePage /> },
               { path: "/listing/:id", element: withSuspense(<ListingDetailPage />) },
               { path: "/user/:id", element: withSuspense(<UserProfilePage />) },
+              { path: "/requests", element: withSuspense(<RequestsPage />) },
+              { path: "/requests/mine", element: withSuspense(<MyRequestsPage />) },
             ],
           },
         ],

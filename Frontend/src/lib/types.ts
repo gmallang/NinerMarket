@@ -106,6 +106,36 @@ export interface CurrentUser {
   has_password?: boolean;
 }
 
+export type WantedRequestStatus = "active" | "fulfilled" | "expired";
+
+export interface WantedRequestDto {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  category: string;
+  budget_min: number | null;
+  budget_max: number | null;
+  preferred_location: string;
+  photos: string[];
+  status: WantedRequestStatus;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+  requester: Seller | null;
+  response_count: number;
+}
+
+export interface NewWantedRequest {
+  title: string;
+  category: string;
+  description: string;
+  budget_min?: number | null;
+  budget_max?: number | null;
+  preferred_location?: string;
+  expires_at?: string | null;
+}
+
 export interface NotificationDto {
   id: string;
   user_id: string;

@@ -3,7 +3,18 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import users, listings, ratings, notifications, messaging, photos, offers, push, saved
+from routes import (
+    users,
+    listings,
+    ratings,
+    notifications,
+    messaging,
+    photos,
+    offers,
+    push,
+    saved,
+    wanted_requests,
+)
 
 app = FastAPI(title="NinerMarket API")
 
@@ -14,6 +25,10 @@ app.add_middleware(
     allow_origins=_allowed or ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    # The listings endpoint reports its unpaginated match count here; without
+    # exposing it the browser can't read the header cross-origin and the
+    # "Showing X–Y of Z" footer falls back to guesses.
+    expose_headers=["X-Total-Count"],
 )
 
 app.include_router(users.router)
@@ -25,3 +40,4 @@ app.include_router(photos.router)
 app.include_router(offers.router)
 app.include_router(push.router)
 app.include_router(saved.router)
+app.include_router(wanted_requests.router)

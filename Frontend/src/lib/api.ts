@@ -3,10 +3,12 @@ import type {
   ListingDto,
   NewListing,
   NewRating,
+  NewWantedRequest,
   NotificationDto,
   Offer,
   Rating,
   UserDto,
+  WantedRequestDto,
 } from "./types";
 import type { Conversation } from "@/data/conversations";
 
@@ -49,7 +51,7 @@ function isAuthEndpoint(path: string): boolean {
   return AUTH_ENDPOINTS.some((ep) => base === ep || base.startsWith(`${ep}/`));
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function requestRaw(path: string, init?: RequestInit): Promise<Response> {
   const token = getToken();
   const res = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
@@ -77,6 +79,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw new Error(detail);
   }
+  return res;
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await requestRaw(path, init);
   return (await res.json()) as T;
 }
 
@@ -86,22 +93,39 @@ export interface ListParams {
   max_price?: number;
   status?: string;
   q?: string;
+  condition?: string;
+  location?: string;
+  sort?: string;
   limit?: number;
   offset?: number;
 }
 
+export interface ListingPage {
+  items: ListingDto[];
+  /** Total rows matching the query, from the backend's X-Total-Count header. */
+  total?: number;
+}
+
 export const api = {
-  listListings: (params: ListParams = {}) => {
+  listListings: async (params: ListParams = {}): Promise<ListingPage> => {
     const q = new URLSearchParams();
     if (params.category) q.set("category", params.category);
     if (params.min_price != null) q.set("min_price", String(params.min_price));
     if (params.max_price != null) q.set("max_price", String(params.max_price));
     if (params.status) q.set("status", params.status);
     if (params.q?.trim()) q.set("q", params.q.trim());
+    if (params.condition?.trim()) q.set("condition", params.condition.trim());
+    if (params.location?.trim()) q.set("location", params.location.trim());
+    if (params.sort) q.set("sort", params.sort);
     if (params.limit != null) q.set("limit", String(params.limit));
     if (params.offset != null) q.set("offset", String(params.offset));
     const qs = q.toString();
-    return request<ListingDto[]>(`/listings${qs ? `?${qs}` : ""}`);
+    const res = await requestRaw(`/listings${qs ? `?${qs}` : ""}`);
+    const total = res.headers.get("X-Total-Count");
+    return {
+      items: (await res.json()) as ListingDto[],
+      total: total != null && total !== "" ? Number(total) : undefined,
+    };
   },
 
   getListing: (id: string) => request<ListingDto>(`/listings/${id}`),
@@ -214,6 +238,58 @@ export const api = {
 
   getUserListings: (id: string, status = "active") =>
     request<ListingDto[]>(`/users/${id}/listings?status=${status}`),
+
+  // ── Looking For requests ────────────────────────────────────────────────
+  listRequests: async (
+    params: {
+      category?: string;
+      q?: string;
+      status?: "active" | "fulfilled" | "expired" | "all";
+      limit?: number;
+      offset?: number;
+    } = {},
+  ): Promise<{ items: WantedRequestDto[]; total?: number }> => {
+    const q = new URLSearchParams();
+    if (params.category && params.category !== "all") q.set("category", params.category);
+    if (params.q?.trim()) q.set("q", params.q.trim());
+    if (params.status) q.set("status", params.status);
+    if (params.limit != null) q.set("limit", String(params.limit));
+    if (params.offset != null) q.set("offset", String(params.offset));
+    const qs = q.toString();
+    const res = await requestRaw(`/requests${qs ? `?${qs}` : ""}`);
+    const total = res.headers.get("X-Total-Count");
+    return {
+      items: (await res.json()) as WantedRequestDto[],
+      total: total != null && total !== "" ? Number(total) : undefined,
+    };
+  },
+
+  getRequest: (id: string) => request<WantedRequestDto>(`/requests/${id}`),
+
+  getUserRequests: (userId: string, status: "active" | "fulfilled" | "expired" | "all" = "all") =>
+    request<WantedRequestDto[]>(`/users/${userId}/requests?status=${status}`),
+
+  createRequest: (data: NewWantedRequest) =>
+    request<WantedRequestDto>("/requests", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateRequest: (
+    id: string,
+    data: Partial<NewWantedRequest> & { status?: "active" | "fulfilled" },
+  ) =>
+    request<WantedRequestDto>(`/requests/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  deleteRequest: (id: string) => request<{ ok: boolean }>(`/requests/${id}`, { method: "DELETE" }),
+
+  respondToRequest: (id: string) =>
+    request<{ id: string; request_id: string; responder_id: string }>(`/requests/${id}/respond`, {
+      method: "POST",
+    }),
 
   getRatings: (rateeId: string) => request<Rating[]>(`/ratings/${rateeId}`),
 

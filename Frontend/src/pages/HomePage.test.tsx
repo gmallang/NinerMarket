@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { Listing } from "@/lib/types";
 import { useMarketStore } from "@/lib/store";
@@ -65,9 +65,12 @@ describe("HomePage", () => {
 
   it("renders the listing grid", () => {
     renderWithRouter(<HomePage />);
-    expect(screen.getByRole("heading", { name: "All Categories" })).toBeInTheDocument();
-    expect(screen.getByText("Organic Chemistry (Clayden) 2nd Ed.")).toBeInTheDocument();
-    expect(screen.getByText('MacBook Pro 14" M2 (2023)')).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "All Listings" })).toBeInTheDocument();
+    // Recently Listed repeats the newest cards above the grid, so scope the
+    // assertions to the marketplace grid itself.
+    const grid = within(screen.getByRole("region", { name: "Listings" }));
+    expect(grid.getByText("Organic Chemistry (Clayden) 2nd Ed.")).toBeInTheDocument();
+    expect(grid.getByText('MacBook Pro 14" M2 (2023)')).toBeInTheDocument();
   });
 
   it("shows the loading state while listings are pending", () => {
@@ -112,8 +115,9 @@ describe("HomePage", () => {
   });
 
   it("sorts by most recent by default, newest first", () => {
-    const { container } = renderWithRouter(<HomePage />);
-    const titles = Array.from(container.querySelectorAll('[class*="cardTitle"]')).map(
+    renderWithRouter(<HomePage />);
+    const grid = screen.getByRole("region", { name: "Listings" });
+    const titles = Array.from(grid.querySelectorAll('[class*="cardTitle"]')).map(
       (el) => el.textContent
     );
     expect(titles).toEqual([

@@ -25,11 +25,26 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _listing_seller_id(listing_id: str) -> str | None:
+REQUEST_THREAD_PREFIX = "request:"
+
+
+def _counterpart_id(context_id: str) -> str | None:
+    """The other side of a thread. Normally that's the seller of the listing
+    the thread is about; for a "Looking For" conversation the thread is keyed
+    `request:<id>` and the other side is whoever posted the request."""
+    if context_id.startswith(REQUEST_THREAD_PREFIX):
+        request_id = context_id[len(REQUEST_THREAD_PREFIX) :]
+        if db:
+            res = db.table("wanted_requests").select("user_id").eq("id", request_id).execute()
+            return res.data[0]["user_id"] if res.data else None
+        from database import wanted_requests
+
+        row = wanted_requests.get(request_id)
+        return row.get("user_id") if row else None
     if db:
-        res = db.table("listings").select("seller_id").eq("id", listing_id).execute()
+        res = db.table("listings").select("seller_id").eq("id", context_id).execute()
         return res.data[0]["seller_id"] if res.data else None
-    listing = listings.get(listing_id)
+    listing = listings.get(context_id)
     if not listing:
         return None
     return listing.seller_id if hasattr(listing, "seller_id") else listing.get("seller_id")
@@ -49,7 +64,7 @@ def _is_participant(thread_row: dict, user_id: str) -> bool:
     to it, even though the row itself is only ever stored once."""
     if thread_row.get("user_id") == user_id:
         return True
-    return _listing_seller_id(thread_row.get("listingId", "")) == user_id
+    return _counterpart_id(thread_row.get("listingId", "")) == user_id
 
 
 # ── Per-participant read cursors ────────────────────────────────────────────
@@ -165,7 +180,7 @@ def _viewer_relative(row: dict, msgs: list[dict], viewer_id: str) -> dict:
         row["other_user_id"] = other_id
         msgs = [{**m, "sent": not m.get("sent", True)} for m in msgs]
     else:
-        other_id = _listing_seller_id(row.get("listingId", ""))
+        other_id = _counterpart_id(row.get("listingId", ""))
         row["other_user_id"] = other_id
     row["messages"] = msgs
     row["unread"] = _unread_for(int(row["id"]), viewer_id)
@@ -316,9 +331,18 @@ def list_threads(user_id: str, caller_id: str = Depends(require_user)):
             row["id"]
             for row in db.table("listings").select("id").eq("seller_id", user_id).execute().data
         ]
+        # Threads about a "Looking For" request are keyed `request:<id>`, and
+        # the requester is a participant even though they own no listing.
+        my_request_ids = [
+            f"request:{row['id']}"
+            for row in db.table("wanted_requests").select("id").eq("user_id", user_id).execute().data
+        ]
         or_filter = f"user_id.eq.{user_id}"
         if my_listing_ids:
             or_filter += f",listingId.in.({','.join(my_listing_ids)})"
+        if my_request_ids:
+            quoted = ",".join(f'"{key}"' for key in my_request_ids)
+            or_filter += f",listingId.in.({quoted})"
         rows = (
             db.table("threads")
             .select("*")
@@ -351,13 +375,26 @@ def list_threads(user_id: str, caller_id: str = Depends(require_user)):
         # the whole inbox instead of once per thread (eliminates the other
         # N+1 pattern: seller/display-name lookups and unread-cursor checks
         # that used to run 3-4 queries per thread).
-        listing_ids = list({row["listingId"] for row in rows})
+        context_ids = {row["listingId"] for row in rows}
+        listing_ids = [cid for cid in context_ids if not cid.startswith(REQUEST_THREAD_PREFIX)]
+        request_ids = [
+            cid[len(REQUEST_THREAD_PREFIX) :]
+            for cid in context_ids
+            if cid.startswith(REQUEST_THREAD_PREFIX)
+        ]
         sellers = (
             db.table("listings").select("id,seller_id").in_("id", listing_ids).execute().data
             if listing_ids
             else []
         )
         seller_by_listing = {r["id"]: r["seller_id"] for r in sellers}
+        if request_ids:
+            requesters = (
+                db.table("wanted_requests").select("id,user_id").in_("id", request_ids).execute().data
+            )
+            seller_by_listing.update(
+                {f"{REQUEST_THREAD_PREFIX}{r['id']}": r["user_id"] for r in requesters}
+            )
 
         opener_ids = list({row["user_id"] for row in rows if row["user_id"] != user_id})
         names = (
@@ -429,9 +466,9 @@ def open_thread(user_id: str, body: OpenThreadRequest, caller_id: str = Depends(
     `other_user_id` names the buyer, and the thread is keyed by their id
     instead so it lines up with one they might open themselves later."""
     _check_caller(user_id, caller_id)
-    seller_id = _listing_seller_id(body.listing_id)
+    seller_id = _counterpart_id(body.listing_id)
     if seller_id is None:
-        raise HTTPException(status_code=404, detail="Listing not found")
+        raise HTTPException(status_code=404, detail="Listing or request not found")
 
     if user_id == seller_id:
         if not body.other_user_id:
@@ -545,7 +582,7 @@ def send_thread_message(
         # instant it's read, whereas a separate notification had no way to
         # stay in sync with that and just piled up as noise.
         recipient_id = (
-            _listing_seller_id(thread_row["listingId"]) if sent_by_opener else thread_row["user_id"]
+            _counterpart_id(thread_row["listingId"]) if sent_by_opener else thread_row["user_id"]
         )
         _notify_new_message(recipient_id, user_id, msg["text"], thread_id)
         return _viewer_relative(thread_row, existing_msgs, user_id)
@@ -567,7 +604,7 @@ def send_thread_message(
     _advance_cursor(thread_id, user_id, msg["id"])
 
     recipient_id = (
-        _listing_seller_id(thread["listingId"]) if sent_by_opener else thread["user_id"]
+        _counterpart_id(thread["listingId"]) if sent_by_opener else thread["user_id"]
     )
     _notify_new_message(recipient_id, user_id, msg["text"], thread_id)
     return _viewer_relative(thread, thread["messages"], user_id)

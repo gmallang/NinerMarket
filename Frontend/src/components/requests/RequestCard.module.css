@@ -83,6 +83,10 @@
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  /* A long run with no spaces (a pasted URL, "aaaaaaaa...") has no break
+     point for line-clamp to wrap at, so it overflows the card instead of
+     clamping. Let the browser break mid-word as a last resort. */
+  overflow-wrap: anywhere;
 }
 
 .meta {
@@ -107,6 +111,16 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  /* Same unbroken-string problem as .description, but this one sits in a
+     flex row rather than a block of text, so there's no good place to wrap
+     to — truncate with an ellipsis instead. min-width: 0 overrides the flex
+     item's default auto min-width, which would otherwise ignore max-width
+     and overflow straight past the card anyway. */
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .footer {

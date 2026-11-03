@@ -51,6 +51,28 @@ function isAuthEndpoint(path: string): boolean {
   return AUTH_ENDPOINTS.some((ep) => base === ep || base.startsWith(`${ep}/`));
 }
 
+// FastAPI's validation errors (422s) send `detail` as an array of
+// {msg, loc, ...} objects rather than a string. Left unhandled, that array
+// gets JSON.stringify'd and shown to the user verbatim — pull out the
+// human-readable `msg` (and field name, when it's not just "body") instead.
+function formatErrorDetail(detail: unknown): string {
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    const messages = detail
+      .map((item) => {
+        if (!item || typeof item !== "object" || typeof (item as { msg?: unknown }).msg !== "string") {
+          return null;
+        }
+        const { msg, loc } = item as { msg: string; loc?: unknown };
+        const field = Array.isArray(loc) ? loc[loc.length - 1] : undefined;
+        return typeof field === "string" && field !== "body" ? `${field}: ${msg}` : msg;
+      })
+      .filter((m): m is string => Boolean(m));
+    if (messages.length > 0) return messages.join("; ");
+  }
+  return JSON.stringify(detail);
+}
+
 async function requestRaw(path: string, init?: RequestInit): Promise<Response> {
   const token = getToken();
   const res = await fetch(`${API_BASE_URL}${path}`, {
@@ -65,7 +87,7 @@ async function requestRaw(path: string, init?: RequestInit): Promise<Response> {
     try {
       const body = await res.json();
       if (body?.detail) {
-        detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail);
+        detail = formatErrorDetail(body.detail);
       }
     } catch {
       // ignore parse errors

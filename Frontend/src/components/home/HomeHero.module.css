@@ -101,9 +101,6 @@
   position: relative;
   min-height: 100%;
   overflow: hidden;
-  /* Own stacking context so the rounded clip is honoured by every engine -
-     Safari otherwise lets the absolutely positioned photo paint over it. */
-  isolation: isolate;
   min-width: 0;
   border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
   background: var(--color-muted);

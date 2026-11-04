@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
+import campusHero from "@/assets/campus-hero.png";
 import s from "./HomeHero.module.css";
 
 const CHIP_CATEGORIES = [
@@ -80,6 +81,13 @@ export function HomeHero() {
       </div>
 
       <div className={s.photoWrap}>
+        <img
+          className={s.photo}
+          src={campusHero}
+          alt="UNC Charlotte campus clock tower"
+          loading="eager"
+          decoding="async"
+        />
       </div>
     </section>
   );

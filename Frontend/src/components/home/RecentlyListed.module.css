@@ -17,6 +17,9 @@
 }
 
 .title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 1.2rem;
   font-weight: 800;
   color: var(--color-fg);
@@ -40,12 +43,24 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
 .grid > * {
   min-width: 0;
+}
+
+@media (max-width: 1280px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 900px) {

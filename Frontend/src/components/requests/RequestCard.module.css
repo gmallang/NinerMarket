@@ -86,6 +86,10 @@
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  /* A long run with no spaces (a pasted URL, "aaaaaaaa...") has no break point
+     for line-clamp to wrap at, so it overflows the card instead of clamping.
+     Let the browser break mid-word as a last resort. */
+  overflow-wrap: anywhere;
 }
 
 .meta {

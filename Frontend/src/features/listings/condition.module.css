@@ -24,6 +24,10 @@
 .condGood {
   background: var(--badge-good-bg);
   color: var(--badge-good-fg);
+  /* Every other condition badge is a saturated color that reads on its own
+     against a photo; white needs a border or it can vanish against a light
+     background the way the others can't. */
+  border: 1px solid var(--color-border);
 }
 .condFair {
   background: var(--badge-fair-bg);

@@ -16,10 +16,11 @@
   --color-primary-light: #006945;
   --color-primary-fg: #ffffff;
 
-  /* Warm gold accent used for the primary Sell CTA */
-  --color-gold: #e5b85a;
-  --color-gold-dark: #c99a3f;
-  --color-gold-fg: #1f2a22;
+  /* White pill used for CTAs that sit on a green surface (nav bar, hero,
+     dark CTA bands) — green-on-green would have no contrast there. */
+  --color-on-brand-bg: #ffffff;
+  --color-on-brand-bg-hover: #eef2ee;
+  --color-on-brand-fg: #005035;
 
   /* Surfaces */
   --color-bg: #f7f8f6;

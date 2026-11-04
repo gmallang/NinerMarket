@@ -22,6 +22,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Google OAuth's redirect-mode callback bounces the system
+                 browser back here via this custom scheme when signing in
+                 from the native app (see Backend/routes/users.py's
+                 google_callback and Frontend/src/main.tsx's appUrlOpen
+                 listener) — the app isn't a browser tab the backend can
+                 redirect a website URL to. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.ninermarket.app" android:host="auth" />
+            </intent-filter>
+
         </activity>
 
         <provider

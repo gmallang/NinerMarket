@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AccountSetup } from "@/features/setup/AccountSetup";
 import { useMarketStore } from "@/lib/store";
+import { SiteFooter } from "@/components/shared/SiteFooter";
 import s from "@/features/setup/setup.module.css";
 
 export function SetupPage() {
@@ -27,13 +28,16 @@ export function SetupPage() {
 
   return (
     <div className={s.setupPage}>
-      <AccountSetup
-        name={user?.display_name ?? ""}
-        onSave={handleSave}
-        onSkip={() => navigate("/", { replace: true })}
-        saving={saving}
-        error={error}
-      />
+      <div className={s.setupBody}>
+        <AccountSetup
+          name={user?.display_name ?? ""}
+          onSave={handleSave}
+          onSkip={() => navigate("/", { replace: true })}
+          saving={saving}
+          error={error}
+        />
+      </div>
+      <SiteFooter />
     </div>
   );
 }

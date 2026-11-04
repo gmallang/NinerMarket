@@ -54,7 +54,7 @@ export function HomePage() {
   const limitParam = Number(params.get("limit")) || 24;
   const viewMine = params.get("mine") === "1";
   // Memoized on the raw string, not re-split into a fresh array on every
-  // render — otherwise `filtered` below would recompute unconditionally
+  // render - otherwise `filtered` below would recompute unconditionally
   // since a new array reference never equals the previous one.
   const activeConditions = useMemo(
     () => conditionParam.split(",").filter(Boolean),
@@ -75,7 +75,7 @@ export function HomePage() {
 
   // The marketplace grid is server-paginated now, so it only holds the current
   // page of active listings. The "your listings" and "saved" views need their
-  // own complete sets — sold items included — so load those separately.
+  // own complete sets - sold items included - so load those separately.
   // Both caches are keyed by what they were fetched for, so switching views
   // never shows one user's listings under another's heading.
   const [owned, setOwned] = useState<{ userId: string; items: Listing[] } | null>(null);
@@ -271,7 +271,7 @@ export function HomePage() {
 
       {listingsError && (
         <div className={s.demoBanner}>
-          Couldn't load listings — {listingsError}
+          Couldn't load listings: {listingsError}
           <button className={s.retryBtn} onClick={() => void loadListings()}>
             Retry
           </button>

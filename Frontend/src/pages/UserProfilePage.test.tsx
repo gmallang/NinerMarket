@@ -131,6 +131,6 @@ describe("UserProfilePage", () => {
     expect(api.createRating).toHaveBeenCalledWith(
       expect.objectContaining({ rater_id: "u-me", ratee_id: "u-1", stars: 5, comment: "Superb!" })
     );
-    expect(await screen.findByText(/Thanks — your rating was submitted/)).toBeInTheDocument();
+    expect(await screen.findByText(/Thanks, your rating was submitted/)).toBeInTheDocument();
   });
 });

@@ -42,7 +42,7 @@ export function clearToken(): void {
   }
 }
 
-// Endpoints whose own failures return 401 by design (wrong password, etc.) —
+// Endpoints whose own failures return 401 by design (wrong password, etc.) -
 // a 401 from these must not be treated as "your saved session died".
 const AUTH_ENDPOINTS = ["/users/login", "/users/google", "/users/verify", "/users/resend"];
 
@@ -53,7 +53,7 @@ function isAuthEndpoint(path: string): boolean {
 
 // FastAPI's validation errors (422s) send `detail` as an array of
 // {msg, loc, ...} objects rather than a string. Left unhandled, that array
-// gets JSON.stringify'd and shown to the user verbatim — pull out the
+// gets JSON.stringify'd and shown to the user verbatim - pull out the
 // human-readable `msg` (and field name, when it's not just "body") instead.
 function formatErrorDetail(detail: unknown): string {
   if (typeof detail === "string") return detail;

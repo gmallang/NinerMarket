@@ -1,14 +1,20 @@
 /* ─────────────────────────────────────────────
-   setup.module.css — First-run account setup page
+   setup.module.css - First-run account setup page
    ───────────────────────────────────────────── */
 
 .setupPage {
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   padding: var(--space-4);
   background: linear-gradient(160deg, #0b2418 0%, #003c28 100%);
+}
+
+.setupBody {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .setupModal {

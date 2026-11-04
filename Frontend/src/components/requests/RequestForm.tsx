@@ -24,7 +24,7 @@ function toDateInput(iso: string | null | undefined): string {
 }
 
 /** Create/edit form for a "Looking For" request. Deliberately separate from
- * SellForm — a request has a budget range and an expiry, no price/condition. */
+ * SellForm - a request has a budget range and an expiry, no price/condition. */
 export function RequestForm({
   request,
   onClose,
@@ -121,7 +121,7 @@ export function RequestForm({
             className={f.formTextarea}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Size, model, condition — anything that helps someone help you."
+            placeholder="Size, model, condition, or anything that helps someone help you."
             rows={3}
             maxLength={2000}
             required

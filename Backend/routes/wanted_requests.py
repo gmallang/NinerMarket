@@ -1,4 +1,4 @@
-"""\"Looking For\" requests — the buy side of the marketplace.
+"""\"Looking For\" requests - the buy side of the marketplace.
 
 A wanted request is deliberately **not** a Listing: it has no price or
 condition, it carries a budget range, and it expires. Keeping the two models
@@ -123,7 +123,7 @@ def _requester_dict(user_id: str) -> dict | None:
 
 
 def _response_counts(request_ids: list[str]) -> dict[str, int]:
-    """One query for the whole page — no per-card N+1."""
+    """One query for the whole page - no per-card N+1."""
     if not request_ids:
         return {}
     if db:
@@ -311,7 +311,7 @@ def list_user_requests(
     caller_id: str = Depends(require_user),
 ):
     """The caller's own requests, every status included (that's what the My
-    Requests screen needs). Deliberately owner-only — the public feed is
+    Requests screen needs). Deliberately owner-only - the public feed is
     /requests."""
     if caller_id != user_id:
         raise HTTPException(status_code=403, detail="You can only view your own requests")
@@ -454,7 +454,7 @@ def delete_request(request_id: str, caller_id: str = Depends(require_user)):
 def respond_to_request(request_id: str, caller_id: str = Depends(require_user)):
     """Records that the caller reached out, and tells the requester.
 
-    The actual conversation lives in the existing messaging system — the
+    The actual conversation lives in the existing messaging system - the
     frontend opens a thread keyed by `request:<id>` so both sides can keep
     talking without a second inbox.
     """

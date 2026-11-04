@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
-   AppLayout.module.css — Marketplace shell
+   AppLayout.module.css - Marketplace shell
    Navbar, sidebar, body layout
    Colors: all via var() from main.css
    ───────────────────────────────────────────── */
@@ -66,9 +66,10 @@
 
 .logoText {
   font-family: var(--font-display);
-  font-size: 1.3rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  /* Same treatment as the wordmark in the home hero banner. */
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   line-height: 1;
   white-space: nowrap;
   color: var(--color-fg-inverse);
@@ -91,7 +92,7 @@
 }
 
 .searchWrap {
-  width: 420px;
+  width: clamp(180px, 32vw, 420px);
   max-width: 100%;
   justify-self: center;
   position: relative;
@@ -1045,39 +1046,15 @@
   min-width: 0;
 }
 
-/* ── Site footer (every page) ── */
-.siteFooter {
-  /* Above the scroll fade so the copyright never gets washed out. */
+/* ── Shared footer slot (every page) ── */
+.siteFooterSlot {
   position: relative;
   z-index: 700;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-card);
-}
-
-.siteFooterInner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  padding: var(--space-4) var(--space-6);
-  font-size: 0.8125rem;
-  color: var(--color-fg-muted);
-}
-
-.siteFooterLink {
-  color: var(--color-primary);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.siteFooterLink:hover {
-  text-decoration: underline;
 }
 
 /* The sidebar is fixed, so the footer starts where the content does. */
 @media (min-width: 1025px) {
-  .siteFooter {
+  .siteFooterSlot {
     margin-left: var(--sidebar-w);
     transition: margin-left 200ms var(--ease);
   }
@@ -1085,7 +1062,7 @@
 
 /* Keep the footer clear of the fixed bottom nav on small screens. */
 @media (max-width: 1024px) {
-  .siteFooter {
+  .siteFooterSlot {
     padding-bottom: calc(68px + env(safe-area-inset-bottom));
   }
 }

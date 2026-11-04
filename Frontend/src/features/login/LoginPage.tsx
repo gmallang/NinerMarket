@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { ShieldCheck, ShoppingBag, MapPin, X, ChevronDown, Eye, EyeOff } from "lucide-react";
 import ninerLogo from "@/assets/NinerMarket.png";
@@ -20,6 +19,7 @@ import {
 import { API_BASE_URL, api, getToken, setToken } from "@/lib/api";
 import { GoogleChooser, GoogleG, TermsModal, HelpModal } from "./AuthModals";
 import { Modal } from "@/components/shared/Modal";
+import { SiteFooter } from "@/components/shared/SiteFooter";
 import s from "./login.module.css";
 
 // ─── Login page ─────────────────────────────────────────────────────────────
@@ -422,7 +422,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
   return (
     <div className={s.xPage}>
       <div className={s.xMain}>
-        {/* Left — light side with headline, logo, features & footer */}
+        {/* Left - light side with headline, logo, features & footer */}
         <div className={s.xLeft}>
           <h1 className={s.xHeadline}>Your campus marketplace</h1>
           <div className={s.xLogo}>
@@ -442,7 +442,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
           </ul>
         </div>
 
-        {/* Right — light side with join panel */}
+        {/* Right - light side with join panel */}
         <div className={s.xRight}>
           <div className={s.xCard}>
             <h2 className={s.xSubheadline}>Shop &amp; sell on campus</h2>
@@ -505,25 +505,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
         </div>
       </div>
 
-      <footer className={s.xFooter}>
-        <Link to="/about" className={s.xFooterLink}>
-          About
-        </Link>
-        <span>·</span>
-        <Link to="/privacy" className={s.xFooterLink}>
-          Privacy
-        </Link>
-        <span>·</span>
-        <button type="button" className={s.xFooterLink} onClick={() => setHelpOpen(true)}>
-          Help
-        </button>
-        <span>·</span>
-        <button type="button" className={s.xFooterLink} onClick={() => setTermsOpen(true)}>
-          Terms
-        </button>
-        <span>·</span>
-        <span>© 2026 NinerMarket</span>
-      </footer>
+      <SiteFooter />
 
       {/* Sign-in / sign-up modal */}
       <Modal
@@ -552,7 +534,7 @@ export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void 
               <strong>{verifyEmailAddress}</strong>. Enter it below to verify your account.
             </p>
             <p className={s.xSpamNote}>
-              Don&apos;t see it? Check your <strong>spam/junk folder</strong> — verification emails
+              Don&apos;t see it? Check your <strong>spam/junk folder</strong>. Verification emails
               sometimes land there. Still nothing after a minute? Tap Resend below.
             </p>
             <input

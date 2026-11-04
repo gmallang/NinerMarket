@@ -11,7 +11,7 @@ const JPEG_QUALITY = 0.82;
 export function listingImageUrl(url: string, width: number): string {
   if (url.startsWith("data:")) return url;
   if (url.startsWith("https://images.unsplash.com/")) {
-    // Width only — no forced h/fit=crop, which pre-cropped photos to squares
+    // Width only - no forced h/fit=crop, which pre-cropped photos to squares
     // at the CDN and made subjects look zoomed-in. Containers crop via CSS.
     const u = new URL(url);
     u.searchParams.set("w", String(width));

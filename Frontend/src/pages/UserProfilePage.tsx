@@ -112,7 +112,7 @@ export function UserProfilePage() {
       });
       setStars(0);
       setComment("");
-      setSubmitMsg("Thanks — your rating was submitted.");
+      setSubmitMsg("Thanks, your rating was submitted.");
       const [u, r] = await Promise.all([api.getUser(id), api.getRatings(id)]);
       setProfile(u);
       setRatings(r);
@@ -242,7 +242,7 @@ export function UserProfilePage() {
           {isOwnProfile && <p className={s.email}>{profile.email}</p>}
           <div className={s.summary}>
             <span className={s.summaryAvg}>
-              {profile.rating_count > 0 ? profile.rating_avg.toFixed(1) : "—"}
+              {profile.rating_count > 0 ? profile.rating_avg.toFixed(1) : "New"}
             </span>
             <div>
               <Stars value={Math.round(profile.rating_avg)} />
@@ -342,7 +342,7 @@ export function UserProfilePage() {
                       }}
                       disabled={unsellingId === item.id}
                     >
-                      {unsellingId === item.id ? "Reposting…" : "Unsell — put back up"}
+                      {unsellingId === item.id ? "Reposting…" : "Unsell (put back up)"}
                     </button>
                   )}
               </div>

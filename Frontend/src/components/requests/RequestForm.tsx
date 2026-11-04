@@ -163,6 +163,7 @@ export function RequestForm({
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. UNC Charlotte Campus"
             list="request-locations"
+            maxLength={120}
           />
           <datalist id="request-locations">
             {CAMPUS_LOCATIONS.map((loc) => (

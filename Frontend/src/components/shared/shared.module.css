@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
-   shared.module.css — Cross-component UI primitives
+   shared.module.css - Cross-component UI primitives
    Buttons, modal close button, inline form errors
    ───────────────────────────────────────────── */
 
@@ -71,7 +71,7 @@
   top: 0;
   left: 0;
   width: 100%;
-  /* dvh tracks the keyboard-shrunk visual viewport on mobile — `inset: 0`
+  /* dvh tracks the keyboard-shrunk visual viewport on mobile - `inset: 0`
      doesn't reliably resize with it on iOS Safari, leaving a gap at the
      bottom where the page behind the modal shows through undimmed once the
      keyboard opens. */
@@ -101,7 +101,7 @@
 }
 
 /* Dialogs that open on top of another modal (offer/report/messages over a
-   listing) must cover the dialog beneath them — same stack as the base layer
+   listing) must cover the dialog beneath them - same stack as the base layer
    plus one, so their backdrop also dims the listing instead of sitting
    behind its content. */
 .modalOverlayForeground {

@@ -72,7 +72,7 @@ def create_notification(
     # notification permission.
     send_push(user_id, "NinerMarket", text, f"/listing/{listing_id}" if listing_id else "/")
     # Email fallback: works even when the user never enabled web push, which
-    # is the common case. Best-effort — a missing RESEND_API_KEY just no-ops.
+    # is the common case. Best-effort - a missing RESEND_API_KEY just no-ops.
     to = user_email(user_id)
     if to:
         notification_email(

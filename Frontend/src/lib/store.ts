@@ -91,7 +91,7 @@ function persistThreadsCache(convs: Conversation[]): void {
 }
 
 // Realtime subscription + typing-timeout handles live outside the store's
-// reactive state — components never need to read them directly.
+// reactive state - components never need to read them directly.
 let unsubscribeInbox: (() => void) | null = null;
 let unsubscribeListings: (() => void) | null = null;
 const typingTimeouts = new Map<number, ReturnType<typeof setTimeout>>();
@@ -120,7 +120,7 @@ function loadSavedLocal(): Set<string> {
 
 function latestMsgId(conv: Conversation): number {
   // Messages are always appended in chronological order, so the last element
-  // has the highest id — no need to scan the entire array with reduce.
+  // has the highest id - no need to scan the entire array with reduce.
   return conv.messages.at(-1)?.id ?? 0;
 }
 
@@ -308,7 +308,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
         return { convs, activeConvId };
       });
       // If the recipient currently has this conversation open, they've seen
-      // it — advance their read cursor so no badge appears for it.
+      // it - advance their read cursor so no badge appears for it.
       if (get().messagesOpen && get().activeConvId === threadId) {
         void api.markThreadRead(user.id, threadId, latestMsgId(thread)).catch(() => {});
       }
@@ -394,13 +394,13 @@ export const useMarketStore = create<MarketState>((set, get) => {
       set({ user: updated });
     } catch (err) {
       // The cached profile no longer exists on the backend (DB reset, account
-      // deleted) — the session is a dead end, so log out instead of keeping
+      // deleted) - the session is a dead end, so log out instead of keeping
       // the ghost user around.
       if (err instanceof Error && err.message.includes("User not found")) {
         get().logout();
         return;
       }
-      // backend unreachable — keep the cached user
+      // backend unreachable - keep the cached user
     }
   },
 
@@ -504,7 +504,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
       request.requester.display_name,
     );
     get().setInputText(
-      draft ?? `Hi ${request.requester.display_name.split(" ")[0]} — I saw your request for "${request.title}".`,
+      draft ?? `Hi ${request.requester.display_name.split(" ")[0]} - I saw your request for "${request.title}".`,
     );
   },
 
@@ -513,7 +513,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
     const state = get();
     const nowSaved = !state.savedItems.has(id);
 
-    // Optimistic update — flip the heart immediately, roll back if the API fails.
+    // Optimistic update - flip the heart immediately, roll back if the API fails.
     set((s) => {
       const next = new Set(s.savedItems);
       if (nowSaved) next.add(id);
@@ -522,7 +522,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
     });
 
     if (!user) {
-      // Not signed in — fall back to local-only so the UI still works, but
+      // Not signed in - fall back to local-only so the UI still works, but
       // nothing is synced. (Real saves require an account.)
       return;
     }
@@ -858,7 +858,7 @@ export const useMarketStore = create<MarketState>((set, get) => {
   // saved session (expired, resigned with a new secret, or the user no longer
   // exists server-side). Log out so the stale cached profile stops driving
   // endless failing requests, then force a real reload rather than just
-  // re-rendering in place — a browser that's been open across a deploy may
+  // re-rendering in place - a browser that's been open across a deploy may
   // also be holding a stale cached bundle, and a plain client-side state
   // clear wouldn't replace that. Guarded so a persistently broken backend
   // can't reload-loop the tab.

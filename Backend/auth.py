@@ -23,13 +23,13 @@ def _get_session_secret() -> str:
     Some modules import this one before database.py runs load_dotenv(), so
     reading os.getenv() at module load could lock in a value from before
     .env was ever loaded, silently ignoring whatever's actually configured.
-    Deferring the read until a token is actually created/verified — which
-    only happens once every import has finished — avoids that entirely."""
+    Deferring the read until a token is actually created/verified - which
+    only happens once every import has finished - avoids that entirely."""
     global _session_secret
     if _session_secret is None:
         secret = os.getenv("SESSION_SECRET")
         if not secret:
-            # Fallback for any environment — regenerating this on every
+            # Fallback for any environment - regenerating this on every
             # restart just means existing sessions get invalidated, which is
             # a minor cost compared to the app failing to boot.
             secret = secrets.token_hex(32)
@@ -61,7 +61,7 @@ def verify_password(password: str, stored: str) -> bool:
 def create_session_token(user_id: str) -> str:
     """Issues a signed, stateless session token for user_id. Callers present this
     as `Authorization: Bearer <token>` on every subsequent request; verify_session_token
-    is what actually authenticates them — nothing else does."""
+    is what actually authenticates them - nothing else does."""
     expires_at = int((datetime.now(timezone.utc) + timedelta(days=SESSION_TTL_DAYS)).timestamp())
     payload = f"{user_id}.{expires_at}"
     signature = hmac.new(_get_session_secret().encode(), payload.encode(), hashlib.sha256).hexdigest()
@@ -90,7 +90,7 @@ def require_user(authorization: str | None = Header(default=None)) -> str:
     """FastAPI dependency: extracts and verifies the bearer session token,
     returning the authenticated user's id. Routes that mutate a specific user's
     data must depend on this and check the returned id against the resource
-    they're touching — this only proves who's calling, not what they're allowed to touch."""
+    they're touching - this only proves who's calling, not what they're allowed to touch."""
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
     user_id = verify_session_token(authorization.removeprefix("Bearer ").strip())
@@ -167,7 +167,7 @@ def send_verification_email(
 
 def notification_email(to: str, subject: str, message: str, path: str = "") -> bool:
     """Sends a plain notification email (new message, offer, etc.). The message
-    body is escaped — it routinely carries user-supplied text (names, listing
+    body is escaped - it routinely carries user-supplied text (names, listing
     titles, chat messages) and must not be rendered as raw HTML in the inbox."""
     base = os.getenv("FRONTEND_URL", "").rstrip("/")
     link = (

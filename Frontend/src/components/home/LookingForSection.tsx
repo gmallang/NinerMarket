@@ -78,7 +78,7 @@ export function LookingForSection() {
         <div className={s.empty}>
           <p className={s.emptyTitle}>No open requests right now</p>
           <p className={s.emptyBody}>
-            Be the first — tell the campus what you're looking for and let other Niners help.
+            Be the first: tell the campus what you're looking for and let other Niners help.
           </p>
           <button type="button" className={s.postBtn} onClick={openRequestForm}>
             <Plus size={15} /> Post a Request

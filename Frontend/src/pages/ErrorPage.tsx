@@ -13,7 +13,7 @@ export function ErrorPage() {
     >
       <h1>Something went wrong</h1>
       <p style={{ lineHeight: 1.5 }}>
-        The page didn't load correctly. This usually happens right after an app update — refresh to
+        The page didn't load correctly. This usually happens right after an app update. Refresh to
         pick up the latest version.
       </p>
       <button

@@ -1,17 +1,16 @@
 /* ─────────────────────────────────────────────
-   NinerMarket — Main design tokens
+   NinerMarket - Main design tokens
    All other CSS files pull from these variables.
    ───────────────────────────────────────────── */
 
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Caveat:wght@600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap");
 
 :root {
   /* Fonts */
-  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-script: "Caveat", "Segoe Script", cursive;
+  --font-body: "Instrument Sans", system-ui, sans-serif;
+  --font-display: "Instrument Sans", system-ui, sans-serif;
 
-  /* Brand greens — deep campus forest, per the homepage mock */
+  /* Brand greens - deep campus forest, per the homepage mock */
   --color-primary: #0e4b3f;
   --color-primary-dark: #09362d;
   --color-primary-light: #146b54;
@@ -30,7 +29,7 @@
 
   /* Text */
   --color-fg: #1a1a1a;
-  /* Darkened from the original #6b7a6b/#9daa9d — those sat right at (muted)
+  /* Darkened from the original #6b7a6b/#9daa9d - those sat right at (muted)
      or well under (subtle, 2.4:1) the WCAG AA minimum of 4.5:1 for normal
      text, which read as barely-visible gray across timestamps, labels, and
      secondary copy throughout the app. */
@@ -47,12 +46,12 @@
   --color-warn: #d97706;
   --color-success: #16a34a;
 
-  /* Condition badge colours — fixed hierarchy, one hue per condition:
+  /* Condition badge colours - fixed hierarchy, one hue per condition:
      Like New  → saturated green (best condition)
      Excellent → pale green
      Good      → yellow
      Fair      → orange  (most used/worn)
-     Service   → purple  (not a condition — a service category) */
+     Service   → purple  (not a condition - a service category) */
   --badge-like-new-bg: #bbf7d0;
   --badge-like-new-fg: #15803d;
   --badge-excellent-bg: #dcfce7;

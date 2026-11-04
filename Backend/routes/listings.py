@@ -39,7 +39,7 @@ def _with_seller(entry, seller: dict | None = None):
 
     Pass a pre-fetched `seller` dict when processing many listings at once
     (e.g. list_listings already batch-fetches sellers). When `seller` is None
-    and the db is configured, a single targeted query is issued — callers that
+    and the db is configured, a single targeted query is issued - callers that
     know they only have one listing (get_listing, update_listing, etc.) still
     get the convenience without triggering an N+1."""
     if isinstance(entry, Listing):
@@ -71,7 +71,7 @@ def list_listings(
     limit: int = Query(default=60, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ):
-    # Public, unauthenticated, not personalized — safe to cache briefly.
+    # Public, unauthenticated, not personalized - safe to cache briefly.
     # Real-time freshness for changes (new/sold/edited listings) is already
     # handled by the "listings" broadcast channel triggering a client refetch,
     # so this short window only cuts down on redundant polling/reloads.
@@ -206,7 +206,7 @@ def create_listing(listing: Listing, user_id: str = Depends(require_user)):
     broadcast("listings", "listing_changed", {"id": listing.id})
 
     # Looking For matching: a new listing can be exactly what someone asked
-    # for. Best-effort — a matcher failure must never fail the listing.
+    # for. Best-effort - a matcher failure must never fail the listing.
     if not reasons:
         try:
             from routes.wanted_requests import notify_request_matches
@@ -243,7 +243,7 @@ def report_listing(
 ):
     """Records a report after a user reports a listing (duplicates from the
     same reporter are rejected). Only once REPORT_THRESHOLD distinct
-    reporters have flagged it does the listing actually get hidden — a
+    reporters have flagged it does the listing actually get hidden - a
     single report can't take a listing down on its own. The seller is
     notified when that threshold is crossed and can edit to resolve."""
     if db:

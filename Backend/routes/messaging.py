@@ -59,7 +59,7 @@ def _display_name(user_id: str) -> str:
 
 
 def _is_participant(thread_row: dict, user_id: str) -> bool:
-    """A thread has two sides — whoever opened it (thread_row['user_id']) and
+    """A thread has two sides - whoever opened it (thread_row['user_id']) and
     the seller of the listing it's about. Both must be able to see and reply
     to it, even though the row itself is only ever stored once."""
     if thread_row.get("user_id") == user_id:
@@ -105,7 +105,7 @@ def _member_cursor(thread_id: int, user_id: str) -> int:
 
 def _advance_cursor(thread_id: int, user_id: str, up_to: int) -> None:
     """Moves a member's read cursor forward to up_to, never backwards.
-    Skips the pre-read of the current cursor — upsert with MAX would be ideal,
+    Skips the pre-read of the current cursor - upsert with MAX would be ideal,
     but Supabase PostgREST doesn't support expressions in upsert values.
     Instead we read once and only write when the new value is actually higher,
     which is already safe: the cursor is monotonic by construction (we never
@@ -151,7 +151,7 @@ def _notify_new_message(recipient_id: str, sender_id: str, text: str, thread_id:
     tabs, web push for subscribed devices, and an email fallback. The email is
     only sent when this is the recipient's first unread message in the thread
     (unread went 0 -> 1), so an active back-and-forth doesn't email on every
-    line — the next message after they read emails again."""
+    line - the next message after they read emails again."""
     if not recipient_id:
         return
     broadcast(f"inbox:{recipient_id}", "new_message", {"thread_id": thread_id})
@@ -167,7 +167,7 @@ def _viewer_relative(row: dict, msgs: list[dict], viewer_id: str) -> dict:
     """Threads are stored from the opener's point of view: name/avatar show
     the seller, and each message's `sent` means "sent by the opener". When
     the seller views the same thread, flip both so they see the buyer's name
-    and correctly see which messages are theirs — without a second stored
+    and correctly see which messages are theirs - without a second stored
     copy of the thread. Unread is derived per viewer from their cursor, and
     `other_read_cursor` tells each side which of their messages the other
     person has read (a message is read when its id is at or below that)."""
@@ -244,7 +244,7 @@ def start_deal_thread(
     listing_id: str, buyer_id: str, seller_id: str, seed_text: str
 ) -> int | None:
     """Opens (or reuses) the buyer<->seller conversation for a listing and posts
-    a first message from the seller — used when a seller accepts an offer, so
+    a first message from the seller - used when a seller accepts an offer, so
     the two can arrange the handoff immediately instead of having to open a
     chat by hand. The buyer-facing notification for the acceptance is sent
     separately by the caller, so this only emits the live inbox signal (no
@@ -432,7 +432,7 @@ def list_threads(user_id: str, caller_id: str = Depends(require_user)):
 def get_thread(user_id: str, thread_id: int, caller_id: str = Depends(require_user)):
     """Fetches a single thread. Used to refresh just the affected conversation
     when a realtime "new message" signal arrives, instead of reloading every
-    thread the user has — that round trip (plus a per-thread messages query)
+    thread the user has - that round trip (plus a per-thread messages query)
     is what was showing up as a delay before a message actually appeared."""
     _check_caller(user_id, caller_id)
     if db:
@@ -461,8 +461,8 @@ def get_thread(user_id: str, thread_id: int, caller_id: str = Depends(require_us
 def open_thread(user_id: str, body: OpenThreadRequest, caller_id: str = Depends(require_user)):
     """Opens (or reuses) the thread for a listing. Threads are always keyed by
     the buyer's id, since that's who "opens" the conversation in the normal
-    flow. When the caller is the listing's seller — e.g. reaching out to
-    someone who made an offer, before that person has ever opened a chat —
+    flow. When the caller is the listing's seller - e.g. reaching out to
+    someone who made an offer, before that person has ever opened a chat -
     `other_user_id` names the buyer, and the thread is keyed by their id
     instead so it lines up with one they might open themselves later."""
     _check_caller(user_id, caller_id)
@@ -557,7 +557,7 @@ def send_thread_message(
                 "lastTimestamp": msg["timestamp"],
             }
         ).eq("id", str(thread_id)).execute()
-        # The sender obviously saw what they just sent — advance their cursor.
+        # The sender obviously saw what they just sent - advance their cursor.
         _advance_cursor(thread_id, user_id, msg["id"])
 
         # Reuse the already-fetched thread_row and append the new message

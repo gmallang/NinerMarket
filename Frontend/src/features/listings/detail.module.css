@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
-   detail.module.css — Listing detail page
+   detail.module.css - Listing detail page
    ───────────────────────────────────────────── */
 
 .overlayContent {
@@ -45,7 +45,7 @@
   position: relative;
 }
 
-/* Top chrome cluster (kebab + close) — one corner, one visual group. */
+/* Top chrome cluster (kebab + close) - one corner, one visual group. */
 .detailTopActions {
   position: absolute;
   top: 12px;
@@ -128,7 +128,7 @@
 .detailMainImg {
   width: 100%;
   height: 100%;
-  /* contain, not cover — cover crops photos whose aspect ratio doesn't match
+  /* contain, not cover - cover crops photos whose aspect ratio doesn't match
      the gallery box, which reads as a zoomed-in image. The gallery's muted
      background fills any letterbox bands. */
   object-fit: contain;
@@ -190,7 +190,7 @@
   }
 }
 
-/* Priority dots — a compact, always-on indicator that doesn't require reading
+/* Priority dots - a compact, always-on indicator that doesn't require reading
    a counter; the numbered counter pill still shows the exact position. */
 .detailDots {
   position: absolute;
@@ -224,8 +224,8 @@
   width: 16px;
 }
 
-/* The thumbnail selector is its own box below the main image — its own
-   background, top border and padding — so it doesn't visually merge with the
+/* The thumbnail selector is its own box below the main image - its own
+   background, top border and padding - so it doesn't visually merge with the
    photo area above it. */
 .detailThumbs {
   display: flex;
@@ -327,7 +327,7 @@
   flex-shrink: 0;
 }
 
-/* Compact single-line seller strip — no bordered card. */
+/* Compact single-line seller strip - no bordered card. */
 .detailSeller {
   display: flex;
   margin-top: var(--space-4);
@@ -498,7 +498,7 @@
 
 .detailMenu {
   position: absolute;
-  /* Drops DOWN from the kebab, right-aligned — the cluster sits at the
+  /* Drops DOWN from the kebab, right-aligned - the cluster sits at the
      modal's top edge, so opening upward gets clipped by overflow:hidden. */
   top: calc(100% + 8px);
   right: 0;

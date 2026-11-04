@@ -23,7 +23,6 @@ export const LOCATION_GROUPS = [
     label: "Campus Buildings & Landmarks",
     options: [
       "Belk Plaza",
-      "Popp Martin Student Union",
       "Atkins Library",
       "Barnhardt Student Activity Center",
       "Fretwell Building",

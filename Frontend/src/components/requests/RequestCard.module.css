@@ -27,38 +27,41 @@
   gap: var(--space-2);
 }
 
+/* A quiet label instead of a tinted pill — keeps the card top row out of the
+   way so the title, budget and actions carry the hierarchy. */
 .category {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  background: rgba(26, 122, 60, 0.09);
-  border-radius: var(--radius-full);
-  padding: 3px 9px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-fg-muted);
 }
 
 .status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 0.6875rem;
   font-weight: 700;
-  border-radius: var(--radius-full);
-  padding: 3px 9px;
   text-transform: capitalize;
+}
+
+.status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: currentColor;
 }
 
 .active {
   color: var(--color-primary);
-  background: rgba(26, 122, 60, 0.1);
 }
 
 .fulfilled {
   color: #1f6feb;
-  background: rgba(31, 111, 235, 0.1);
 }
 
 .expired {
   color: var(--color-fg-muted);
-  background: var(--color-muted);
 }
 
 .title {
@@ -97,10 +100,7 @@
 .budget {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: var(--color-primary-dark);
-  background: rgba(26, 122, 60, 0.08);
-  border-radius: var(--radius-sm);
-  padding: 2px 8px;
+  color: var(--color-primary);
 }
 
 .metaItem {

@@ -224,8 +224,7 @@ export function SellForm({
               setLocationOpen(true);
             }}
             onFocus={() => setLocationOpen(true)}
-            onBlur={() => window.setTimeout(() => setLocationOpen(false), 100)}
-            placeholder="e.g. Student Union"
+            onBlur={() => window.setTimeout(() => setLocationOpen(false), 100)}              placeholder="e.g. Atkins Library"
             autoComplete="off"
             required
           />

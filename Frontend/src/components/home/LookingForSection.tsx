@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Megaphone, Plus } from "lucide-react";
 import { api } from "@/lib/api";
 import { useMarketStore } from "@/lib/store";
 import type { WantedRequestDto } from "@/lib/types";
@@ -51,6 +51,7 @@ export function LookingForSection() {
       <div className={s.header}>
         <div className={s.titleWrap}>
           <h2 className={s.title} id="looking-for-title">
+            <Megaphone size={20} className={s.titleIcon} />
             Looking For
           </h2>
           <p className={s.subtitle}>

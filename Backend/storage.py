@@ -45,11 +45,11 @@ def _make_thumb(raw: bytes) -> tuple[bytes, str] | None:
     (e.g. animated GIFs, which we pass through untouched). JPEG rather than
     WebP: the deployed serverless environment's Pillow build turned out to
     lack libwebp, so every save(..., "WEBP") call was silently failing and
-    falling through to the broad except below — every thumbnail in
+    falling through to the broad except below - every thumbnail in
     production was actually just the full-size original the whole time.
     JPEG has no such system-library dependency. It can't carry an alpha
     channel, so transparent PNGs are flattened onto white for the thumbnail
-    only — the full-size original photo is untouched."""
+    only - the full-size original photo is untouched."""
     try:
         from PIL import Image
 

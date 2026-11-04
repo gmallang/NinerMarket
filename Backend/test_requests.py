@@ -242,7 +242,7 @@ def test_respond_and_request_thread():
 
     reply = client.post(
         f"/users/{REQUESTER}/threads/{thread_id}/messages",
-        json={"text": "Great — how much?"},
+        json={"text": "Great - how much?"},
         headers=_auth(REQUESTER),
     )
     assert reply.status_code == 200, reply.text
@@ -262,7 +262,7 @@ def test_listing_matching_notifies_once():
         "/listings",
         json={
             "seller_id": OTHER,
-            "name": "Galanz mini fridge — dorm size",
+            "name": "Galanz mini fridge - dorm size",
             "price": 55,
             "category": "furniture",
             "condition": "Good",

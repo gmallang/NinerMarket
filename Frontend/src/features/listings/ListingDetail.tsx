@@ -121,11 +121,11 @@ export function ListingDetail({
       try {
         await navigator.share({
           title: item.title,
-          text: `${item.title} — $${item.price.toLocaleString()} on NinerMarket`,
+          text: `${item.title} ($${item.price.toLocaleString()}) on NinerMarket`,
           url,
         });
       } catch {
-        // User dismissed the share sheet — nothing to do.
+        // User dismissed the share sheet - nothing to do.
       }
       return;
     }

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
-   Messaging.module.css — Chat page
+   Messaging.module.css - Chat page
    Colors: all via var() from main.css
    ───────────────────────────────────────────── */
 
@@ -619,7 +619,7 @@
 @media (max-width: 640px) {
   .msgInput {
     /* iOS Safari auto-zooms the page on focus for any input/textarea under
-       16px — this keeps the visual size the same everywhere else but stops
+       16px - this keeps the visual size the same everywhere else but stops
        that zoom on phones. */
     font-size: 16px;
   }
@@ -724,7 +724,7 @@
   .overlayContent {
     top: 8px;
     /* dvh tracks the keyboard-shrunk visual viewport on mobile; a fixed
-       `bottom` offset combined with `height: auto` doesn't — it stays
+       `bottom` offset combined with `height: auto` doesn't - it stays
        anchored to the pre-keyboard viewport, which is what made this panel
        appear to float mid-screen with the nav bar and page content
        visible underneath it once the keyboard opened. */

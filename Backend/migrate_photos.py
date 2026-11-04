@@ -4,7 +4,7 @@ the resulting public URLs. Also backfills the photos_small column (thumbnails)
 so cards can serve the small variants.
 
 Base64 photos embedded in JSON bloat every listings response by ~33%, can't be
-cached by the browser or a CDN, and must fully arrive before they render —
+cached by the browser or a CDN, and must fully arrive before they render -
 the classic source of slow mobile load. This script makes the stored data
 self-consistent with the normal upload flow (SellForm -> /photos -> Storage URL
 + thumbnail).
@@ -25,7 +25,7 @@ from storage import upload_photo
 def main() -> int:
     if not db:
         print("Supabase is not configured (no SUPABASE_URL / SUPABASE_KEY).")
-        print("Nothing to migrate — local dev stores photos in memory only.")
+        print("Nothing to migrate - local dev stores photos in memory only.")
         return 1
 
     rows = (
@@ -52,7 +52,7 @@ def main() -> int:
             if isinstance(photo, str) and photo.startswith("data:image/"):
                 try:
                     result = upload_photo(row.get("seller_id") or "migration", photo)
-                except Exception as exc:  # noqa: BLE001 — report and continue
+                except Exception as exc:  # noqa: BLE001 - report and continue
                     print(f"  listing {row['id']}: failed to upload photo: {exc}")
                     failed += 1
                     new_photos.append(photo)

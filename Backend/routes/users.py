@@ -182,7 +182,7 @@ def forgot_password(body: ForgotPasswordRequest, request: Request):
     rate_limit(f"forgot:{email}", max_attempts=3, window_seconds=15 * 60)
 
     user = _find_user(email)
-    # Don't reveal whether the account exists — always report success so an
+    # Don't reveal whether the account exists - always report success so an
     # attacker can't enumerate which @charlotte.edu addresses are registered.
     if not user:
         return {"ok": True}
@@ -304,7 +304,7 @@ async def google_callback(request: Request):
     def _back(suffix: str) -> RedirectResponse:
         if is_native_app:
             # The native app isn't a browser tab, so there's no website page
-            # to send this browser back to — redirect to the app's own
+            # to send this browser back to - redirect to the app's own
             # custom URL scheme instead; Capacitor/Android and iOS hand that
             # back to the app via an appUrlOpen event (see main.tsx).
             scheme = os.getenv("APP_URL_SCHEME", "com.ninermarket.app")
@@ -390,7 +390,7 @@ def set_password(body: SetPasswordRequest, authorization: str | None = Header(de
 
 def get_user_by_id(id: str) -> User | None:
     """Internal lookup returning the full User model. Never expose this directly
-    to the client — use _to_public()."""
+    to the client - use _to_public()."""
     if db:
         data = db.table("users").select("*").eq("id", id).execute()
         return _row_to_user(data.data[0]) if data.data else None

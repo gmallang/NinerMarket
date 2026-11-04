@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { ChevronRight, MapPin } from "lucide-react";
-import campusHero from "@/assets/campus-hero.png";
+import { ChevronRight } from "lucide-react";
 import s from "./HomeHero.module.css";
 
 const CHIP_CATEGORIES = [
@@ -43,15 +42,6 @@ export function HomeHero() {
   return (
     <section className={s.hero} aria-labelledby="hero-title">
       <div className={s.copy}>
-        <div className={s.brandRow}>
-          <span className={s.brandMark} aria-hidden="true" />
-          <span className={s.brandName}>NinerMarket</span>
-          <span className={s.locationPill}>
-            <MapPin size={13} />
-            Charlotte, NC
-          </span>
-        </div>
-
         <h1 className={s.title} id="hero-title">
           Find it on campus.
         </h1>
@@ -90,17 +80,6 @@ export function HomeHero() {
       </div>
 
       <div className={s.photoWrap}>
-        <img
-          className={s.photo}
-          src={campusHero}
-          alt="UNC Charlotte campus clock tower"
-          loading="eager"
-          decoding="async"
-        />
-        <div className={s.photoOverlay} aria-hidden="true">
-          <span className={s.photoScript}>Real Students.</span>
-          <span className={`${s.photoScript} ${s.photoScriptUnderline}`}>Real Deals.</span>
-        </div>
       </div>
     </section>
   );

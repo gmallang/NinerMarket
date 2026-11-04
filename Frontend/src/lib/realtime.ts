@@ -15,7 +15,7 @@ export interface TypingPayload {
 }
 
 /** Subscribes to a user's personal inbox channel. Carries no message
- * content — just "something changed, go refetch" and typing pings — so it's
+ * content - just "something changed, go refetch" and typing pings - so it's
  * safe to leave as a public channel without minting Supabase auth tokens
  * for our own session-token-based auth. Returns an unsubscribe function. */
 export function subscribeInbox(
@@ -68,7 +68,7 @@ export function subscribeListings(handlers: {
   };
 }
 
-// Outgoing channels used to send typing pings — kept open and reused per
+// Outgoing channels used to send typing pings - kept open and reused per
 // recipient rather than reconnecting on every keystroke, since broadcast
 // sends need the channel to have actually finished joining first.
 const outgoing = new Map<string, { channel: RealtimeChannel; ready: boolean }>();

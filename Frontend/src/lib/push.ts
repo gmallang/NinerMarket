@@ -1,6 +1,6 @@
 // Web Push (Push API) setup. Lets a signed-in user opt in to real OS-level
 // notifications for new messages/offers/listing updates even when they don't
-// have a NinerMarket tab open — the realtime broadcast used for the in-app
+// have a NinerMarket tab open - the realtime broadcast used for the in-app
 // bell badge only reaches an already-open tab.
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {

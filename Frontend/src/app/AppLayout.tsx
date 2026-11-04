@@ -14,12 +14,16 @@ import {
   Home,
   CheckCircle2,
   Megaphone,
+  ChevronDown,
+  ChevronLeft,
+  SlidersHorizontal,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import ninerLogo from "@/assets/NinerMarket.png";
 import { avatarUrl } from "@/lib/avatar";
 import { useMarketStore } from "@/lib/store";
-import { CONDITIONS } from "@/data/categories";
+import { api } from "@/lib/api";
+import { CATEGORIES } from "@/data/categories";
 import { LOCATION_GROUPS } from "@/data/locations";
 import { Modal } from "@/components/shared/Modal";
 import { SellForm } from "@/features/sell/SellForm";
@@ -81,10 +85,13 @@ export function AppLayout() {
   const messagesOpen = useMarketStore((s) => s.messagesOpen);
   const openMessagesOverlay = useMarketStore((s) => s.openMessagesOverlay);
   const loadSaved = useMarketStore((s) => s.loadSaved);
+  const requestsVersion = useMarketStore((s) => s.requestsVersion);
 
   const [q, setQ] = useState(params.get("q") ?? "");
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+  const [activeRequestCount, setActiveRequestCount] = useState<number | null>(null);
   const [minPriceInput, setMinPriceInput] = useState(params.get("minPrice") ?? "");
   const [maxPriceInput, setMaxPriceInput] = useState(params.get("maxPrice") ?? "");
   const [showScrollFade, setShowScrollFade] = useState(false);
@@ -94,6 +101,9 @@ export function AppLayout() {
   const totalUnread = convs.reduce((n, c) => n + c.unread, 0);
   const unreadNotifs = notifications.filter((n) => !n.read).length;
   const activeConditions = (params.get("condition") ?? "").split(",").filter(Boolean);
+  const activeCategory = params.get("category") ?? "all";
+  const activeLocation = params.get("location") ?? "";
+  const onlyAvailable = params.get("available") !== "0";
   // Only regroup notifications when the list actually changes.
   const groupedNotifs = useMemo(() => groupNotifs(notifications), [notifications]);
 
@@ -122,6 +132,22 @@ export function AppLayout() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+
+  // Drives the "N requests" badge in the sidebar's Browse shortcuts.
+  useEffect(() => {
+    let alive = true;
+    api
+      .listRequests({ status: "active", limit: 1 })
+      .then(({ items, total }) => {
+        if (alive) setActiveRequestCount(total ?? items.length);
+      })
+      .catch(() => {
+        if (alive) setActiveRequestCount(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [requestsVersion]);
 
   useEffect(() => {
     const sentinel = fadeSentinelRef.current;
@@ -181,37 +207,84 @@ export function AppLayout() {
     navigate("/login");
   };
 
+  const resetFilters = () => {
+    setMinPriceInput("");
+    setMaxPriceInput("");
+    navigate("/");
+  };
+
+  const applyPriceRange = () => {
+    const next = new URLSearchParams(pathname === "/" ? params : undefined);
+    if (minPriceInput.trim()) next.set("minPrice", minPriceInput.trim());
+    else next.delete("minPrice");
+    if (maxPriceInput.trim()) next.set("maxPrice", maxPriceInput.trim());
+    else next.delete("maxPrice");
+    next.delete("page");
+    const qs = next.toString();
+    navigate(qs ? `/?${qs}` : "/");
+  };
+
+  const FILTER_CONDITIONS = ["New", "Like New", "Good", "Fair"];
+
+  const marketplaceActive =
+    pathname === "/" && !params.get("saved") && !params.get("mine") && !params.get("view");
+  const requestsActive = pathname.startsWith("/requests");
+
   const filterFields = (
     <>
-      <div className={s.filterGroup}>
-        <label className={s.filterLabel}>Sort by</label>
-        <select
-          className={s.filterSelect}
-          value={params.get("sort") ?? "recent"}
-          onChange={(e) => applyFilter("sort", e.target.value)}
-        >
-          <option value="recent">Most Recent</option>
-          <option value="price-asc">Price: Low to High</option>
-          <option value="price-desc">Price: High to Low</option>
-        </select>
+      <div className={`${s.filterGroup} ${s.browseGroup}`}>
+        <label className={s.filterLabel}>Browse</label>
+        <p className={s.browseEyebrow}>Marketplace</p>
+        <div className={s.browseList}>
+          <Link
+            to="/"
+            className={`${s.browseCard} ${marketplaceActive ? s.browseCardActive : ""}`}
+            aria-current={marketplaceActive ? "page" : undefined}
+          >
+            <span className={s.browseTop}>
+              <span className={s.browseName}>For Sale</span>
+              <span className={s.browseBadge}>
+                <span className={s.browseDot} aria-hidden="true" />
+                Active
+              </span>
+            </span>
+            <span className={s.browseDesc}>Browse items listed by fellow Niners.</span>
+          </Link>
+          <Link
+            to="/requests"
+            className={`${s.browseCard} ${requestsActive ? s.browseCardActive : ""}`}
+            aria-current={requestsActive ? "page" : undefined}
+          >
+            <span className={s.browseTop}>
+              <span className={s.browseName}>Looking For</span>
+              <span className={s.browseBadge}>
+                {activeRequestCount == null
+                  ? "Requests"
+                  : `${activeRequestCount} ${activeRequestCount === 1 ? "request" : "requests"}`}
+              </span>
+            </span>
+            <span className={s.browseDesc}>Find what students are searching for.</span>
+          </Link>
+        </div>
       </div>
 
-      <div className={s.filterGroup}>
-        <label className={s.filterLabel}>Location</label>
+      <div className={`${s.filterGroup} ${s.categoryGroup}`}>
+        <label className={s.filterLabel} htmlFor="category-filter">
+          Category
+        </label>
         <select
-          className={s.filterSelect}
-          value={params.get("location") ?? ""}
-          onChange={(e) => applyFilter("location", e.target.value)}
+          id="category-filter"
+          className={`${s.filterSelect} ${s.selectControl}`}
+          value={activeCategory}
+          onChange={(event) =>
+            applyFilter("category", event.target.value === "all" ? "" : event.target.value)
+          }
         >
-          <option value="">All Locations</option>
-          {LOCATION_GROUPS.map((group) => (
-            <optgroup key={group.label} label={group.label}>
-              {group.options.map((place) => (
-                <option key={place} value={place}>
-                  {place}
-                </option>
-              ))}
-            </optgroup>
+          <option value="all">All Categories</option>
+          {CATEGORIES.filter((category) => category.id !== "all").map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.label}
+            </option>
           ))}
         </select>
       </div>
@@ -223,34 +296,42 @@ export function AppLayout() {
             className={s.filterInputSmall}
             type="number"
             min={0}
-            placeholder="Min"
+            placeholder="$ Min"
             value={minPriceInput}
             onChange={(e) => setMinPriceInput(e.target.value)}
-            onBlur={() => applyFilter("minPrice", minPriceInput.trim())}
+            onBlur={applyPriceRange}
             onKeyDown={(e) => {
-              if (e.key === "Enter") applyFilter("minPrice", minPriceInput.trim());
+              if (e.key === "Enter") applyPriceRange();
             }}
           />
-          <span className={s.priceSep}>–</span>
           <input
             className={s.filterInputSmall}
             type="number"
             min={0}
-            placeholder="Max"
+            placeholder="$ Max"
             value={maxPriceInput}
             onChange={(e) => setMaxPriceInput(e.target.value)}
-            onBlur={() => applyFilter("maxPrice", maxPriceInput.trim())}
+            onBlur={applyPriceRange}
             onKeyDown={(e) => {
-              if (e.key === "Enter") applyFilter("maxPrice", maxPriceInput.trim());
+              if (e.key === "Enter") applyPriceRange();
             }}
           />
+          <button
+            type="button"
+            className={s.priceApply}
+            onClick={applyPriceRange}
+            aria-label="Apply price range"
+            title="Apply price range"
+          >
+            <ChevronDown size={14} className={s.priceApplyIcon} />
+          </button>
         </div>
       </div>
 
       <div className={s.filterGroup}>
         <label className={s.filterLabel}>Condition</label>
         <div className={s.checkboxList}>
-          {CONDITIONS.map((condition) => (
+          {FILTER_CONDITIONS.map((condition) => (
             <label key={condition} className={s.checkboxRow}>
               <input
                 type="checkbox"
@@ -262,11 +343,63 @@ export function AppLayout() {
           ))}
         </div>
       </div>
+
+      <div className={s.filterGroup}>
+        <label className={s.filterLabel} htmlFor="location-filter">
+          Location
+        </label>
+        <select
+          id="location-filter"
+          className={`${s.filterSelect} ${s.selectControl}`}
+          value={activeLocation || "all"}
+          onChange={(event) =>
+            applyFilter("location", event.target.value === "all" ? "" : event.target.value)
+          }
+        >
+          <option value="all">All Locations</option>
+          {LOCATION_GROUPS.map((group) => (
+            <optgroup key={group.label} label={group.label}>
+              {group.options.map((location) => (
+                <option key={location} value={location}>
+                  {location}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+
+      <div className={s.filterGroup}>
+        <label className={s.filterLabel}>Sort By</label>
+        <select
+          className={s.filterSelect}
+          value={params.get("sort") ?? "recent"}
+          onChange={(e) => applyFilter("sort", e.target.value)}
+        >
+          <option value="recent">Newest First</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+        </select>
+      </div>
+
+      <div className={s.filterGroup}>
+        <label className={s.filterLabel}>Availability</label>
+        <div className={s.checkboxList}>
+          <label className={s.checkboxRow}>
+            <input
+              type="checkbox"
+              checked={onlyAvailable}
+              onChange={() => applyFilter("available", onlyAvailable ? "0" : "")}
+            />
+            Show only available
+          </label>
+        </div>
+      </div>
     </>
   );
 
   return (
-    <div className={s.page}>
+    <div className={`${s.page} ${filtersCollapsed ? s.pageFiltersCollapsed : ""}`}>
       <nav className={s.navbar}>
         <div className={s.navInner}>
           <div className={s.navLeft}>
@@ -320,7 +453,9 @@ export function AppLayout() {
                 <DropdownMenu.Trigger asChild>
                   <button className={s.iconBtn} aria-label="Notifications" title="Notifications">
                     <Bell size={16} />
-                    {unreadNotifs > 0 && <span className={s.notifDot} />}
+                    {unreadNotifs > 0 && (
+                      <span className={s.notifBadge}>{unreadNotifs > 9 ? "9+" : unreadNotifs}</span>
+                    )}
                   </button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
@@ -441,8 +576,19 @@ export function AppLayout() {
               <div className={s.profileWrap}>
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger asChild>
-                    <button className={s.navAvatar} aria-label="Your profile" title="Your profile">
-                      <img src={avatarUrl(user.display_name, 64)} alt="Your profile" loading="lazy" decoding="async" />
+                    <button
+                      className={s.profilePill}
+                      aria-label="Your profile"
+                      title="Your profile"
+                    >
+                      <img
+                        className={s.profilePillAvatar}
+                        src={avatarUrl(user.display_name, 64)}
+                        alt="Your profile"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <ChevronDown size={14} className={s.profileChevron} />
                     </button>
                   </DropdownMenu.Trigger>
                   <DropdownMenu.Portal>
@@ -499,26 +645,67 @@ export function AppLayout() {
             aria-hidden="true"
           />
         )}
-        <aside className={`${s.sidebar} ${mobileSidebarOpen ? s.sidebarOpen : ""}`} aria-label="Filters">
+        <aside
+          className={`${s.sidebar} ${mobileSidebarOpen ? s.sidebarOpen : ""} ${
+            filtersCollapsed ? s.sidebarCollapsed : ""
+          }`}
+          aria-label="Filters"
+        >
           <div className={s.sidebarHeader}>
-            <h3 className={s.sidebarTitle}>Filters</h3>
-            <button
-              type="button"
-              className={s.sidebarClose}
-              onClick={() => setMobileSidebarOpen(false)}
-              aria-label="Close filters"
-            >
-              <X size={16} />
-            </button>
+            <h3 className={s.sidebarTitle}>
+              <SlidersHorizontal size={16} />
+              <span className={s.sidebarTitleText}>Filters</span>
+            </h3>
+            <div className={s.sidebarHeaderActions}>
+              <button type="button" className={s.resetBtn} onClick={resetFilters}>
+                Reset
+              </button>
+              <button
+                type="button"
+                className={s.sidebarCollapse}
+                onClick={() => setFiltersCollapsed((v) => !v)}
+                aria-expanded={!filtersCollapsed}
+                aria-controls="filter-fields"
+                aria-label={filtersCollapsed ? "Expand filters" : "Collapse filters"}
+                title={filtersCollapsed ? "Expand filters" : "Collapse filters"}
+              >
+                <ChevronLeft
+                  size={16}
+                  className={filtersCollapsed ? s.sidebarCollapseIconFlipped : undefined}
+                />
+              </button>
+              <button
+                type="button"
+                className={s.sidebarClose}
+                onClick={() => setMobileSidebarOpen(false)}
+                aria-label="Close filters"
+              >
+                <X size={16} />
+              </button>
+            </div>
           </div>
-          <div className={s.sidebarInner}>{filterFields}</div>
+          <div className={s.sidebarInner} id="filter-fields">
+            {filterFields}
+          </div>
         </aside>
 
         <main className={s.content}>
           <Outlet />
         </main>
-        <div ref={fadeSentinelRef} aria-hidden="true" className={s.fadeSentinel} />
       </div>
+
+      {/* Sits at the top of the footer so the scroll fade switches off before
+          the footer scrolls into view. */}
+      <div ref={fadeSentinelRef} aria-hidden="true" className={s.fadeSentinel} />
+
+      <footer className={s.siteFooter}>
+        <div className={s.siteFooterInner}>
+          <span>© 2026 NinerMarket</span>
+          <Link to="/privacy" className={s.siteFooterLink}>
+            Privacy Policy
+          </Link>
+        </div>
+      </footer>
 
       <div
         className={`${s.scrollFade} ${showScrollFade ? s.scrollFadeShow : ""}`}

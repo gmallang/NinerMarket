@@ -1,83 +1,105 @@
-import { useEffect, useState } from "react";
-import { ArrowRight, Plus, Package, Search } from "lucide-react";
-import { api } from "@/lib/api";
-import { useMarketStore } from "@/lib/store";
+import { useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ChevronRight, MapPin } from "lucide-react";
+import campusHero from "@/assets/campus-hero.png";
 import s from "./HomeHero.module.css";
 
+const CHIP_CATEGORIES = [
+  { id: "textbooks", label: "Textbooks" },
+  { id: "furniture", label: "Furniture" },
+  { id: "electronics", label: "Electronics" },
+  { id: "bikes", label: "Bikes & Transport" },
+  { id: "clothing", label: "Clothing & Greek" },
+  { id: "supplies", label: "School Supplies" },
+  { id: "housing", label: "Housing & Leasing" },
+  { id: "services", label: "Student Services" },
+  { id: "movein", label: "Move-In Essentials" },
+  { id: "other", label: "Other" },
+];
+
+const SHORTLIST_SIZE = 5;
+
 export function HomeHero() {
-  const listingsTotal = useMarketStore((state) => state.listingsTotal);
-  const listings = useMarketStore((state) => state.listings);
-  const requestsVersion = useMarketStore((state) => state.requestsVersion);
-  const openRequestForm = useMarketStore((state) => state.openRequestForm);
-  const openSellForm = useMarketStore((state) => state.openSellForm);
+  const [params] = useSearchParams();
+  const [expanded, setExpanded] = useState(false);
+  const activeCategory = params.get("category") ?? "all";
+  const activeIsShortlisted = CHIP_CATEGORIES.slice(0, SHORTLIST_SIZE).some(
+    (category) => category.id === activeCategory
+  );
+  const showAll = expanded || (activeCategory !== "all" && !activeIsShortlisted);
+  const visibleCategories = showAll
+    ? CHIP_CATEGORIES
+    : CHIP_CATEGORIES.slice(0, SHORTLIST_SIZE);
 
-  const [activeRequests, setActiveRequests] = useState<number | null>(null);
-
-  // Real counts only — the hero shows what the backend actually has.
-  useEffect(() => {
-    let alive = true;
-    api
-      .listRequests({ status: "active", limit: 1 })
-      .then(({ items, total }) => {
-        if (alive) setActiveRequests(total ?? items.length);
-      })
-      .catch(() => {
-        // Leave the stat hidden rather than inventing a number.
-      });
-    return () => {
-      alive = false;
-    };
-  }, [requestsVersion]);
-
-  const listingCount = listingsTotal ?? listings.length;
-
-  const scrollToListings = () => {
-    document.getElementById("listings")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const categoryHref = (id: string) => {
+    const next = new URLSearchParams(params);
+    next.delete("page");
+    if (id === "all") next.delete("category");
+    else next.set("category", id);
+    const qs = next.toString();
+    return qs ? `/?${qs}` : "/";
   };
 
   return (
     <section className={s.hero} aria-labelledby="hero-title">
       <div className={s.copy}>
+        <div className={s.brandRow}>
+          <span className={s.brandMark} aria-hidden="true" />
+          <span className={s.brandName}>NinerMarket</span>
+          <span className={s.locationPill}>
+            <MapPin size={13} />
+            Charlotte, NC
+          </span>
+        </div>
+
         <h1 className={s.title} id="hero-title">
-          Your campus. Your marketplace.
+          Find it on campus.
         </h1>
         <p className={s.subtitle}>
-          Buy what you need. Sell what you don't. Find what you've been looking for — all from
-          fellow Niners.
+          Buy, sell, and discover what fellow Niners are listing.
         </p>
-        <div className={s.actions}>
-          <button type="button" className={s.primaryBtn} onClick={scrollToListings}>
-            Explore Listings
-            <ArrowRight size={15} />
+
+        <nav className={s.chipRow} aria-label="Popular categories">
+          <Link
+            to={categoryHref("all")}
+            className={`${s.chip} ${activeCategory === "all" ? s.chipActive : ""}`}
+            aria-current={activeCategory === "all" ? "page" : undefined}
+          >
+            All Items
+          </Link>
+          {visibleCategories.map((category) => (
+            <Link
+              key={category.id}
+              to={categoryHref(category.id)}
+              className={`${s.chip} ${activeCategory === category.id ? s.chipActive : ""}`}
+              aria-current={activeCategory === category.id ? "page" : undefined}
+            >
+              {category.label}
+            </Link>
+          ))}
+          <button
+            type="button"
+            className={`${s.chip} ${s.moreBtn}`}
+            onClick={() => setExpanded((value) => !value)}
+            aria-expanded={showAll}
+          >
+            {showAll ? "Less" : "More"}
+            <ChevronRight size={14} className={showAll ? s.moreIconOpen : undefined} />
           </button>
-          <button type="button" className={s.secondaryBtn} onClick={openRequestForm}>
-            <Search size={15} />
-            Post a Request
-          </button>
-          <button type="button" className={s.ghostBtn} onClick={openSellForm}>
-            <Plus size={15} />
-            Sell an Item
-          </button>
-        </div>
+        </nav>
       </div>
 
-      <div className={s.stats}>
-        <div className={s.stat}>
-          <Package size={16} className={s.statIcon} />
-          <span className={s.statValue}>{listingCount.toLocaleString()}</span>
-          <span className={s.statLabel}>
-            {listingCount === 1 ? "listing" : "listings"} on the market
-          </span>
-        </div>
-        <div className={s.statDivider} aria-hidden="true" />
-        <div className={s.stat}>
-          <Search size={16} className={s.statIcon} />
-          <span className={s.statValue}>
-            {activeRequests === null ? "—" : activeRequests.toLocaleString()}
-          </span>
-          <span className={s.statLabel}>
-            {activeRequests === 1 ? "student is" : "students are"} looking for something
-          </span>
+      <div className={s.photoWrap}>
+        <img
+          className={s.photo}
+          src={campusHero}
+          alt="UNC Charlotte campus clock tower"
+          loading="eager"
+          decoding="async"
+        />
+        <div className={s.photoOverlay} aria-hidden="true">
+          <span className={s.photoScript}>Real Students.</span>
+          <span className={`${s.photoScript} ${s.photoScriptUnderline}`}>Real Deals.</span>
         </div>
       </div>
     </section>

@@ -11,7 +11,6 @@ import { ListingRow } from "@/features/listings/ListingRow";
 import { HomeHero } from "@/components/home/HomeHero";
 import { CategoryShortcuts } from "@/components/home/CategoryShortcuts";
 import { RecentlyListed } from "@/components/home/RecentlyListed";
-import { LookingForSection } from "@/components/home/LookingForSection";
 import s from "./HomePage.module.css";
 import ps from "./page.module.css";
 
@@ -50,6 +49,7 @@ export function HomePage() {
   // Price filters are written by the sidebar as `minPrice` / `maxPrice`.
   const minPrice = params.get("minPrice") ?? "";
   const maxPrice = params.get("maxPrice") ?? "";
+  const onlyAvailable = params.get("available") !== "0";
   const pageParam = Math.max(1, Number(params.get("page")) || 1);
   const limitParam = Number(params.get("limit")) || 24;
   const viewMine = params.get("mine") === "1";
@@ -127,7 +127,7 @@ export function HomePage() {
   const prevFilters = useRef<string>("");
   useEffect(() => {
     if (viewSaved || viewMine) return;
-    const fKey = JSON.stringify({ category: activeCategory, sortBy, locationFilter, conditions: activeConditions.join(","), pageParam, limitParam, minPrice, maxPrice });
+    const fKey = JSON.stringify({ category: activeCategory, sortBy, locationFilter, conditions: activeConditions.join(","), onlyAvailable, pageParam, limitParam, minPrice, maxPrice });
     if (prevQ.current === searchQuery && prevFilters.current === fKey) return;
     prevQ.current = searchQuery;
     prevFilters.current = fKey;
@@ -138,10 +138,11 @@ export function HomePage() {
       condition: activeConditions.length ? activeConditions.join(",") : undefined,
       min_price: minPrice ? Number(minPrice) : undefined,
       max_price: maxPrice ? Number(maxPrice) : undefined,
+      status: onlyAvailable ? undefined : "all",
       offset: (pageParam - 1) * limitParam,
       limit: limitParam,
     });
-  }, [searchQuery, loadListings, viewSaved, viewMine, activeCategory, sortBy, locationFilter, activeConditions, pageParam, limitParam, minPrice, maxPrice]);
+  }, [searchQuery, loadListings, viewSaved, viewMine, activeCategory, sortBy, locationFilter, activeConditions, onlyAvailable, pageParam, limitParam, minPrice, maxPrice]);
 
   const source = viewMine
     ? (owned && owned.userId === user?.id ? owned.items : listings)
@@ -155,23 +156,26 @@ export function HomePage() {
         .filter((l) => {
           if (viewMine) return !!user && l.sellerId === user.id;
           if (viewSaved) return savedItems.has(l.id);
-          return l.status !== "sold" && l.status !== "flagged";
+          if (l.status === "flagged") return false;
+          return !onlyAvailable || l.status !== "sold";
         })
         .sort((a, b) => {
           if (sortBy === "price-asc") return a.price - b.price;
           if (sortBy === "price-desc") return b.price - a.price;
           return b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0;
         }),
-    [source, viewMine, viewSaved, user, savedItems, sortBy]
+    [source, viewMine, viewSaved, user, savedItems, sortBy, onlyAvailable]
   );
 
   const openListing = (id: string) => openListingOverlay(id);
   const openSeller = (id: string) => navigate(`/user/${id}`);
   const messageListing = (id: string) => openMessageOverlay(id);
 
+  const viewAll = params.get("view") === "all";
   const isDefaultView =
     !viewMine &&
     !viewSaved &&
+    !viewAll &&
     activeCategory === "all" &&
     !searchQuery &&
     !minPrice &&
@@ -202,12 +206,13 @@ export function HomePage() {
   const heading = viewMine ? "Your Listings" : viewSaved ? "Saved Items" : "All Listings";
 
   return (
-    <div className={ps.page}>
+    <div className={`${ps.page} ${s.page}`}>
       {isDefaultView && <HomeHero />}
       {isDefaultView && <CategoryShortcuts />}
       {isDefaultView && <RecentlyListed />}
-      {isDefaultView && <LookingForSection />}
 
+      {!isDefaultView && (
+        <>
       <div className={s.mainHeader} id="listings">
         <div>
           <h1 className={s.mainTitle}>{heading}</h1>
@@ -387,6 +392,9 @@ export function HomePage() {
             </button>
           </div>
         </div>
+      )}
+
+        </>
       )}
     </div>
   );

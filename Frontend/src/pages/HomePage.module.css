@@ -144,10 +144,10 @@
   margin-top: var(--space-1);
 }
 
-/* ── Grid layout — four across on desktop, per the marketplace spec ── */
+/* ── Grid layout — five across on desktop, per the homepage mock ── */
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
@@ -156,6 +156,12 @@
 }
 
 @media (max-width: 1280px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -297,3 +303,4 @@
     justify-content: center;
   }
 }
+

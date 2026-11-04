@@ -27,38 +27,41 @@
   gap: var(--space-2);
 }
 
+/* A quiet label instead of a tinted pill — keeps the card top row out of the
+   way so the title, budget and actions carry the hierarchy. */
 .category {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  background: rgba(26, 122, 60, 0.09);
-  border-radius: var(--radius-full);
-  padding: 3px 9px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-fg-muted);
 }
 
 .status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 0.6875rem;
   font-weight: 700;
-  border-radius: var(--radius-full);
-  padding: 3px 9px;
   text-transform: capitalize;
+}
+
+.status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: currentColor;
 }
 
 .active {
   color: var(--color-primary);
-  background: rgba(26, 122, 60, 0.1);
 }
 
 .fulfilled {
   color: #1f6feb;
-  background: rgba(31, 111, 235, 0.1);
 }
 
 .expired {
   color: var(--color-fg-muted);
-  background: var(--color-muted);
 }
 
 .title {
@@ -83,9 +86,9 @@
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  /* A long run with no spaces (a pasted URL, "aaaaaaaa...") has no break
-     point for line-clamp to wrap at, so it overflows the card instead of
-     clamping. Let the browser break mid-word as a last resort. */
+  /* A long run with no spaces (a pasted URL, "aaaaaaaa...") has no break point
+     for line-clamp to wrap at, so it overflows the card instead of clamping.
+     Let the browser break mid-word as a last resort. */
   overflow-wrap: anywhere;
 }
 
@@ -101,26 +104,13 @@
 .budget {
   font-size: 0.8125rem;
   font-weight: 700;
-  color: var(--color-primary-dark);
-  background: rgba(26, 122, 60, 0.08);
-  border-radius: var(--radius-sm);
-  padding: 2px 8px;
+  color: var(--color-primary);
 }
 
 .metaItem {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  /* Same unbroken-string problem as .description, but this one sits in a
-     flex row rather than a block of text, so there's no good place to wrap
-     to — truncate with an ellipsis instead. min-width: 0 overrides the flex
-     item's default auto min-width, which would otherwise ignore max-width
-     and overflow straight past the card anyway. */
-  max-width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .footer {

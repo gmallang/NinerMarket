@@ -16,7 +16,7 @@
 
 .card:hover {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-  border-color: rgba(26, 122, 60, 0.35);
+  border-color: rgba(0, 80, 53, 0.35);
   border-top-color: var(--color-primary);
 }
 
@@ -186,7 +186,7 @@
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--color-primary);
-  border: 1px solid rgba(26, 122, 60, 0.35);
+  border: 1px solid rgba(0, 80, 53, 0.35);
   border-radius: var(--radius-md);
   padding: 6px 11px;
   background: transparent;
@@ -196,7 +196,7 @@
 }
 
 .actionBtn:hover {
-  background: rgba(26, 122, 60, 0.08);
+  background: rgba(0, 80, 53, 0.08);
   border-color: var(--color-primary);
 }
 

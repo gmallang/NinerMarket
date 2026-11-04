@@ -1,13 +1,13 @@
 /* ─────────────────────────────────────────────
    LookingForSection.module.css - homepage request feed
    Sits high on the page, so it carries a tinted
-   panel and a gold CTA to read as a feature.
+   panel and a solid-green CTA to read as a feature.
    ───────────────────────────────────────────── */
 
 .section {
   margin-top: var(--space-4);
   padding: var(--space-5);
-  border: 1px solid rgba(14, 75, 63, 0.16);
+  border: 1px solid rgba(0, 80, 53, 0.16);
   border-radius: var(--radius-xl);
   background: linear-gradient(180deg, #f1f7f0 0%, var(--color-card) 78%);
 }
@@ -71,8 +71,8 @@
   gap: 5px;
   font-size: 0.8125rem;
   font-weight: 800;
-  color: var(--color-gold-fg);
-  background: var(--color-gold);
+  color: var(--color-primary-fg);
+  background: var(--color-primary);
   border-radius: var(--radius-full);
   padding: 9px 16px;
   transition:
@@ -81,7 +81,7 @@
 }
 
 .postBtn:hover {
-  background: var(--color-gold-dark);
+  background: var(--color-primary-dark);
 }
 
 .postBtn:active {
@@ -116,7 +116,7 @@
   padding: var(--space-6);
   text-align: center;
   background: var(--color-card);
-  border: 1px dashed rgba(14, 75, 63, 0.3);
+  border: 1px dashed rgba(0, 80, 53, 0.3);
   border-radius: var(--radius-lg);
 }
 

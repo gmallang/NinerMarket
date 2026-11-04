@@ -223,6 +223,6 @@
 .sellerRating {
   margin-left: 4px;
   font-weight: 600;
-  color: #b7791f;
+  color: var(--color-primary);
   white-space: nowrap;
 }

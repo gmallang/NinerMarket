@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { MessageCircle } from "lucide-react";
 import { isCharlotteEmail } from "@/lib/auth";
 import { TERMS_SECTIONS } from "@/data/terms";
+import { PRIVACY_SECTIONS } from "@/data/privacy";
 import { Modal } from "@/components/shared/Modal";
 import shared from "@/components/shared/shared.module.css";
 import s from "./login.module.css";
@@ -159,6 +160,40 @@ export function TermsModal({
         </button>
         <button type="button" className={shared.btnPrimary} onClick={onAccept}>
           {accepted ? "Done" : "I Accept"}
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+// ─── Privacy policy modal ────────────────────────────────────────────────────
+
+export function PrivacyModal({ onClose }: { onClose: () => void }) {
+  return (
+    <Modal
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+      className={s.termsModal}
+      ariaLabel="Privacy policy"
+    >
+      <div className={s.termsHeader}>
+        <h2 className={s.googleTitle}>Privacy Policy</h2>
+      </div>
+      <div className={s.termsScroll}>
+        {PRIVACY_SECTIONS.map((section, i) => (
+          <div key={i} className={s.termsSection}>
+            <h3>
+              {i + 1}. {section.title}
+            </h3>
+            <p>{section.body}</p>
+          </div>
+        ))}
+      </div>
+      <div className={s.termsActions}>
+        <button type="button" className={shared.btnPrimary} onClick={onClose}>
+          Done
         </button>
       </div>
     </Modal>

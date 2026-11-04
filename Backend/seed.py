@@ -63,7 +63,7 @@ def _seed_demo_requests(requests: dict, now: datetime) -> None:
             "user_id": "seller-8",
             "title": "Mini Fridge for My Dorm",
             "description": (
-                "Need one before move-in — anything 3 cu ft or larger. I can pick it up "
+                "Need one before move-in. Anything 3 cu ft or larger. I can pick it up "
                 "from any residence hall."
             ),
             "category": "movein",
@@ -101,7 +101,7 @@ def _seed_demo_requests(requests: dict, now: datetime) -> None:
         {
             "user_id": "seller-2",
             "title": "Desk Chair for My Dorm",
-            "description": "Something with back support — my current one is a plastic folding chair.",
+            "description": "Something with back support. My current one is a plastic folding chair.",
             "category": "furniture",
             "budget_min": 50,
             "budget_max": 80,
@@ -185,11 +185,11 @@ def seed_dev_store(
         (7,  "Mini Fridge (Galanz 3.1 cu ft)",       65,   "movein",     "Good",     "Res Life Complex",  "photo-1584568694244-14fbdf83bd30", "seller-7",  "2d"),
         (8,  "Desk Lamp + USB Charging Hub",         18,   "movein",     "Like New", "North Campus",      "photo-1507473885765-e6ed057f782c", "seller-8",  "4h"),
         (9,  "Sigma Chi Formal Suit (38R)",           55,   "clothing",   "Good",     "Greek Row",         "photo-1592343516109-362f7bd871aa", "seller-9",  "1d"),
-        (10, "Peer Tutoring — Orgo & Bio Chem",      20,   "services",   "Service",  "Science Center",    "photo-1434030216411-0b793f4b4173", "seller-10", "3d"),
+        (10, "Peer Tutoring: Orgo & Bio Chem",       20,   "services",   "Service",  "Science Center",    "photo-1434030216411-0b793f4b4173", "seller-10", "3d"),
         (11, "Psychology 101 Course Pack Bundle",    22,   "textbooks",  "Good",     "Social Sciences",   "photo-1456513080510-7bf3a84b82f8", "seller-11", "7h"),
         (12, "Standing Desk Converter",              48,   "furniture",  "Like New", "Off-Campus Ave",    "photo-1593642632559-0c6d3fc62b89", "seller-12", "5d"),
-        (13, "2BR Sublet — Spring Semester",         750,  "housing",    "Good",     "Off-Campus Ave",    "photo-1522708323590-d24dbb6b0267", "seller-13", "1d"),
-        (14, "Roommate Wanted — UWalk 2BR",          550,  "housing",    "Good",     "UWalk",             "photo-1502672260266-1c1ef2d93688", "seller-14", "3h"),
+        (13, "2BR Sublet: Spring Semester",          750,  "housing",    "Good",     "Off-Campus Ave",    "photo-1522708323590-d24dbb6b0267", "seller-13", "1d"),
+        (14, "Roommate Wanted: UWalk 2BR",           550,  "housing",    "Good",     "UWalk",             "photo-1502672260266-1c1ef2d93688", "seller-14", "3h"),
     ]
 
 
@@ -199,7 +199,7 @@ def seed_dev_store(
     for _, name, price, category, condition, campus, image, seller_id, ago in demo:
         n = int(ago[:-1])
         # Each demo row above carries the Unsplash id of a photo that actually
-        # matches the item. Render that exact photo — seeding used to point at
+        # matches the item. Render that exact photo - seeding used to point at
         # picsum.photos, which ignores the seed and returned unrelated
         # imagery (textbooks showing landscapes). One photo per row: sticking
         # unrelated gallery shots onto a listing is worse than having none.
@@ -275,8 +275,8 @@ def seed_dev_store(
         ("Command Hooks Bulk Pack", 10, "movein"),
         ("Levoit Air Purifier", 55, "movein"),
         ("Steam Iron", 15, "movein"),
-        ("1BR Apartment Sublet — Summer", 800, "housing"),
-        ("Room in 4BR House — Fall", 625, "housing"),
+        ("1BR Apartment Sublet: Summer", 800, "housing"),
+        ("Room in 4BR House: Fall", 625, "housing"),
         ("Studio Near Light Rail", 950, "housing"),
         ("Move-In Help (Truck + Muscle)", 60, "services"),
         ("Calculus Tutoring (Hourly)", 25, "services"),
@@ -440,7 +440,7 @@ def _seed_demo_notifications(notifications: dict, now: datetime) -> None:
         {
             "id": "n-2",
             "user_id": "u-anna",
-            "text": "New listing in Housing & Leasing: 2BR Sublet — Spring Semester.",
+            "text": "New listing in Housing & Leasing: 2BR Sublet for Spring Semester.",
             "listing_id": "13",
             "created_at": hours_ago(8),
             "read": False,

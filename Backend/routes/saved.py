@@ -17,7 +17,7 @@ def _saved_ids(user_id: str) -> list[str]:
 
 def _toggle(user_id: str, listing_id: str, should_save: bool) -> list[str]:
     """Ensures the listing is either saved (True) or not saved (False) for the
-    user, returning the resulting full list of saved ids. Idempotent — saving
+    user, returning the resulting full list of saved ids. Idempotent - saving
     something already saved (or unsaving something absent) is a no-op."""
     if db:
         existing = (

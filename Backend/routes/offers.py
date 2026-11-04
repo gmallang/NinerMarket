@@ -22,7 +22,7 @@ def generate_id():
 
 def _get_listing(listing_id: str) -> dict:
     """Returns the listing as a dict (a raw row from Supabase or a pydantic
-    model from the in-memory store) — the `db` flag distinguishes them."""
+    model from the in-memory store) - the `db` flag distinguishes them."""
     if db:
         data = db.table("listings").select("*").eq("id", listing_id).execute()
         if not data.data:
@@ -278,7 +278,7 @@ def accept_offer(offer_id: str, user_id: str = Depends(require_user)):
         offer["buyer_id"],
         user_id,
         f'Accepted your offer of ${offer["price"]:,.2f} for '
-        f'"{_listing_attr(listing, "name")}" — let\'s arrange pickup.',
+        f'"{_listing_attr(listing, "name")}". Let\'s arrange pickup.',
     )
     create_notification(
         offer["buyer_id"],

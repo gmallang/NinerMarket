@@ -11,7 +11,7 @@ import ps from "./page.module.css";
 
 const PAGE_SIZE = 12;
 
-/** Public "Looking For" feed — active requests from across campus. */
+/** Public "Looking For" feed - active requests from across campus. */
 export function RequestsPage() {
   const [params, setParams] = useSearchParams();
   const user = useMarketStore((state) => state.user);
@@ -88,7 +88,7 @@ export function RequestsPage() {
         <div>
           <h1 className={s.title}>Looking For</h1>
           <p className={s.subtitle}>
-            Can't find what you need? See what fellow Niners are searching for — or ask for it
+            Can't find what you need? See what fellow Niners are searching for, or ask for it
             yourself.
           </p>
         </div>
@@ -137,7 +137,7 @@ export function RequestsPage() {
         </label>
       </div>
 
-      {error && <div className={s.error}>Couldn't load requests — {error}</div>}
+      {error && <div className={s.error}>Couldn't load requests: {error}</div>}
 
       {items === null ? (
         <div className={s.grid} aria-hidden="true">
@@ -152,7 +152,7 @@ export function RequestsPage() {
           <p className={s.emptyBody}>
             {q || category !== "all"
               ? "Try a different search or category."
-              : "Nobody is looking for anything right now — post the first request."}
+              : "Nobody is looking for anything right now. Post the first request."}
           </p>
           <button type="button" className={s.primaryBtn} onClick={openRequestForm}>
             <Plus size={15} /> Post a Request

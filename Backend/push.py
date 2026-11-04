@@ -29,7 +29,7 @@ def _drop_subscription(endpoint: str, user_id: str) -> None:
 
 def send_push(user_id: str, title: str, body: str, url: str = "/") -> None:
     """Best-effort Web Push to every device this user has subscribed on.
-    Never raises — a failed push must not break whatever triggered it (a new
+    Never raises - a failed push must not break whatever triggered it (a new
     notification or message), since it's a supplementary channel on top of
     the in-app badge/realtime signal, not the source of truth."""
     if not VAPID_PRIVATE_KEY:
@@ -53,7 +53,7 @@ def send_push(user_id: str, title: str, body: str, url: str = "/") -> None:
             )
         except WebPushException as exc:
             # 404/410 means the browser dropped this subscription (uninstalled,
-            # cleared permissions, etc) — stop trying to reach it.
+            # cleared permissions, etc) - stop trying to reach it.
             status = getattr(exc.response, "status_code", None)
             if status in (404, 410):
                 _drop_subscription(sub["endpoint"], user_id)

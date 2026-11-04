@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────
-   login.module.css — Login page + auth modals
+   login.module.css - Login page + auth modals
    Covers LoginPage, GoogleChooser, TermsModal,
    HelpModal and the sign-in / sign-up modal.
    ───────────────────────────────────────────── */
@@ -29,7 +29,7 @@
   }
 }
 
-/* Left — dark green side with headline, logo, features & footer */
+/* Left - dark green side with headline, logo, features & footer */
 .xLeft {
   flex: 1;
   min-width: 0;
@@ -119,7 +119,7 @@
   flex-shrink: 0;
 }
 
-/* Right — light side with join panel */
+/* Right - light side with join panel */
 .xRight {
   flex: 1;
   min-width: 0;
@@ -348,48 +348,12 @@
   border-color: var(--color-primary-dark);
 }
 
-.xFooter {
-  width: 100%;
-  padding: var(--space-4) var(--space-6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  font-size: 0.75rem;
-  color: #7fa390;
-  background: #0b2418;
-}
 
-.xFooterLink {
-  font-size: 0.75rem;
-  color: #7fa390;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
 
-.xFooterLink:hover {
-  text-decoration: underline;
-  color: #b3a369;
-}
 
 @media (max-width: 860px) {
-  .xFooter {
-    background: var(--color-bg);
-    color: var(--color-fg-subtle);
-    border-top: 1px solid var(--color-border);
-    padding: var(--space-4);
-  }
 
-  .xFooterLink {
-    color: var(--color-fg-subtle);
-  }
 
-  .xFooterLink:hover {
-    color: var(--color-primary);
-  }
 }
 
 .xDemoHint {

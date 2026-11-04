@@ -26,6 +26,7 @@ import { api } from "@/lib/api";
 import { CATEGORIES } from "@/data/categories";
 import { LOCATION_GROUPS } from "@/data/locations";
 import { Modal } from "@/components/shared/Modal";
+import { SiteFooter } from "@/components/shared/SiteFooter";
 import { SellForm } from "@/features/sell/SellForm";
 import { RequestForm } from "@/components/requests/RequestForm";
 import { MessagesOverlay } from "@/features/messaging/MessagesOverlay";
@@ -479,10 +480,10 @@ export function AppLayout() {
                                 void checkPushEnabled();
                                 setPushError(
                                   status === "nokey"
-                                    ? "Push isn't configured on the server yet — try again later."
+                                    ? "Push isn't configured on the server yet - try again later."
                                     : status === "denied"
-                                      ? "Blocked — enable notifications for this site in your browser settings."
-                                      : "Not available yet — check back soon."
+                                      ? "Blocked - enable notifications for this site in your browser settings."
+                                      : "Not available yet - check back soon."
                                 );
                               });
                             }}
@@ -698,14 +699,9 @@ export function AppLayout() {
           the footer scrolls into view. */}
       <div ref={fadeSentinelRef} aria-hidden="true" className={s.fadeSentinel} />
 
-      <footer className={s.siteFooter}>
-        <div className={s.siteFooterInner}>
-          <span>© 2026 NinerMarket</span>
-          <Link to="/privacy" className={s.siteFooterLink}>
-            Privacy Policy
-          </Link>
-        </div>
-      </footer>
+      <div className={s.siteFooterSlot}>
+        <SiteFooter />
+      </div>
 
       <div
         className={`${s.scrollFade} ${showScrollFade ? s.scrollFadeShow : ""}`}

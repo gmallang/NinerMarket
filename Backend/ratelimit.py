@@ -8,7 +8,7 @@ _hits: dict[str, list[float]] = defaultdict(list)
 
 def rate_limit(key: str, max_attempts: int, window_seconds: int) -> None:
     """Fixed-window limiter keyed by an arbitrary string (e.g. "login:1.2.3.4").
-    In-memory only — resets on cold start, so this is a best-effort speed bump
+    In-memory only - resets on cold start, so this is a best-effort speed bump
     against brute-forcing, not a hard guarantee on serverless."""
     now = time.time()
     hits = _hits[key]

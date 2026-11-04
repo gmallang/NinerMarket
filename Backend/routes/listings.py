@@ -100,9 +100,9 @@ def list_listings(
             query = query.gte("price", min_price)
         if max_price is not None:
             query = query.lte("price", max_price)
-        if status:
+        if status and status != "all":
             query = query.eq("status", status)
-        else:
+        elif not status:
             query = query.eq("status", "active")
         if condition and condition.strip():
             conds = [c.strip() for c in condition.split(",") if c.strip()]
@@ -145,9 +145,9 @@ def list_listings(
         results = [l for l in results if l.price >= min_price]
     if max_price is not None:
         results = [l for l in results if l.price <= max_price]
-    if status:
+    if status and status != "all":
         results = [l for l in results if l.status == status]
-    else:
+    elif not status:
         results = [l for l in results if l.status == "active"]
     if condition and condition.strip():
         conds = [c.strip() for c in condition.split(",") if c.strip()]

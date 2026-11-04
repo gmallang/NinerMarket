@@ -18,10 +18,7 @@ export function CategoryShortcuts() {
   const activeCategory = params.get("category") ?? "all";
 
   return (
-    <section className={s.section}>
-      <div className={s.header}>
-        <h2 className={s.title}>Browse by category</h2>
-      </div>
+    <section className={s.section} aria-label="Browse by category">
       <div className={s.grid}>
         {shortcuts.map((item) => {
           const Icon = item.icon;
@@ -35,7 +32,9 @@ export function CategoryShortcuts() {
               className={`${s.card} ${isActive ? s.cardActive : ""}`}
               aria-current={isActive ? "page" : undefined}
             >
-              <Icon size={20} className={s.icon} />
+              <span className={s.iconWrap}>
+                <Icon size={22} className={s.icon} />
+              </span>
               <span className={s.label}>{item.label}</span>
             </Link>
           );
@@ -44,4 +43,3 @@ export function CategoryShortcuts() {
     </section>
   );
 }
-

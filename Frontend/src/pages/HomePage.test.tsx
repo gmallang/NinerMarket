@@ -63,8 +63,17 @@ describe("HomePage", () => {
     });
   });
 
-  it("renders the listing grid", () => {
+  it("renders the marketplace landing view by default", () => {
     renderWithRouter(<HomePage />);
+    expect(screen.getByRole("heading", { name: "Find it on campus." })).toBeInTheDocument();
+    // The Looking For feed now lives on /requests, reachable from the sidebar.
+    expect(screen.queryByRole("heading", { name: "Looking For" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Recently Listed" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "All Listings" })).not.toBeInTheDocument();
+  });
+
+  it("renders the listing grid", () => {
+    renderWithRouter(<HomePage />, "/?view=all");
     expect(screen.getByRole("heading", { name: "All Listings" })).toBeInTheDocument();
     // Recently Listed repeats the newest cards above the grid, so scope the
     // assertions to the marketplace grid itself.
@@ -75,13 +84,13 @@ describe("HomePage", () => {
 
   it("shows the loading state while listings are pending", () => {
     useMarketStore.setState({ listings: [], loading: true });
-    renderWithRouter(<HomePage />);
+    renderWithRouter(<HomePage />, "/?view=all");
     expect(screen.getByText("Loading listings...")).toBeInTheDocument();
   });
 
   it("shows an empty state when nothing matches", () => {
     useMarketStore.setState({ listings: [] });
-    renderWithRouter(<HomePage />);
+    renderWithRouter(<HomePage />, "/?view=all");
     expect(screen.getByText("No listings found")).toBeInTheDocument();
   });
 
@@ -115,7 +124,7 @@ describe("HomePage", () => {
   });
 
   it("sorts by most recent by default, newest first", () => {
-    renderWithRouter(<HomePage />);
+    renderWithRouter(<HomePage />, "/?view=all");
     const grid = screen.getByRole("region", { name: "Listings" });
     const titles = Array.from(grid.querySelectorAll('[class*="cardTitle"]')).map(
       (el) => el.textContent
@@ -129,7 +138,7 @@ describe("HomePage", () => {
 
   it("shows an error banner with retry when listings fail to load", () => {
     useMarketStore.setState({ listings: [], listingsError: "Failed to fetch" });
-    renderWithRouter(<HomePage />);
+    renderWithRouter(<HomePage />, "/?view=all");
     expect(screen.getByText(/Couldn't load listings/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
   });

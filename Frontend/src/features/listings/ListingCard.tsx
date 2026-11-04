@@ -55,6 +55,27 @@ export function ListingCard({
   onOpen: () => void;
   onOpenSeller?: () => void;
 }) {
+  const sellerInfo = (
+    <>
+      <img
+        src={avatarUrl(item.seller, 40)}
+        alt={item.seller}
+        className={s.sellerAvatar}
+        loading="lazy"
+        decoding="async"
+      />
+      <span className={s.sellerInfo}>
+        <span className={s.sellerName}>{item.seller}</span>
+        <span className={s.sellerStats}>
+          {item.sellerRatingCount ? `${item.sellerRatingCount} ratings` : "New seller"}
+          {item.sellerRating > 0 && (
+            <span className={s.sellerRating}>· ★ {item.sellerRating.toFixed(1)}</span>
+          )}
+        </span>
+      </span>
+    </>
+  );
+
   return (
     <div className={s.card} onClick={onOpen}>
       <div className={s.cardImageWrap}>
@@ -85,9 +106,8 @@ export function ListingCard({
         <p className={s.cardTitle}>{item.title}</p>
         <div className={s.cardMeta}>
           <span>
-            {item.condition} • {item.campus}
+            {item.condition} · {item.campus}
           </span>
-          <span className={s.cardMetaTime}>{item.time}</span>
         </div>
         <div className={s.sellerRow}>
           {item.sellerId && onOpenSeller ? (
@@ -98,16 +118,10 @@ export function ListingCard({
                 onOpenSeller();
               }}
             >
-              <img src={avatarUrl(item.seller, 40)} alt={item.seller} className={s.sellerAvatar} loading="lazy" decoding="async" />
-              <span className={s.sellerName}>{item.seller}</span>
-              {item.sellerRating != null && <span className={s.sellerRating}>★ {item.sellerRating}</span>}
+              {sellerInfo}
             </button>
           ) : (
-            <>
-              <img src={avatarUrl(item.seller, 40)} alt={item.seller} className={s.sellerAvatar} loading="lazy" decoding="async" />
-              <span className={s.sellerName}>{item.seller}</span>
-              {item.sellerRating != null && <span className={s.sellerRating}>★ {item.sellerRating}</span>}
-            </>
+            <div className={s.sellerStatic}>{sellerInfo}</div>
           )}
         </div>
       </div>

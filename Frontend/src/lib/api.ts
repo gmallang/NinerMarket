@@ -1,4 +1,6 @@
 import type {
+  AdminListing,
+  AdminUser,
   AuthResponse,
   ListingDto,
   NewListing,
@@ -403,4 +405,66 @@ export const api = {
       method: "DELETE",
       body: JSON.stringify({ endpoint }),
     }),
+
+  // ── Admin panel ──────────────────────────────────────────────────────────
+  // Every call is rejected with 403 by the backend unless the signed-in user
+  // is on the admin allow-list; hiding the panel in the UI is only cosmetic.
+  adminListListings: async (
+    params: { q?: string; status?: string; limit?: number; offset?: number } = {},
+  ): Promise<{ items: AdminListing[]; total?: number }> => {
+    const q = new URLSearchParams();
+    if (params.q?.trim()) q.set("q", params.q.trim());
+    if (params.status && params.status !== "all") q.set("status", params.status);
+    if (params.limit != null) q.set("limit", String(params.limit));
+    if (params.offset != null) q.set("offset", String(params.offset));
+    const qs = q.toString();
+    const res = await requestRaw(`/admin/listings${qs ? `?${qs}` : ""}`);
+    const total = res.headers.get("X-Total-Count");
+    return {
+      items: (await res.json()) as AdminListing[],
+      total: total != null && total !== "" ? Number(total) : undefined,
+    };
+  },
+
+  adminDeleteListing: (id: string) =>
+    request<{ deleted: string }>(`/admin/listings/${id}`, { method: "DELETE" }),
+
+  adminListRequests: async (
+    params: { q?: string; status?: string; limit?: number; offset?: number } = {},
+  ): Promise<{ items: WantedRequestDto[]; total?: number }> => {
+    const q = new URLSearchParams();
+    if (params.q?.trim()) q.set("q", params.q.trim());
+    if (params.status && params.status !== "all") q.set("status", params.status);
+    if (params.limit != null) q.set("limit", String(params.limit));
+    if (params.offset != null) q.set("offset", String(params.offset));
+    const qs = q.toString();
+    const res = await requestRaw(`/admin/requests${qs ? `?${qs}` : ""}`);
+    const total = res.headers.get("X-Total-Count");
+    return {
+      items: (await res.json()) as WantedRequestDto[],
+      total: total != null && total !== "" ? Number(total) : undefined,
+    };
+  },
+
+  adminDeleteRequest: (id: string) =>
+    request<{ deleted: string }>(`/admin/requests/${id}`, { method: "DELETE" }),
+
+  adminListUsers: async (
+    params: { q?: string; limit?: number; offset?: number } = {},
+  ): Promise<{ items: AdminUser[]; total?: number }> => {
+    const q = new URLSearchParams();
+    if (params.q?.trim()) q.set("q", params.q.trim());
+    if (params.limit != null) q.set("limit", String(params.limit));
+    if (params.offset != null) q.set("offset", String(params.offset));
+    const qs = q.toString();
+    const res = await requestRaw(`/admin/users${qs ? `?${qs}` : ""}`);
+    const total = res.headers.get("X-Total-Count");
+    return {
+      items: (await res.json()) as AdminUser[],
+      total: total != null && total !== "" ? Number(total) : undefined,
+    };
+  },
+
+  adminDeleteUser: (id: string) =>
+    request<{ deleted: string }>(`/admin/users/${id}`, { method: "DELETE" }),
 };

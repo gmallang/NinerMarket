@@ -15,7 +15,13 @@ PBKDF2_ITERATIONS = 600_000
 CODE_TTL_MINUTES = 15
 SESSION_TTL_DAYS = 30
 
+# Who gets into the admin panel. Overridable via ADMIN_EMAILS so a deployment
+# can add or rotate moderators without a code change; the default is the two
+# project admins.
+DEFAULT_ADMIN_EMAILS = "ksaifeld@charlotte.edu,gmallang@charlotte.edu"
+
 _session_secret: str | None = None
+_admin_emails: frozenset[str] | None = None
 
 
 def _get_session_secret() -> str:
@@ -35,6 +41,22 @@ def _get_session_secret() -> str:
             secret = secrets.token_hex(32)
         _session_secret = secret
     return _session_secret
+
+
+def admin_emails() -> frozenset[str]:
+    """Lower-cased set of admin addresses. Read lazily for the same reason as
+    _get_session_secret: database.py loads .env after this module imports."""
+    global _admin_emails
+    if _admin_emails is None:
+        raw = os.getenv("ADMIN_EMAILS", DEFAULT_ADMIN_EMAILS)
+        _admin_emails = frozenset(e.strip().lower() for e in raw.split(",") if e.strip())
+    return _admin_emails
+
+
+def is_admin_email(email: str | None) -> bool:
+    """Whether this address may use the admin panel. Never trust the client's
+    copy of this flag — routes/admin.py re-checks it against the session."""
+    return bool(email) and email.strip().lower() in admin_emails()
 
 
 def hash_password(password: str) -> str:

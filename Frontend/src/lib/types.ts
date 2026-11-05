@@ -17,6 +17,8 @@ export interface UserDto {
   rating_count: number;
   email_verified?: boolean;
   has_password?: boolean;
+  /** Set by the backend from its admin allow-list; also gates /admin. */
+  is_admin?: boolean;
 }
 
 export interface AuthResponse {
@@ -104,6 +106,23 @@ export interface CurrentUser {
   payment_methods?: string[];
   email_verified?: boolean;
   has_password?: boolean;
+  is_admin?: boolean;
+}
+
+export interface AdminListing extends ListingDto {
+  report_count: number;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  display_name: string;
+  school_year?: string;
+  email_verified?: boolean;
+  rating_avg: number;
+  rating_count: number;
+  is_admin: boolean;
+  listing_count: number;
 }
 
 export type WantedRequestStatus = "active" | "fulfilled" | "expired";

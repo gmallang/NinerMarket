@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronLeft,
   SlidersHorizontal,
+  ShieldAlert,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import ninerLogo from "@/assets/NinerMarket.png";
@@ -623,6 +624,14 @@ export function AppLayout() {
                       >
                         <Megaphone size={14} /> My Requests
                       </DropdownMenu.Item>
+                      {user.is_admin && (
+                        <DropdownMenu.Item
+                          className={s.profileMenuItem}
+                          onSelect={() => navigate("/admin")}
+                        >
+                          <ShieldAlert size={14} /> Admin panel
+                        </DropdownMenu.Item>
+                      )}
                       <DropdownMenu.Item
                         className={`${s.profileMenuItem} ${s.profileMenuItemDanger}`}
                         onSelect={handleLogout}

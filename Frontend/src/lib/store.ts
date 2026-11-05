@@ -389,6 +389,9 @@ export const useMarketStore = create<MarketState>((set, get) => {
         school_year: u.school_year,
         payment_methods: u.payment_methods,
         email_verified: u.email_verified ?? true,
+        // Re-read on every refresh so losing admin access (or gaining it)
+        // takes effect without the user signing out.
+        is_admin: u.is_admin ?? false,
       };
       saveUser(updated);
       set({ user: updated });

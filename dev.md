@@ -26,6 +26,10 @@ is often occupied by an unrelated project; don't kill it.
 
 Seeded login: `anna@charlotte.edu` / `ninermarket-demo` (all seed users share it).
 
+The admin panel lives at `/admin`. The two admins (`ksaifeld@charlotte.edu`,
+`gmallang@charlotte.edu`) are seeded in local dev too, same password; access is
+re-checked server-side against the `ADMIN_EMAILS` allow-list on every request.
+
 ## Verification
 
 ```bash
@@ -82,6 +86,7 @@ Backend (set in the host's project settings, then redeploy):
 | `FRONTEND_URL` | deployed frontend origin |
 | `RESEND_API_KEY` | transactional email |
 | `GOOGLE_CLIENT_ID` | Google sign-in |
+| `ADMIN_EMAILS` | comma-separated emails allowed into `/admin` (defaults to the two admins) |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | web push |
 
 Frontend: `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.

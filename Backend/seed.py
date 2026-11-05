@@ -172,6 +172,10 @@ def seed_dev_store(
         "seller-13": user("seller-13", "Daniel R.",  4.7, 12, "Senior",    ["Venmo", "Zelle", "Bank Transfer"]),
         "seller-14": user("seller-14", "Sofia L.",   4.9, 16, "Graduate",  ["Venmo", "Zelle"]),
         "u-anna":    user("u-anna",    "Anna C.",    4.8, 21, "Senior",    ["Cash", "Venmo", "Zelle"], email="anna@charlotte.edu"),
+        # The two accounts on the backend's admin allow-list (see auth.py), so
+        # the admin panel is reachable when running against the seeded store.
+        "u-ksaifeld": user("u-ksaifeld", "Kareem", 5.0, 0, "Senior", ["Cash", "Venmo"], email="ksaifeld@charlotte.edu"),
+        "u-gmallang": user("u-gmallang", "Chand",  5.0, 0, "Senior", ["Cash", "Venmo"], email="gmallang@charlotte.edu"),
     }
     users.update(sellers)
 

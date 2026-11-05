@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { Suspense, lazy } from "react";
 import { Navigate, createBrowserRouter } from "react-router-dom";
 import { AppLayout } from "./AppLayout";
-import { PublicOnly, RequireAuth } from "./guards";
+import { PublicOnly, RequireAdmin, RequireAuth } from "./guards";
 import { HomePage } from "@/pages/HomePage";
 
 const LoginPage = lazy(() => import("@/pages/LoginPage").then((m) => ({ default: m.LoginPage })));
@@ -22,6 +22,7 @@ const RequestsPage = lazy(() =>
 const MyRequestsPage = lazy(() =>
   import("@/pages/MyRequestsPage").then((m) => ({ default: m.MyRequestsPage }))
 );
+const AdminPage = lazy(() => import("@/pages/AdminPage").then((m) => ({ default: m.AdminPage })));
 
 const fallback = (
   <div
@@ -62,6 +63,14 @@ export const router = createBrowserRouter([
               { path: "/user/:id", element: withSuspense(<UserProfilePage />) },
               { path: "/requests", element: withSuspense(<RequestsPage />) },
               { path: "/requests/mine", element: withSuspense(<MyRequestsPage />) },
+              {
+                path: "/admin",
+                element: withSuspense(
+                  <RequireAdmin>
+                    <AdminPage />
+                  </RequireAdmin>
+                ),
+              },
             ],
           },
         ],

@@ -12,6 +12,7 @@ from auth import (
     create_session_token,
     generate_code,
     hash_password,
+    is_admin_email,
     make_user_id,
     require_user,
     send_verification_email,
@@ -49,6 +50,7 @@ def _to_public(user: User) -> UserPublic:
         rating_count=user.rating_count,
         email_verified=user.email_verified,
         has_password=bool(user.password_hash),
+        is_admin=is_admin_email(user.email),
     )
 
 

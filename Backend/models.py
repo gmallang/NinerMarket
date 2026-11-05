@@ -38,6 +38,7 @@ class UserPublic(BaseModel):
     rating_count: int = 0
     email_verified: bool = False
     has_password: bool = False
+    is_admin: bool = False
 
 
 class LoginRequest(BaseModel):

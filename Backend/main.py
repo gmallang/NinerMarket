@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routes import (
+    admin,
     users,
     listings,
     ratings,
@@ -41,3 +42,4 @@ app.include_router(offers.router)
 app.include_router(push.router)
 app.include_router(saved.router)
 app.include_router(wanted_requests.router)
+app.include_router(admin.router)

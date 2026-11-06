@@ -1,295 +1,278 @@
 /* ─────────────────────────────────────────────
-   login.module.css - Login page + auth modals
-   Covers LoginPage, GoogleChooser, TermsModal,
-   HelpModal and the sign-in / sign-up modal.
+   login.module.css - auth card + auth modals
+   The card floats over the hero photo on the
+   public pages; the modals it opens live here too.
    ───────────────────────────────────────────── */
 
-/* ── Login page shell ── */
-.xPage {
-  min-height: 100vh;
-  background:
-    radial-gradient(1100px 600px at 85% -10%, rgba(0, 80, 53, 0.12), transparent 60%),
-    radial-gradient(900px 500px at -10% 110%, rgba(0, 80, 53, 0.08), transparent 55%),
-    var(--color-bg);
-  color: var(--color-fg);
-  display: flex;
-  flex-direction: column;
-}
-
-.xMain {
-  flex: 1;
+/* ── Auth card ── */
+.card {
   width: 100%;
-  display: flex;
-  align-items: stretch;
-}
-
-@media (max-width: 860px) {
-  .xMain {
-    flex-direction: column;
-  }
-}
-
-/* Left - dark green side with headline, logo, features & footer */
-.xLeft {
-  flex: 1;
-  min-width: 0;
-  background: #0b2418;
-  color: #e7e9ea;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-6);
-  padding: var(--space-8) var(--space-6);
-}
-
-@media (max-width: 860px) {
-  .xLeft {
-    flex: none;
-    justify-content: center;
-    padding: var(--space-6) var(--space-6) var(--space-3);
-    gap: var(--space-4);
-  }
-}
-
-.xLogo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-}
-
-.xLogoName {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: #fff;
-  transform: translateX(8px);
-}
-
-@media (max-width: 860px) {
-  .xLogoName {
-    font-size: 1.25rem;
-    transform: none;
-  }
-}
-
-.xLogoImg {
-  display: block;
-  width: min(300px, 70%);
-  height: 210px;
-  object-fit: contain;
-  filter: brightness(0) invert(1);
-}
-
-@media (max-width: 860px) {
-  .xLogoImg {
-    width: min(150px, 52%);
-    height: 118px;
-  }
-}
-
-.xFeatures {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-3);
-  color: #d7dfda;
-  font-size: 0.9375rem;
-  text-align: left;
-  width: 100%;
-  max-width: 420px;
-}
-
-.xFeatures li {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-}
-
-.xFeatures li svg {
-  color: #fff;
-  stroke: #fff;
-  flex-shrink: 0;
-}
-
-/* Right - light side with join panel */
-.xRight {
-  flex: 1;
-  min-width: 0;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 24px 22px 22px;
+  border-radius: 12px;
   background: #fff;
   color: var(--color-fg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-8) var(--space-6);
+  box-shadow: 0 12px 32px rgba(12, 28, 18, 0.22);
 }
 
-@media (max-width: 860px) {
-  .xRight {
-    justify-content: flex-start;
-    padding: var(--space-5) var(--space-4) var(--space-4);
-  }
-}
-
-.xHeadline {
+.cardTitle {
   font-family: var(--font-display);
-  font-size: 3rem;
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  color: #fff;
-  text-align: center;
-  text-wrap: balance;
-  margin-top: 0;
-}
-
-@media (max-width: 860px) {
-  .xHeadline {
-    font-size: 2rem;
-  }
-}
-
-.xSubheadline {
-  font-family: var(--font-display);
-  font-size: 2.25rem;
+  font-size: 1.3125rem;
   font-weight: 700;
-  color: var(--color-primary);
-  margin-top: 0;
-  width: 100%;
+  line-height: 1.25;
   text-align: center;
+  color: var(--color-fg);
 }
 
-.xCard {
-  width: min(420px, 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: #fff;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-6) var(--space-6) var(--space-5);
-  box-sizing: border-box;
+.cardSub {
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--color-fg-muted);
 }
 
-@media (max-width: 860px) {
-  .xSubheadline {
-    font-size: 1.5rem;
-    margin-top: var(--space-4);
-  }
-}
-
-.xActions {
-  margin-top: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-3);
-  width: 100%;
-  max-width: 360px;
-}
-
-.xGoogleBtn {
-  width: 100%;
+.googleSlot {
   display: flex;
   justify-content: center;
   min-height: 44px;
+  margin-top: 16px;
 }
 
-.xSocialBtn {
-  width: 100%;
+.googleBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  padding: 12px 20px;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-primary-fg);
-  background: var(--color-primary);
-  border: 1px solid var(--color-primary);
+  gap: 10px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 11px 16px;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
-  cursor: pointer;
+  background: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-fg);
   transition: background var(--duration) var(--ease);
 }
 
-.xSocialBtn:hover {
-  background: var(--color-primary-dark);
-}
-
-.xSocialBtn:disabled,
-.xSubmitBtn:disabled {
-  background: var(--color-muted);
-  border-color: var(--color-border);
-  color: var(--color-fg-subtle);
-  cursor: not-allowed;
-}
-
-.xSocialBtn:disabled:hover,
-.xSubmitBtn:disabled:hover {
+.googleBtn:hover {
   background: var(--color-muted);
 }
 
-.xEmailLink {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-align: left;
-  color: var(--color-primary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.xEmailLink:hover {
-  text-decoration: underline;
-}
-
-.xOnlyNote {
-  font-size: 0.875rem;
-  line-height: 1.5;
+.or {
+  position: relative;
+  margin: 14px 0 12px;
+  text-align: center;
+  font-size: 0.75rem;
   color: var(--color-fg-muted);
-  margin: 0;
 }
 
-.xTerms {
+.or::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.or span {
+  position: relative;
+  padding: 0 10px;
+  background: #fff;
+}
+
+.cardForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid #d5d9d6;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.875rem;
+  color: var(--color-fg);
+  outline: none;
+  transition:
+    border-color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease);
+}
+
+.input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 80, 53, 0.14);
+}
+
+.input::placeholder {
+  color: var(--color-fg-subtle);
+}
+
+.fieldError {
+  font-size: 0.75rem;
+  color: var(--color-danger);
+}
+
+.pwdWrap {
+  position: relative;
+  width: 100%;
+}
+
+.pwdWrap .input {
+  padding-right: 40px;
+}
+
+.pwdToggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-fg-muted);
+}
+
+.pwdToggle:hover {
+  color: var(--color-fg);
+  background: var(--color-muted);
+}
+
+.forgot {
+  align-self: flex-end;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.forgot:hover {
+  text-decoration: underline;
+}
+
+.terms {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-2);
+  gap: 8px;
   font-size: 0.75rem;
   line-height: 1.4;
   color: var(--color-fg-muted);
   cursor: pointer;
 }
 
-.xTerms input {
+.terms input {
   margin-top: 2px;
   accent-color: var(--color-primary);
   flex-shrink: 0;
 }
 
-.xTermsLink {
-  color: var(--color-primary);
-  background: none;
-  border: none;
-  cursor: pointer;
+.termsLink {
   padding: 0;
+  border: none;
+  background: none;
   font-size: inherit;
+  color: var(--color-primary);
 }
 
-.xTermsLink:hover {
+.termsLink:hover {
   text-decoration: underline;
 }
+
+.error {
+  padding: 8px 10px;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  background: #fef2f2;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.submitBtn {
+  width: 100%;
+  margin-top: 2px;
+  padding: 11px 16px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  transition: background var(--duration) var(--ease);
+}
+
+.submitBtn:hover {
+  background: var(--color-primary-dark);
+}
+
+.submitBtn:disabled {
+  background: var(--color-muted);
+  color: var(--color-fg-subtle);
+  cursor: not-allowed;
+}
+
+.onlyNote {
+  margin-top: 12px;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--color-fg-muted);
+}
+
+.switchRow {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+}
+
+.switchLink {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: inherit;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.switchLink:hover {
+  text-decoration: underline;
+}
+
+.auxRow {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.auxLink {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+}
+
+.auxLink:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+/* ── Shared auth modal bits (Google chooser / terms / help) ── */
 
 .xError {
   font-size: 0.8125rem;
@@ -300,60 +283,6 @@
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-3);
   margin: 0;
-}
-
-.xSignInBox {
-  width: 100%;
-  max-width: 360px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-3);
-}
-
-.xDivider {
-  border: none;
-  border-top: 1px solid var(--color-border);
-  width: 100%;
-  max-width: 360px;
-  margin: var(--space-6) 0 var(--space-5);
-}
-
-.xSignInLabel {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-fg);
-  margin-top: var(--space-4);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
-}
-
-.xSignInBtn {
-  width: 100%;
-  padding: 12px 20px;
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  background: #fff;
-  border: 1.5px solid var(--color-primary);
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  transition:
-    background var(--duration) var(--ease),
-    border-color var(--duration) var(--ease);
-}
-
-.xSignInBtn:hover {
-  background: var(--color-accent);
-  border-color: var(--color-primary-dark);
-}
-
-
-
-
-@media (max-width: 860px) {
-
-
 }
 
 .xDemoHint {
@@ -435,11 +364,6 @@
   color: var(--color-fg-subtle);
 }
 
-.xFieldError {
-  font-size: 0.75rem;
-  color: var(--color-danger);
-}
-
 .xVerifyNote {
   font-size: 0.875rem;
   line-height: 1.5;
@@ -466,103 +390,13 @@
   font-weight: 700;
 }
 
-
-.xSelectWrap {
-  position: relative;
-  width: 100%;
-}
-
-.xFormBlock {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.xFormLabel {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-fg-muted);
-}
-
 .xPasswordWrap {
   position: relative;
   width: 100%;
 }
 
-.xPwdToggle {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: none;
-  color: var(--color-fg-muted);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  padding: 0;
-}
-
-.xPwdToggle:hover {
-  color: var(--color-fg);
-  background: var(--color-muted);
-}
-
 .xPasswordWrap .xInput {
   padding-right: 42px;
-}
-
-.xSelect {
-  width: 100%;
-  padding: 12px 40px 12px 14px;
-  font-family: var(--font-body);
-  font-size: 0.9375rem;
-  color: var(--color-fg);
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  outline: none;
-  box-sizing: border-box;
-  cursor: pointer;
-  transition: border-color var(--duration) var(--ease);
-  appearance: none;
-}
-
-.xSelect option {
-  color: var(--color-fg);
-  background: var(--color-card);
-}
-
-.xSelect:focus {
-  border-color: var(--color-primary);
-}
-
-.xSelectIcon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: var(--color-fg-muted);
-}
-
-.xForgot {
-  align-self: flex-start;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
-
-.xForgot:hover {
-  text-decoration: underline;
 }
 
 .xSubmitBtn {
@@ -781,3 +615,15 @@
 .helpContactLink:hover {
   text-decoration: underline;
 }
+
+.xSubmitBtn:disabled {
+  background: var(--color-muted);
+  border-color: var(--color-border);
+  color: var(--color-fg-subtle);
+  cursor: not-allowed;
+}
+
+.xSubmitBtn:disabled:hover {
+  background: var(--color-muted);
+}
+

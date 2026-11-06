@@ -1,0 +1,101 @@
+.hero {
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid rgba(31, 122, 82, 0.25);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--space-6);
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+}
+
+.bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1200px 400px at 10% 10%, rgba(255, 255, 255, 0.12) 0%, transparent 60%),
+    linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background-size: cover;
+  background-position: center;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(31, 122, 82, 0.92) 0%, rgba(31, 122, 82, 0.78) 55%, rgba(31, 122, 82, 0.4) 100%);
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  padding: clamp(var(--space-4), 4vw, var(--space-8));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 640px;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.logo {
+  height: 34px;
+  width: auto;
+  filter: brightness(0) invert(1);
+}
+
+.locationBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--color-fg-inverse);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 800;
+  color: var(--color-fg-inverse);
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ctaRow {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  background: #fff;
+  color: var(--color-primary);
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+}
+
+.ctaPrimary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}

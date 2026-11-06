@@ -1,0 +1,393 @@
+/* ─────────────────────────────────────────────
+   publicChrome.module.css - the public page shell
+   Shared by /login and /about: a green navbar, the
+   photo hero with the auth card, the three feature
+   tiles and the large marketing footer.
+   ───────────────────────────────────────────── */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  color: var(--color-fg);
+}
+
+.main {
+  flex: 1;
+}
+
+/* ── Navbar ── App navbar lockup: app green, white cart, white wordmark. */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.navInner {
+  width: 100%;
+  max-width: 1100px;
+  height: 64px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.brandImg {
+  display: block;
+  height: 28px;
+  width: auto;
+  max-width: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: brightness(0) invert(1);
+  transition: filter var(--duration) var(--ease);
+}
+
+.brand:hover .brandImg {
+  filter: brightness(0) invert(1) drop-shadow(0 0 6px rgba(255, 255, 255, 0.85));
+}
+
+.brand:hover .brandName {
+  text-shadow:
+    0 0 8px rgba(255, 255, 255, 0.9),
+    0 0 20px rgba(255, 255, 255, 0.45);
+}
+
+.brandName {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--color-fg-inverse);
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.navLink {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.86);
+  text-decoration: none;
+  transition: color var(--duration) var(--ease);
+}
+
+.navLink:hover {
+  color: #fff;
+}
+
+/* Matches the app navbar's white Sell CTA: white pill, green label. */
+.navCta {
+  padding: 9px 18px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-full);
+  background: #fff;
+  color: var(--color-primary);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+  transition: background var(--duration) var(--ease);
+}
+
+.navCta:hover {
+  background: var(--color-accent);
+}
+
+/* ── Hero: dark green block with the auth card floating on it ── */
+.heroSection {
+  padding: 24px 16px 0;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1040px;
+  min-height: 560px;
+  margin: 0 auto;
+  padding: 48px 16px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--color-primary-dark);
+  box-shadow: var(--shadow-lg);
+}
+
+.heroCard {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.heroPill {
+  display: block;
+  margin: 14px auto 0;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: var(--shadow-md);
+  font-size: 0.8125rem;
+  color: var(--color-fg);
+  transition: box-shadow var(--duration) var(--ease);
+}
+
+.heroPill:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.heroPill strong {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+/* ── Example columns: the real app components, sized for the page ── */
+.examples {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 40px 16px 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  align-items: start;
+}
+
+.example {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.exampleTitle {
+  max-width: 280px;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #111;
+}
+
+.exampleSub {
+  max-width: 290px;
+  margin-top: 10px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-fg-muted);
+}
+
+/* A live component sits on this stage, not a hand-built mock. */
+.exampleStage {
+  width: 100%;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  text-align: left;
+  pointer-events: none;
+}
+
+.exampleListing {
+  width: 100%;
+  max-width: 200px;
+}
+
+.exampleRequests {
+  width: 100%;
+  max-width: 300px;
+}
+
+.chatBox {
+  width: 100%;
+  max-width: 300px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-bg);
+  box-shadow: 0 18px 36px rgba(12, 28, 18, 0.16);
+}
+
+/* ── Join band ── */
+.joinBand {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.joinTitle {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.joinBtn {
+  padding: 11px 22px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  transition: background var(--duration) var(--ease);
+}
+
+.joinBtn:hover {
+  background: var(--color-primary-dark);
+}
+
+/* ── Footer ── */
+.footer {
+  padding: 32px 16px 44px;
+  background: #fff;
+  border-top: 1px solid var(--color-border);
+}
+
+.footerInner {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.footerCols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.colTitle {
+  margin-bottom: 10px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.colList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.colLink {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.8125rem;
+  color: #3c4043;
+  text-align: left;
+  text-decoration: none;
+}
+
+.colLink:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.footerNote {
+  margin-top: 26px;
+  max-width: 720px;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: #5b635c;
+}
+
+/* ── Responsive ── */
+@media (max-width: 860px) {
+  .navInner {
+    padding: 0 16px;
+  }
+
+  .navLinks {
+    gap: 14px;
+  }
+
+  .navLink {
+    display: none;
+  }
+
+  .heroSection {
+    padding: 16px 12px 0;
+  }
+
+  .hero {
+    min-height: 0;
+    padding: 32px 12px;
+    border-radius: 16px;
+  }
+
+  .examples {
+    max-width: 420px;
+    padding-top: 32px;
+    gap: 36px;
+    grid-template-columns: 1fr;
+  }
+
+  .exampleStage {
+    margin-top: 18px;
+  }
+
+  .footerCols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 28px;
+  }
+}
+
+@media (max-width: 560px) {
+  .brandName {
+    font-size: 1.15rem;
+  }
+
+  .brandImg {
+    height: 26px;
+  }
+
+  .navCta {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+  }
+
+  .heroPill {
+    font-size: 0.75rem;
+    padding: 9px 14px;
+  }
+
+  .exampleTitle {
+    font-size: 1.25rem;
+  }
+
+
+  .joinBand {
+    padding: 32px 16px 36px;
+  }
+
+  .joinTitle {
+    font-size: 1.2rem;
+  }
+}

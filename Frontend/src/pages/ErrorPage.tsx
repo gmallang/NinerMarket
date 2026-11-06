@@ -24,7 +24,7 @@ export function ErrorPage() {
           padding: "10px 20px",
           borderRadius: 8,
           border: 0,
-          background: "var(--color-accent, #00704a)",
+          background: "var(--color-accent, #1f7a52)",
           color: "#fff",
           fontSize: 15,
           cursor: "pointer",

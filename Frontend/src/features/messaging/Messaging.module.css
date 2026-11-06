@@ -650,12 +650,12 @@
 .sendBtn:not(:disabled) {
   background: var(--color-primary-light);
   color: var(--color-fg-inverse);
-  box-shadow: 0 2px 8px rgba(34, 160, 80, 0.45);
+  box-shadow: 0 2px 8px rgba(31, 122, 82, 0.45);
 }
 
 .sendBtn:hover:not(:disabled) {
   background: var(--color-primary);
-  box-shadow: 0 3px 10px rgba(0, 80, 53, 0.5);
+  box-shadow: 0 3px 10px rgba(31, 122, 82, 0.5);
 }
 
 .sendBtn:active {

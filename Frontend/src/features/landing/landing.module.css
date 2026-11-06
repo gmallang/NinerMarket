@@ -81,8 +81,8 @@
 .navCta {
   padding: 9px 18px;
   border-radius: var(--radius-full);
-  background: var(--color-gold);
-  color: var(--color-gold-fg);
+  background: var(--color-on-brand-bg);
+  color: var(--color-on-brand-fg);
   font-size: 0.9375rem;
   font-weight: 800;
   border: 1px solid rgba(0, 0, 0, 0.06);
@@ -91,7 +91,7 @@
 }
 
 .navCta:hover {
-  background: var(--color-gold-dark);
+  background: var(--color-on-brand-bg-hover);
 }
 
 .browseWrap {
@@ -152,7 +152,7 @@
 .hero {
   position: relative;
   overflow: hidden;
-  background: radial-gradient(120% 140% at 0% 0%, #1c6353 0%, #14564a 46%, #0e4b3f 78%);
+  background: radial-gradient(120% 140% at 0% 0%, #076f4c 0%, #035e3f 46%, #005035 78%);
   color: #fff;
 }
 
@@ -185,7 +185,9 @@
 }
 
 .heroGold {
-  color: var(--color-gold);
+  /* A pale green tint instead of white keeps this line visually distinct
+     from the rest of the headline without introducing a non-brand hue. */
+  color: var(--color-accent);
 }
 
 .heroTagline {
@@ -232,14 +234,14 @@
 }
 
 .btnGold {
-  background: var(--color-gold);
-  color: var(--color-gold-fg);
+  background: var(--color-on-brand-bg);
+  color: var(--color-on-brand-fg);
   border: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
 }
 
 .btnGold:hover {
-  background: var(--color-gold-dark);
+  background: var(--color-on-brand-bg-hover);
 }
 
 .btnOutline {

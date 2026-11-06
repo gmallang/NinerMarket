@@ -10,16 +10,17 @@
   --font-body: "Instrument Sans", system-ui, sans-serif;
   --font-display: "Instrument Sans", system-ui, sans-serif;
 
-  /* Brand greens - deep campus forest, per the homepage mock */
-  --color-primary: #0e4b3f;
-  --color-primary-dark: #09362d;
-  --color-primary-light: #146b54;
+  /* Brand greens — matches the UNC Charlotte C mark */
+  --color-primary: #005035;
+  --color-primary-dark: #003c28;
+  --color-primary-light: #006945;
   --color-primary-fg: #ffffff;
 
-  /* Warm gold accent used for the primary Sell CTA */
-  --color-gold: #e5b85a;
-  --color-gold-dark: #c99a3f;
-  --color-gold-fg: #1f2a22;
+  /* White pill used for CTAs that sit on a green surface (nav bar, hero,
+     dark CTA bands) — green-on-green would have no contrast there. */
+  --color-on-brand-bg: #ffffff;
+  --color-on-brand-bg-hover: #eef2ee;
+  --color-on-brand-fg: #005035;
 
   /* Surfaces */
   --color-bg: #f7f8f6;
@@ -39,7 +40,7 @@
 
   /* Borders */
   --color-border: #e5e7eb;
-  --color-border-focus: #0e4b3f;
+  --color-border-focus: #005035;
 
   /* Semantic */
   --color-danger: #d4183d;
@@ -49,22 +50,22 @@
   /* Condition badge colours - fixed hierarchy, one hue per condition:
      Like New  → saturated green (best condition)
      Excellent → pale green
-     Good      → yellow
+     Good      → white
      Fair      → orange  (most used/worn)
      Service   → purple  (not a condition - a service category) */
   --badge-like-new-bg: #bbf7d0;
   --badge-like-new-fg: #15803d;
   --badge-excellent-bg: #dcfce7;
   --badge-excellent-fg: #166534;
-  --badge-good-bg: #fef9c3;
-  --badge-good-fg: #713f12;
+  --badge-good-bg: #ffffff;
+  --badge-good-fg: #1c1e1c;
   --badge-fair-bg: #ffedd5;
   --badge-fair-fg: #9a3412;
   --badge-service-bg: #ede9fe;
   --badge-service-fg: #4c1d95;
 
   /* Chat bubble colours */
-  --bubble-sent-bg: #0e4b3f;
+  --bubble-sent-bg: #005035;
   --bubble-sent-fg: #ffffff;
   --bubble-recv-bg: #eef0ee;
   --bubble-recv-fg: #1c1e1c;

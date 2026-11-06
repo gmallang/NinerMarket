@@ -2,6 +2,7 @@ import { Heart } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
 import { listingImageUrl } from "@/lib/image";
+import { formatPostedDate } from "@/lib/format";
 import { ProgressiveImage } from "@/components/shared/ProgressiveImage";
 import ninerLogo from "@/assets/NinerMarket.png";
 import s from "./card.module.css";
@@ -48,24 +49,29 @@ export function ListingCard({
   onToggleSave,
   onOpen,
   onOpenSeller,
+  blurSeller = false,
 }: {
   item: Listing;
   saved: boolean;
   onToggleSave: () => void;
   onOpen: () => void;
   onOpenSeller?: () => void;
+  /** Public previews hide who is selling until the visitor signs in. */
+  blurSeller?: boolean;
 }) {
   const sellerInfo = (
     <>
       <img
         src={avatarUrl(item.seller, 40)}
-        alt={item.seller}
+        alt={blurSeller ? "" : item.seller}
         className={s.sellerAvatar}
         loading="lazy"
         decoding="async"
       />
       <span className={s.sellerInfo}>
-        <span className={s.sellerName}>{item.seller}</span>
+        <span className={blurSeller ? `${s.sellerName} ${s.sellerNameBlur}` : s.sellerName}>
+          {item.seller}
+        </span>
         <span className={s.sellerStats}>
           {item.sellerRatingCount ? `${item.sellerRatingCount} ratings` : "New seller"}
           {item.sellerRating > 0 && (
@@ -109,6 +115,9 @@ export function ListingCard({
             {item.condition} · {item.campus}
           </span>
         </div>
+        {item.createdAt && (
+          <p className={s.cardDate}>Posted {formatPostedDate(item.createdAt)}</p>
+        )}
         <div className={s.sellerRow}>
           {item.sellerId && onOpenSeller ? (
             <button

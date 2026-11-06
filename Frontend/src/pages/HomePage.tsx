@@ -8,7 +8,6 @@ import { CATEGORIES } from "@/data/categories";
 import type { Listing } from "@/lib/types";
 import { ListingCard } from "@/features/listings/ListingCard";
 import { ListingRow } from "@/features/listings/ListingRow";
-import { HomeHero } from "@/components/home/HomeHero";
 import { CategoryShortcuts } from "@/components/home/CategoryShortcuts";
 import { RecentlyListed } from "@/components/home/RecentlyListed";
 import s from "./HomePage.module.css";
@@ -207,7 +206,6 @@ export function HomePage() {
 
   return (
     <div className={`${ps.page} ${s.page}`}>
-      {isDefaultView && <HomeHero />}
       {isDefaultView && <CategoryShortcuts />}
       {isDefaultView && <RecentlyListed />}
 

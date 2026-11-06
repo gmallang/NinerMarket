@@ -9,12 +9,24 @@ afterEach(() => {
 });
 
 describe("LoginPage", () => {
-  it("renders the marketing side and sign-in entry points", () => {
+  it("renders the auth card over the hero", () => {
     vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "");
     renderWithRouter(<LoginPage />);
-    expect(screen.getByText("Your campus marketplace")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Discover your campus marketplace" })
+    ).toBeInTheDocument();
     expect(screen.getByText("Continue with Google")).toBeInTheDocument();
     expect(screen.getByText(/UNC Charlotte students, faculty/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /New to NinerMarket/ })).toBeInTheDocument();
+  });
+
+  it("switches the card to the log-in form from the card's switch link", async () => {
+    vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "");
+    const { user } = renderWithRouter(<LoginPage />);
+
+    expect(screen.queryByText("Forgot password?")).not.toBeInTheDocument();
+    await user.click(screen.getAllByRole("button", { name: "Log in" })[0]);
+    expect(screen.getByText("Forgot password?")).toBeInTheDocument();
   });
 
   it("renders the Google Identity button when a client id is configured", () => {
@@ -39,7 +51,6 @@ describe("LoginPage", () => {
   it("rejects an invalid email with a field-level warning", async () => {
     vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "");
     const { user } = renderWithRouter(<LoginPage />);
-    await user.click(screen.getByText("Sign up with your @charlotte.edu email instead"));
     const emailInput = screen.getByPlaceholderText("Email address (@charlotte.edu)");
     await user.type(emailInput, "anna@gmail.com");
     expect(screen.getByText(/Must be a @charlotte.edu email/)).toBeInTheDocument();

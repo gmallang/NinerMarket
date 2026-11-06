@@ -144,7 +144,7 @@
   margin-top: var(--space-1);
 }
 
-/* ── Grid layout - five across on desktop, per the homepage mock ── */
+/* ── Grid layout — five across on desktop, per the homepage mock ── */
 .grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));

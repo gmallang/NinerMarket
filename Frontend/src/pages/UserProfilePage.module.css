@@ -68,7 +68,7 @@
 }
 
 .starFilled {
-  color: #f59e0b;
+  color: var(--color-primary);
 }
 
 .starEmpty {
@@ -123,7 +123,7 @@
 .rateComment:focus {
   outline: none;
   border-color: var(--color-border-focus);
-  box-shadow: 0 0 0 3px rgba(26, 122, 60, 0.15);
+  box-shadow: 0 0 0 3px rgba(0, 80, 53, 0.15);
 }
 
 .rateFooter {
@@ -281,7 +281,7 @@
 
 .breakdownFill {
   height: 100%;
-  background: #f59e0b;
+  background: var(--color-primary);
   border-radius: var(--radius-full);
 }
 

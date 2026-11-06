@@ -10,7 +10,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   background:
-    radial-gradient(120% 140% at 0% 0%, #1c6353 0%, #14564a 46%, #0e4b3f 78%);
+    radial-gradient(120% 140% at 0% 0%, #076f4c 0%, #035e3f 46%, #005035 78%);
 }
 
 .copy {
@@ -101,26 +101,18 @@
   position: relative;
   min-height: 100%;
   overflow: hidden;
-  /* Own stacking context so the rounded clip is honoured by every engine -
-     Safari otherwise lets the absolutely positioned photo paint over it. */
-  isolation: isolate;
   min-width: 0;
   border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+  background: var(--color-muted);
 }
 
-/* Stock campus photography is replaced by the brand wash: the banner's own
-   green plus a faint white mark, so the panel still has a focal point. */
-.photoWrap::before {
-  content: "";
+.photo {
   position: absolute;
   inset: 0;
-  width: 140px;
-  height: 140px;
-  margin: auto;
-  background: #fff;
-  opacity: 0.09;
-  -webkit-mask: url("../../assets/NinerMarket.png") center / contain no-repeat;
-  mask: url("../../assets/NinerMarket.png") center / contain no-repeat;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
 @media (max-width: 1100px) {

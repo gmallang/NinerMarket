@@ -7,7 +7,7 @@
   display: flex;
   flex-direction: column;
   padding: var(--space-4);
-  background: linear-gradient(160deg, #0b2418 0%, #145c2d 100%);
+  background: linear-gradient(160deg, #0b2418 0%, #003c28 100%);
 }
 
 .setupBody {

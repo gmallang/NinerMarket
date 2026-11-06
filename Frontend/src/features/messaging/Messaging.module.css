@@ -655,7 +655,7 @@
 
 .sendBtn:hover:not(:disabled) {
   background: var(--color-primary);
-  box-shadow: 0 3px 10px rgba(26, 122, 60, 0.5);
+  box-shadow: 0 3px 10px rgba(0, 80, 53, 0.5);
 }
 
 .sendBtn:active {

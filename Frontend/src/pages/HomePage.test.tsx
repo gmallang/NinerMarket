@@ -65,7 +65,9 @@ describe("HomePage", () => {
 
   it("renders the marketplace landing view by default", () => {
     renderWithRouter(<HomePage />);
-    expect(screen.getByRole("heading", { name: "Find it on campus." })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Find it on campus." })
+    ).not.toBeInTheDocument();
     // The Looking For feed now lives on /requests, reachable from the sidebar.
     expect(screen.queryByRole("heading", { name: "Looking For" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Recently Listed" })).toBeInTheDocument();

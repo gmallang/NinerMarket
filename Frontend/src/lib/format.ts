@@ -14,6 +14,13 @@ export function formatRelativeTime(iso: string): string {
   return format(then, "MMM d, yyyy");
 }
 
+/** The calendar date a listing was posted, e.g. "Nov 4, 2026". */
+export function formatPostedDate(iso: string): string {
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return "";
+  return format(then, "MMM d, yyyy");
+}
+
 export function formatClockTime(date: Date = new Date()): string {
   return format(date, "h:mm a");
 }

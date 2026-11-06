@@ -161,6 +161,12 @@
   flex-shrink: 0;
 }
 
+.cardDate {
+  margin-top: 3px;
+  font-size: 0.6875rem;
+  color: var(--color-fg-subtle);
+}
+
 .sellerRow {
   display: flex;
   align-items: center;
@@ -209,6 +215,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Public previews: the seller's name is withheld until they sign in. */
+.sellerNameBlur {
+  filter: blur(4px);
+  user-select: none;
+  pointer-events: none;
 }
 
 .sellerStats {

@@ -10,17 +10,17 @@
   --font-body: "Instrument Sans", system-ui, sans-serif;
   --font-display: "Instrument Sans", system-ui, sans-serif;
 
-  /* Brand greens — matches the UNC Charlotte C mark */
-  --color-primary: #005035;
-  --color-primary-dark: #003c28;
-  --color-primary-light: #006945;
+  /* Brand greens — the lighter campus green used across the site */
+  --color-primary: #1f7a52;
+  --color-primary-dark: #17633f;
+  --color-primary-light: #2b8f62;
   --color-primary-fg: #ffffff;
 
   /* White pill used for CTAs that sit on a green surface (nav bar, hero,
      dark CTA bands) — green-on-green would have no contrast there. */
   --color-on-brand-bg: #ffffff;
   --color-on-brand-bg-hover: #eef2ee;
-  --color-on-brand-fg: #005035;
+  --color-on-brand-fg: #1f7a52;
 
   /* Surfaces */
   --color-bg: #f7f8f6;
@@ -40,7 +40,7 @@
 
   /* Borders */
   --color-border: #e5e7eb;
-  --color-border-focus: #005035;
+  --color-border-focus: #1f7a52;
 
   /* Semantic */
   --color-danger: #d4183d;
@@ -65,7 +65,7 @@
   --badge-service-fg: #4c1d95;
 
   /* Chat bubble colours */
-  --bubble-sent-bg: #005035;
+  --bubble-sent-bg: #1f7a52;
   --bubble-sent-fg: #ffffff;
   --bubble-recv-bg: #eef0ee;
   --bubble-recv-fg: #1c1e1c;

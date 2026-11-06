@@ -11,7 +11,7 @@ const tile = (label: string) =>
       `<rect width="640" height="640" fill="#e4f2ea"/>` +
       `<text x="320" y="320" dy="0.35em" text-anchor="middle" ` +
       `font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" ` +
-      `fill="#27805a">${label}</text></svg>`
+      `fill="#1f7a52">${label}</text></svg>`
   )}`;
 
 export const PREVIEW_LISTINGS: Listing[] = [

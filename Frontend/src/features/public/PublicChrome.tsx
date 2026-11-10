@@ -1,9 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { Sun, Moon } from "lucide-react";
 import ninerLogo from "@/assets/NinerMarket.png";
-import { useTheme, toggleTheme } from "@/lib/theme";
 import { RequestCard } from "@/components/requests/RequestCard";
 import { ListingCard } from "@/features/listings/ListingCard";
 import {
@@ -31,7 +29,6 @@ const noop = () => {};
 
 /** Marketing navbar: brand, then Log in / Sign up. */
 export function PublicNav({ onSignUp, onLogIn }: AuthActions) {
-  const theme = useTheme();
   return (
     <header className={s.nav}>
       <div className={s.navInner}>
@@ -41,15 +38,6 @@ export function PublicNav({ onSignUp, onLogIn }: AuthActions) {
         </Link>
 
         <nav className={s.navLinks} aria-label="Main">
-          <button
-            type="button"
-            className={s.themeToggle}
-            onClick={toggleTheme}
-            aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-            title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-          >
-            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
           <button type="button" className={s.navLink} onClick={() => onLogIn?.()}>
             Log in
           </button>

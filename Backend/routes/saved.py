@@ -62,6 +62,8 @@ def save_listing(user_id: str, body: dict, caller_id: str = Depends(require_user
     listing_id = body.get("listing_id") or ""
     if not listing_id:
         raise HTTPException(status_code=400, detail="listing_id is required")
+    if not isinstance(listing_id, str) or len(listing_id) > 100:
+        raise HTTPException(status_code=400, detail="Invalid listing_id")
 
     exists = listings.get(listing_id) if not db else None
     if db:
@@ -89,6 +91,8 @@ def replace_saved(user_id: str, body: dict, caller_id: str = Depends(require_use
     if caller_id != user_id:
         raise HTTPException(status_code=403, detail="You can only edit your own saved items")
     ids = {i for i in (body.get("listing_ids") or []) if isinstance(i, str)}
+    if len(ids) > 500:
+        raise HTTPException(status_code=400, detail="Too many saved listings in one request")
     if db:
         db.table("saved_listings").delete().eq("user_id", user_id).execute()
         if ids:

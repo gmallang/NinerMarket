@@ -64,6 +64,19 @@ python Backend/migrate_photos.py
   Set a stable value in prod or sessions won't survive redeploys.
 - **Rate limiting:** login is limited (6 per email per 15 min, in-memory). Repeated failed
   logins return HTTP 429. Restart the backend to clear it.
+- **Posting caps:** counted from the database, not memory - 10 new listings per hour plus 30
+  per day, 10 "Looking For" requests per hour plus 20 per day, per account. Over a cap is
+  HTTP 429 with a message the sell and request forms show as-is. Tune `LISTING_*_LIMIT` /
+  `REQUEST_*_LIMIT` in `routes/listings.py` and `routes/wanted_requests.py`.
+- **Photo moderation:** every uploaded listing/request photo is screened before it is
+  stored, and a flagged photo returns HTTP 422 with nothing uploaded. Provider is chosen by
+  which credentials are set: **Sightengine** (`SIGHTENGINE_API_USER` /
+  `SIGHTENGINE_API_SECRET`, nudity + weapons + alcohol + drugs, free plan and no card) or
+  **OpenAI** (`OPENAI_API_KEY`, sexual/violence/self-harm only - it cannot see alcohol,
+  weapons or drugs in a photo). With neither set, screening is skipped; a provider outage
+  fails open and logs a warning. Only photos uploaded through the API are accepted - an
+  external image URL is rejected with HTTP 400, so screening can't be sidestepped by
+  hot-linking. This is not a CSAM control.
 - **Local dev is `.env`-less:** don't expect Supabase behavior locally unless you add `Backend/.env`.
 
 ## Supabase schema

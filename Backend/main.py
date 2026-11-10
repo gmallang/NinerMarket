@@ -2,7 +2,9 @@ import os
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
+from image_moderation import ImageRejected
 from routes import (
     admin,
     users,
@@ -28,6 +30,15 @@ app = FastAPI(
     redoc_url=None if _in_prod else "/redoc",
     openapi_url=None if _in_prod else "/openapi.json",
 )
+
+@app.exception_handler(ImageRejected)
+def _image_rejected(_request: Request, exc: ImageRejected) -> JSONResponse:
+    """A photo blocked by the Terms check. Handled here rather than in each
+    route so every upload path (standalone /photos, listing create/edit,
+    wanted requests) answers the same way - the sell and request forms show
+    this detail verbatim."""
+    return JSONResponse(status_code=422, content={"detail": str(exc)})
+
 
 _allowed = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 

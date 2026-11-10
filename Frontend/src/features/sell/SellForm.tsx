@@ -7,6 +7,7 @@ import { fromDto } from "@/lib/listings";
 import { currentUserId } from "@/lib/user";
 import type { Listing } from "@/lib/types";
 import { CATEGORIES, CONDITIONS } from "@/data/categories";
+import { DESCRIPTION_MAX, PRICE_MAX, TITLE_MAX } from "@/lib/limits";
 import { CAMPUS_LOCATIONS, LOCATION_GROUPS } from "@/data/locations";
 import shared from "@/components/shared/shared.module.css";
 import s from "./SellForm.module.css";
@@ -157,6 +158,7 @@ export function SellForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="What are you selling?"
+            maxLength={TITLE_MAX}
             required
           />
         </label>
@@ -168,6 +170,7 @@ export function SellForm({
               className={s.formInput}
               type="number"
               min="0"
+              max={PRICE_MAX}
               step="0.01"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
@@ -243,6 +246,7 @@ export function SellForm({
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Condition details, specs, why you're selling..."
             rows={3}
+            maxLength={DESCRIPTION_MAX}
           />
         </label>
 

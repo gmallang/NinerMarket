@@ -8,17 +8,18 @@ keep their existing shape untouched.
 
 import re
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
-from auth import require_user
+from auth import notification_email, require_user
 from broadcast import broadcast
 from database import db, users, wanted_request_responses, wanted_requests
 from models import WantedRequestCreate, WantedRequestUpdate
 from moderation import find_prohibited_reasons
 from ratelimit import client_ip, rate_limit
-from routes.notifications import create_notification
+from routes.notifications import create_notification, user_email
 from storage import ensure_photo_url
 
 router = APIRouter()
@@ -336,32 +337,45 @@ def list_user_requests(
     return _batch_out(rows)
 
 
-def _enforce_request_cap(user_id: str, max_per_hour: int = 10) -> None:
-    """A real row count, not the in-memory rate_limit() above - that one
-    resets every time Vercel cold-starts a fresh serverless instance, which
-    is exactly how a scripted for-loop kept getting past it. Counting actual
-    rows holds regardless of which instance serves the request."""
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
+REQUEST_HOURLY_LIMIT = 10
+REQUEST_DAILY_LIMIT = 20
+
+
+def _count_recent_requests(user_id: str, since: datetime) -> int:
     if db:
         res = (
             db.table("wanted_requests")
             .select("id", count="exact")
             .eq("user_id", user_id)
-            .gte("created_at", cutoff.isoformat())
+            .gte("created_at", since.isoformat())
             .execute()
         )
-        count = res.count or 0
-    else:
-        cutoff_iso = cutoff.isoformat()
-        count = sum(
-            1
-            for row in wanted_requests.values()
-            if row["user_id"] == user_id and row["created_at"] >= cutoff_iso
-        )
-    if count >= max_per_hour:
+        return res.count or 0
+    cutoff_iso = since.isoformat()
+    return sum(
+        1
+        for row in wanted_requests.values()
+        if row["user_id"] == user_id and row["created_at"] >= cutoff_iso
+    )
+
+
+def _enforce_request_cap(user_id: str) -> None:
+    """A real row count, not the in-memory rate_limit() above - that one
+    resets every time Vercel cold-starts a fresh serverless instance, which is
+    exactly how a scripted for-loop kept getting past it. Counting actual rows
+    holds regardless of which instance serves the request. Two windows, so a
+    script that paces itself under the hourly cap still stops at a daily
+    ceiling instead of posting forever."""
+    now = datetime.now(timezone.utc)
+    if _count_recent_requests(user_id, now - timedelta(hours=1)) >= REQUEST_HOURLY_LIMIT:
         raise HTTPException(
             status_code=429,
-            detail=f"You've hit the hourly limit of {max_per_hour} new requests. Please wait before adding more.",
+            detail=f"You've hit the hourly limit of {REQUEST_HOURLY_LIMIT} new requests. Please wait before adding more.",
+        )
+    if _count_recent_requests(user_id, now - timedelta(days=1)) >= REQUEST_DAILY_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail=f"You've hit today's limit of {REQUEST_DAILY_LIMIT} requests. You can post again tomorrow.",
         )
 
 
@@ -573,6 +587,30 @@ def _already_notified(user_id: str, listing_id: str) -> bool:
     )
 
 
+# Matching students each used to get their own email, sent strictly one after
+# another inside POST /listings: a listing that matched a dozen requests spent a
+# dozen sequential Resend round trips inside a 10s function, so the mail arrived
+# in a staggered trickle and a busy match could time the whole post out. Two at
+# a time halves that wall time while staying well under Resend's 10 req/s limit.
+MATCH_EMAIL_WORKERS = 2
+
+
+def _send_match_emails(pending: list[tuple[str, str]], listing_id: str) -> None:
+    if not pending:
+        return
+
+    def send(item: tuple[str, str]) -> None:
+        requester_id, text = item
+        to = user_email(requester_id)
+        if to:
+            notification_email(
+                to, "A new listing may match your request", text, f"/listing/{listing_id}"
+            )
+
+    with ThreadPoolExecutor(max_workers=MATCH_EMAIL_WORKERS) as pool:
+        list(pool.map(send, pending))
+
+
 def notify_request_matches(listing: dict, seller_id: str) -> int:
     """Notifies requesters whose active request the new listing plausibly
     matches. Conservative on purpose: same category plus either two shared
@@ -608,6 +646,7 @@ def notify_request_matches(listing: dict, seller_id: str) -> int:
         ]
 
     notified = 0
+    pending: list[tuple[str, str]] = []
     for row in candidates:
         requester_id = row.get("user_id")
         if not requester_id or requester_id == seller_id:
@@ -618,10 +657,10 @@ def notify_request_matches(listing: dict, seller_id: str) -> int:
             continue
         if _already_notified(requester_id, listing_id):
             continue
-        create_notification(
-            requester_id,
-            f'A new listing may match your request "{row.get("title", "")}": "{listing_name}"',
-            listing_id,
-        )
+        text = f'A new listing may match your request "{row.get("title", "")}": "{listing_name}"'
+        # In-app + push now; the email goes out via _send_match_emails below.
+        create_notification(requester_id, text, listing_id, email=False)
+        pending.append((requester_id, text))
         notified += 1
+    _send_match_emails(pending, listing_id)
     return notified

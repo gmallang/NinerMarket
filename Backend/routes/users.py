@@ -31,6 +31,7 @@ from models import (
     User,
     UserCreate,
     UserPublic,
+    UserUpdate,
     VerifyRequest,
 )
 from ratelimit import client_ip, rate_limit
@@ -103,22 +104,30 @@ def _save_user(user: User) -> User:
 
 
 @router.post("/users")
-def create_user(body: UserCreate):
+def create_user(body: UserCreate, request: Request):
     email = body.email.strip().lower()
     if not email.endswith("@charlotte.edu"):
         raise HTTPException(status_code=400, detail="Must use a .charlotte.edu email")
+    # Every call sends a verification email, so an unthrottled loop here is an
+    # email bomb aimed at whatever address it names.
+    rate_limit(f"signup:{client_ip(request)}", max_attempts=5, window_seconds=60 * 60)
 
+    # The id is derived from the email server-side and never taken from the
+    # body: an attacker could otherwise register `u-<someone-else>`, keep the
+    # signed session for that id, and then have the real owner's first Google
+    # sign-in adopt that very row.
+    user_id = make_user_id(email)
     if db:
         by_email = db.table("users").select("id").eq("email", email).execute()
-        by_id = db.table("users").select("id").eq("id", body.id).execute()
+        by_id = db.table("users").select("id").eq("id", user_id).execute()
         if by_email.data or by_id.data:
             raise HTTPException(status_code=409, detail="User already exists")
-    elif body.id in users or _find_by_email(email):
+    elif user_id in users or _find_by_email(email):
         raise HTTPException(status_code=409, detail="User already exists")
 
     code = generate_code()
     user = User(
-        id=body.id,
+        id=user_id,
         email=email,
         display_name=body.display_name.strip(),
         school_year=body.school_year,
@@ -143,8 +152,14 @@ def verify_user(body: VerifyRequest, request: Request):
     user = _find_user(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    # No shortcut for an already-verified account: returning a session token
+    # here without any code let anyone who knew a student's @charlotte.edu
+    # address mint a session for that account. A verified user signs in with a
+    # password or Google instead.
     if user.email_verified:
-        return {"user": _to_public(user), "token": create_session_token(user.id)}
+        raise HTTPException(
+            status_code=409, detail="This email is already verified. Please log in instead."
+        )
     if not code_is_valid(body.code, user.verification_code, user.verification_expires):
         raise HTTPException(status_code=400, detail="Invalid or expired code")
     user.email_verified = True
@@ -346,11 +361,18 @@ async def google_callback(request: Request):
 
 
 @router.post("/users/password")
-def set_password(body: SetPasswordRequest, authorization: str | None = Header(default=None)):
+def set_password(
+    body: SetPasswordRequest,
+    request: Request,
+    authorization: str | None = Header(default=None),
+):
     """Sets a password on an existing account so the user can also sign in with
     email + password. Authenticates via a fresh Google ID token (popup flow) or
     an active session token (redirect flow)."""
     logger = logging.getLogger("uvicorn.error")
+    # PBKDF2 at 600k iterations is deliberately expensive, which makes an
+    # unthrottled endpoint a CPU denial of service on its own.
+    rate_limit(f"password:{client_ip(request)}", max_attempts=10, window_seconds=60 * 60)
     if body.id_token:
         try:
             info = verify_google_id_token(body.id_token)
@@ -419,12 +441,11 @@ def get_user(id: str, authorization: str | None = Header(default=None)):
 
 
 @router.patch("/users/{id}")
-def update_user(id: str, updates: dict, caller_id: str = Depends(require_user)):
+def update_user(id: str, body: UserUpdate, caller_id: str = Depends(require_user)):
     if caller_id != id:
         raise HTTPException(status_code=403, detail="You can only edit your own profile")
 
-    allowed = {"display_name", "school_year", "payment_methods"}
-    clean = {k: v for k, v in updates.items() if k in allowed}
+    clean = body.model_dump(exclude_unset=True, exclude_none=True)
 
     if db:
         existing = db.table("users").select("id").eq("id", id).execute()

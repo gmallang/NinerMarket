@@ -1,13 +1,14 @@
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from auth import notification_email, require_user
 from broadcast import broadcast
 from database import db, notifications, users
 from models import NotificationCreate
 from push import send_push
+from ratelimit import client_ip, rate_limit
 
 router = APIRouter()
 
@@ -52,6 +53,7 @@ def create_notification(
     listing_id: str = "",
     related_user_id: str = "",
     related_user_name: str = "",
+    email: bool = True,
 ) -> dict:
     """Create a notification for a user. Used internally by listings/offers too.
     `related_user_id`/`related_user_name` name the other person involved (e.g.
@@ -73,7 +75,10 @@ def create_notification(
     send_push(user_id, "NinerMarket", text, f"/listing/{listing_id}" if listing_id else "/")
     # Email fallback: works even when the user never enabled web push, which
     # is the common case. Best-effort - a missing RESEND_API_KEY just no-ops.
-    to = user_email(user_id)
+    # Callers that notify a batch of people pass email=False and send the mail
+    # themselves in parallel, instead of one blocking Resend call per recipient
+    # inside a 10s serverless function.
+    to = user_email(user_id) if email else ""
     if to:
         notification_email(
             to,
@@ -104,9 +109,16 @@ def list_notifications(user_id: str, caller_id: str = Depends(require_user)):
 
 @router.post("/users/{user_id}/notifications")
 def post_notification(
-    user_id: str, body: NotificationCreate, caller_id: str = Depends(require_user)
+    user_id: str,
+    body: NotificationCreate,
+    request: Request,
+    caller_id: str = Depends(require_user),
 ):
     _check_caller(user_id, caller_id)
+    # Each call can send an email plus a push to the caller's own devices, so an
+    # unthrottled loop burns the shared Resend quota for the whole campus (that
+    # quota is per team, not per account).
+    rate_limit(f"notify:{caller_id}:{client_ip(request)}", max_attempts=30, window_seconds=600)
     return create_notification(user_id, body.text, body.listing_id)
 
 

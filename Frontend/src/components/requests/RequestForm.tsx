@@ -6,6 +6,7 @@ import type { WantedRequestDto } from "@/lib/types";
 import { useMarketStore } from "@/lib/store";
 import { CATEGORIES } from "@/data/categories";
 import { CAMPUS_LOCATIONS } from "@/data/locations";
+import { PRICE_MAX } from "@/lib/limits";
 import shared from "@/components/shared/shared.module.css";
 import f from "@/features/sell/SellForm.module.css";
 
@@ -136,6 +137,7 @@ export function RequestForm({
               type="number"
               min="0"
               step="1"
+              max={PRICE_MAX}
               value={budgetMin}
               onChange={(e) => setBudgetMin(e.target.value)}
               placeholder="Optional"
@@ -148,6 +150,7 @@ export function RequestForm({
               type="number"
               min="0"
               step="1"
+              max={PRICE_MAX}
               value={budgetMax}
               onChange={(e) => setBudgetMax(e.target.value)}
               placeholder="Optional"

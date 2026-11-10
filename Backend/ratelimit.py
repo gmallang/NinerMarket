@@ -21,5 +21,9 @@ def rate_limit(key: str, max_attempts: int, window_seconds: int) -> None:
 def client_ip(request: Request) -> str:
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
-        return forwarded.split(",")[0].strip()
+        # Proxies append, so the leftmost entry is whatever the caller put
+        # there - keying on it let a client rotate its own bucket with a fake
+        # header and bypass every IP-scoped limit. The rightmost hop is the one
+        # our platform added.
+        return forwarded.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"

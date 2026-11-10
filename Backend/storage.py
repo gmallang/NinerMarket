@@ -2,9 +2,13 @@ import base64
 import io
 import logging
 import mimetypes
+import os
 import uuid
 
+from fastapi import HTTPException
+
 from database import db
+from image_moderation import screen_image
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -105,6 +109,11 @@ def upload_photo(user_id: str, data_url: str) -> dict:
     if len(raw) > MAX_BYTES:
         raise ValueError("Image is too large")
 
+    # Terms check before anything is stored, so a photo that violates them never
+    # lands in the bucket and never gets a public URL. Raises ImageRejected,
+    # which main.py turns into a 422 for the seller.
+    screen_image(raw, content_type)
+
     if not db:
         return {"url": data_url, "thumb_url": data_url}
 
@@ -121,11 +130,30 @@ def upload_photo(user_id: str, data_url: str) -> dict:
     return {"url": url, "thumb_url": thumb_url}
 
 
+def _is_uploaded_photo_url(url: str) -> bool:
+    """Whether this URL points at a photo in our own storage bucket.
+
+    Without this check a seller could put any URL in `photos`: the image
+    screening only ever sees base64 uploads, so a hot-linked image bypasses the
+    Terms check entirely, and the feed would render third-party content nobody
+    moderated.
+    """
+    base = os.getenv("SUPABASE_URL", "").rstrip("/")
+    if not base:
+        return False
+    return url.startswith(f"{base}/storage/v1/object/public/{BUCKET}/")
+
+
 def ensure_photo_url(user_id: str, photo: str) -> dict:
     """Returns a photo as `{"url", "thumb_url"}` pairs, uploading base64
-    data-URL photos on the way. Regular URLs pass through unchanged (with the
-    URL standing in for the thumb), so base64 blobs never end up persisted in
-    the listings table."""
+    data-URL photos on the way. URLs already pointing into our own bucket pass
+    through unchanged (with the URL standing in for the thumb), so base64 blobs
+    never end up persisted in the listings table."""
     if photo.startswith("data:image/"):
         return upload_photo(user_id, photo)
+    if not _is_uploaded_photo_url(photo):
+        raise HTTPException(
+            status_code=400,
+            detail="Photos have to be uploaded through NinerMarket, not linked from another site.",
+        )
     return {"url": photo, "thumb_url": photo}

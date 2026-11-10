@@ -168,29 +168,42 @@ def list_listings(
     return [_with_seller(l) for l in results[offset : offset + limit]]
 
 
-def _enforce_listing_cap(user_id: str, max_per_hour: int = 10) -> None:
-    """A real row count, not the in-memory rate_limit() above - that one
-    resets every time Vercel cold-starts a fresh serverless instance, which
-    is exactly how a scripted for-loop kept getting past it. Counting actual
-    rows holds regardless of which instance serves the request."""
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
+LISTING_HOURLY_LIMIT = 10
+LISTING_DAILY_LIMIT = 30
+
+
+def _count_recent_listings(user_id: str, since: datetime) -> int:
     if db:
         res = (
             db.table("listings")
             .select("id", count="exact")
             .eq("seller_id", user_id)
-            .gte("created_at", cutoff.isoformat())
+            .gte("created_at", since.isoformat())
             .execute()
         )
-        count = res.count or 0
-    else:
-        count = sum(
-            1 for l in listings.values() if l.seller_id == user_id and l.created_at >= cutoff
-        )
-    if count >= max_per_hour:
+        return res.count or 0
+    return sum(
+        1 for l in listings.values() if l.seller_id == user_id and l.created_at >= since
+    )
+
+
+def _enforce_listing_cap(user_id: str) -> None:
+    """A real row count, not the in-memory rate_limit() above - that one
+    resets every time Vercel cold-starts a fresh serverless instance, which
+    is exactly how a scripted for-loop kept getting past it. Counting actual
+    rows holds regardless of which instance serves the request. Two windows, so
+    a script that paces itself under the hourly cap still stops at a daily
+    ceiling instead of posting forever."""
+    now = datetime.now(timezone.utc)
+    if _count_recent_listings(user_id, now - timedelta(hours=1)) >= LISTING_HOURLY_LIMIT:
         raise HTTPException(
             status_code=429,
-            detail=f"You've hit the hourly limit of {max_per_hour} new listings. Please wait before adding more.",
+            detail=f"You've hit the hourly limit of {LISTING_HOURLY_LIMIT} new listings. Please wait before adding more.",
+        )
+    if _count_recent_listings(user_id, now - timedelta(days=1)) >= LISTING_DAILY_LIMIT:
+        raise HTTPException(
+            status_code=429,
+            detail=f"You've hit today's limit of {LISTING_DAILY_LIMIT} listings. You can post again tomorrow.",
         )
 
 

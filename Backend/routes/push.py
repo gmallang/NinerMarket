@@ -1,7 +1,7 @@
 import os
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from auth import require_user
 from database import db, push_subscriptions
@@ -10,17 +10,17 @@ router = APIRouter()
 
 
 class PushSubscriptionKeys(BaseModel):
-    p256dh: str
-    auth: str
+    p256dh: str = Field(max_length=200)
+    auth: str = Field(max_length=100)
 
 
 class PushSubscribeRequest(BaseModel):
-    endpoint: str
+    endpoint: str = Field(min_length=1, max_length=2048)
     keys: PushSubscriptionKeys
 
 
 class PushUnsubscribeRequest(BaseModel):
-    endpoint: str
+    endpoint: str = Field(min_length=1, max_length=2048)
 
 
 def _check_caller(user_id: str, caller_id: str) -> None:
@@ -56,7 +56,11 @@ def subscribe(user_id: str, body: PushSubscribeRequest, caller_id: str = Depends
 def unsubscribe(user_id: str, body: PushUnsubscribeRequest, caller_id: str = Depends(require_user)):
     _check_caller(user_id, caller_id)
     if db:
-        db.table("push_subscriptions").delete().eq("endpoint", body.endpoint).execute()
+        # Scoped to the caller: an endpoint is a secret URL, but deleting by
+        # endpoint alone let anyone who had seen one unregister that device.
+        db.table("push_subscriptions").delete().eq("endpoint", body.endpoint).eq(
+            "user_id", user_id
+        ).execute()
         return {"ok": True}
 
     existing = push_subscriptions.get(user_id, [])

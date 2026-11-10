@@ -59,6 +59,16 @@ class UserPublic(BaseModel):
     is_admin: bool = False
 
 
+class UserUpdate(BaseModel):
+    """Allow-list for PATCH /users/{id}. This used to take a bare dict, which
+    accepted any key at any length - the three fields the profile screen
+    actually edits, each capped the same way as UserCreate."""
+
+    display_name: str | None = Field(default=None, min_length=1, max_length=100)
+    school_year: str | None = Field(default=None, max_length=40)
+    payment_methods: list[ShortStr] | None = Field(default=None, max_length=10)
+
+
 class LoginRequest(BaseModel):
     email: str = Field(max_length=_EMAIL_MAX)
     password: str = Field(max_length=128)

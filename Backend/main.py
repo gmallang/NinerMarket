@@ -1,6 +1,6 @@
 import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from routes import (
@@ -41,6 +41,16 @@ app.add_middleware(
     # "Showing X–Y of Z" footer falls back to guesses.
     expose_headers=["X-Total-Count"],
 )
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """A JSON API doesn't need the full header set a browser-rendered site
+    does (that's in Frontend/vercel.json), but nosniff costs nothing and
+    closes off any browser path that'd try to render a response as HTML."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
 
 app.include_router(users.router)
 app.include_router(listings.router)

@@ -2,9 +2,18 @@
 -- Run this in Supabase Dashboard > SQL Editor.
 --
 -- The backend API uses the service_role key (SUPABASE_KEY in Backend env) so it
--- can read/write these tables without RLS policies. Never expose that key to the
--- frontend. If you prefer the anon key instead, enable RLS and add permissive
--- policies, or none of the queries will work.
+-- can read/write these tables regardless of RLS - service_role always bypasses
+-- it. Never expose that key to the frontend.
+--
+-- The frontend only ever holds the anon key (SUPABASE_ANON_KEY / the Vite-side
+-- VITE_SUPABASE_ANON_KEY), which is necessarily public - it ships in the built
+-- JS bundle for anyone to read. Its one legitimate job is subscribing to
+-- Realtime broadcast channels (see lib/realtime.ts and Backend/broadcast.py),
+-- which doesn't touch tables and isn't affected by RLS at all. Every table
+-- below has RLS enabled with zero policies for anon/authenticated, so holding
+-- the anon key grants no direct read or write access to anything through
+-- Supabase's own REST API - every request still has to go through the FastAPI
+-- backend's own auth, validation, and rate limits.
 
 create table if not exists users (
   id                    text primary key,
@@ -207,4 +216,26 @@ create index if not exists idx_wanted_requests_expires_at on wanted_requests (ex
 create unique index if not exists idx_wanted_response_pair
   on wanted_request_responses (request_id, responder_id);
 create index if not exists idx_wanted_response_request_id on wanted_request_responses (request_id);
+
+-- ── Row Level Security ──────────────────────────────────────────────────────
+-- Enabled with zero policies on every table, on purpose: the only key the
+-- frontend ever holds (anon) is meant to be public, and its one real job
+-- (Realtime broadcast) is a pub/sub layer that doesn't read tables at all. No
+-- policy means anon/authenticated get zero rows on every operation - the
+-- backend's service_role key bypasses RLS entirely by design, so this changes
+-- nothing for the app itself, only for anyone who extracts the anon key from
+-- the frontend bundle and tries to query Supabase directly.
+alter table users enable row level security;
+alter table listings enable row level security;
+alter table ratings enable row level security;
+alter table threads enable row level security;
+alter table messages enable row level security;
+alter table thread_members enable row level security;
+alter table notifications enable row level security;
+alter table push_subscriptions enable row level security;
+alter table listing_reports enable row level security;
+alter table offers enable row level security;
+alter table saved_listings enable row level security;
+alter table wanted_requests enable row level security;
+alter table wanted_request_responses enable row level security;
 

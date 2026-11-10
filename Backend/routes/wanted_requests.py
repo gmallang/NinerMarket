@@ -240,9 +240,9 @@ def _require_owner(row: dict, caller_id: str) -> None:
 @router.get("/requests")
 def list_requests(
     response: Response,
-    category: str | None = Query(default=None),
+    category: str | None = Query(default=None, max_length=60),
     q: str | None = Query(default=None, max_length=120),
-    status: str = Query(default="active"),
+    status: str = Query(default="active", max_length=60),
     limit: int = Query(default=12, ge=1, le=50),
     offset: int = Query(default=0, ge=0),
 ):
@@ -308,7 +308,7 @@ def get_request(request_id: str):
 @router.get("/users/{user_id}/requests")
 def list_user_requests(
     user_id: str,
-    status: str = Query(default="all"),
+    status: str = Query(default="all", max_length=60),
     caller_id: str = Depends(require_user),
 ):
     """The caller's own requests, every status included (that's what the My

@@ -441,7 +441,7 @@ def update_user(id: str, updates: dict, caller_id: str = Depends(require_user)):
 
 
 @router.get("/users/{id}/listings")
-def get_user_listings(id: str, status: str | None = Query(default=None)):
+def get_user_listings(id: str, status: str | None = Query(default=None, max_length=60)):
     if db:
         query = db.table("listings").select("*").eq("seller_id", id)
         if status:

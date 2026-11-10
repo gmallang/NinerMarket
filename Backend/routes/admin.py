@@ -143,7 +143,7 @@ def _matches(text: str, needle: str) -> bool:
 def list_all_listings(
     response: Response,
     q: str | None = Query(default=None, max_length=120),
-    status: str = Query(default="all"),
+    status: str = Query(default="all", max_length=60),
     limit: int = Query(default=100, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     _: str = Depends(require_admin),
@@ -217,7 +217,7 @@ def delete_any_listing(listing_id: str, _: str = Depends(require_admin)):
 def list_all_requests(
     response: Response,
     q: str | None = Query(default=None, max_length=120),
-    status: str = Query(default="all"),
+    status: str = Query(default="all", max_length=60),
     limit: int = Query(default=100, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     _: str = Depends(require_admin),

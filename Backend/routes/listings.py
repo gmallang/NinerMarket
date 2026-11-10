@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from auth import require_user
 from broadcast import broadcast
 from database import db, listings, reports, users
-from models import Listing, ListingUpdate, ReportRequest
+from models import PRICE_MAX, Listing, ListingUpdate, ReportRequest
 from moderation import find_prohibited_reasons
 from ratelimit import client_ip, rate_limit
 from routes.notifications import create_notification
@@ -60,14 +60,14 @@ def _with_seller(entry, seller: dict | None = None):
 @router.get("/listings")
 def list_listings(
     response: Response,
-    category: str | None = Query(default=None),
-    min_price: float | None = Query(default=None, ge=0),
-    max_price: float | None = Query(default=None, ge=0),
-    status: str | None = Query(default=None),
+    category: str | None = Query(default=None, max_length=60),
+    min_price: float | None = Query(default=None, ge=0, le=PRICE_MAX),
+    max_price: float | None = Query(default=None, ge=0, le=PRICE_MAX),
+    status: str | None = Query(default=None, max_length=60),
     q: str | None = Query(default=None, max_length=120),
-    condition: str | None = Query(default=None),
-    location: str | None = Query(default=None),
-    sort: str = Query(default="recent"),
+    condition: str | None = Query(default=None, max_length=60),
+    location: str | None = Query(default=None, max_length=120),
+    sort: str = Query(default="recent", max_length=60),
     limit: int = Query(default=60, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ):

@@ -18,12 +18,15 @@ import {
   ChevronLeft,
   SlidersHorizontal,
   ShieldAlert,
+  Sun,
+  Moon,
 } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import ninerLogo from "@/assets/NinerMarket.png";
 import { avatarUrl } from "@/lib/avatar";
 import { useMarketStore } from "@/lib/store";
 import { api } from "@/lib/api";
+import { useTheme, toggleTheme } from "@/lib/theme";
 import { CATEGORIES } from "@/data/categories";
 import { LOCATION_GROUPS } from "@/data/locations";
 import { Modal } from "@/components/shared/Modal";
@@ -56,6 +59,7 @@ export function AppLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [params] = useSearchParams();
+  const theme = useTheme();
 
   const user = useMarketStore((s) => s.user);
   const convs = useMarketStore((s) => s.convs);
@@ -438,6 +442,15 @@ export function AppLayout() {
           </div>
 
           <div className={s.navActions}>
+            <button
+              className={s.iconBtn}
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+
             <button
               className={`${s.iconBtn} ${s.messagesNavBtn} ${
                 messagesOpen ? s.iconBtnActive : ""

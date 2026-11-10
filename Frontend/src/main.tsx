@@ -4,6 +4,10 @@ import { Analytics } from "@vercel/analytics/react";
 import { Capacitor } from "@capacitor/core";
 import { App as CapacitorApp } from "@capacitor/app";
 import App from "./app/App";
+// Side effect: resolves stored/system theme preference and stamps
+// data-theme onto <html> before the app renders, so there's no
+// flash of the wrong theme on load.
+import "@/lib/theme";
 import "./styles/index.css";
 
 // Google's redirect-mode OAuth callback (see LoginPage's `login_uri`) bounces

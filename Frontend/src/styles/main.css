@@ -107,6 +107,34 @@
   --duration: 180ms;
 }
 
+/* ── Dark theme ──
+   lib/theme.ts stamps data-theme="light"|"dark" on <html> (resolved from a
+   stored choice or, failing that, prefers-color-scheme) before first paint.
+   Only surface/text/border tokens change here - the brand green and the
+   semantic danger/warn/success colors stay the same in both themes, since
+   they're already saturated enough to read on a dark card. */
+:root[data-theme="dark"] {
+  --color-bg: #14181a;
+  --color-card: #1d2225;
+  --color-muted: #262c2f;
+  --color-accent: #16301f;
+
+  --color-fg: #eef1f0;
+  --color-fg-muted: #a7b1ac;
+  --color-fg-subtle: #7c8884;
+  --color-fg-inverse: #0f1211;
+
+  --color-border: #333b3e;
+
+  --badge-good-bg: #262c2f;
+  --badge-good-fg: #eef1f0;
+
+  --bubble-recv-bg: #262c2f;
+  --bubble-recv-fg: #eef1f0;
+
+  --scrollbar-thumb: #3a4245;
+}
+
 /* ── Base resets ── */
 *,
 *::before,

@@ -97,6 +97,24 @@
   color: #fff;
 }
 
+/* Matches AppLayout's .iconBtn - a translucent white circle, since this
+   nav sits on the same solid-green surface. */
+.themeToggle {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--duration) var(--ease);
+}
+
+.themeToggle:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 /* Matches the app navbar's white Sell CTA: white pill, green label. */
 .navCta {
   padding: 9px 18px;

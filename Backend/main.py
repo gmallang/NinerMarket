@@ -17,7 +17,17 @@ from routes import (
     wanted_requests,
 )
 
-app = FastAPI(title="NinerMarket API")
+# Swagger UI / ReDoc / the raw OpenAPI schema list every endpoint (including
+# that /admin/* exists) to anyone who asks. Harmless in local dev; on Vercel
+# (see database.py's own VERCEL check) there's no reason to advertise the
+# full API surface to the public internet, so all three are disabled there.
+_in_prod = bool(os.getenv("VERCEL"))
+app = FastAPI(
+    title="NinerMarket API",
+    docs_url=None if _in_prod else "/docs",
+    redoc_url=None if _in_prod else "/redoc",
+    openapi_url=None if _in_prod else "/openapi.json",
+)
 
 _allowed = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 

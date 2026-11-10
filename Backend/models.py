@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -89,6 +90,25 @@ class Listing(BaseModel):
     pickup_location: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     sold_at: datetime | None = None
+
+
+class ListingUpdate(BaseModel):
+    """Explicit allow-list for PATCH /listings/{id}. id, seller_id, flag_reason,
+    photos_small, created_at, and sold_at are all server-derived/moderation-
+    owned - deliberately absent here rather than merely stripped, so a bare
+    dict payload can't inject them (or any other unknown field)."""
+
+    name: str | None = None
+    price: float | None = Field(default=None, ge=0)
+    category: str | None = None
+    condition: str | None = None
+    description: str | None = None
+    pickup_location: str | None = None
+    photos: list[str] | None = None
+    # Moderation is the only thing allowed to set "flagged" - see
+    # _apply_moderation, which re-derives it from the (possibly just-edited)
+    # text regardless of what's requested here.
+    status: Literal["active", "sold"] | None = None
 
 
 class Rating(BaseModel):

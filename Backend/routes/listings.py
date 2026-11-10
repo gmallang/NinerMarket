@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from auth import require_user
 from broadcast import broadcast
 from database import db, listings, reports, users
-from models import Listing, ReportRequest
+from models import Listing, ListingUpdate, ReportRequest
 from moderation import find_prohibited_reasons
 from ratelimit import client_ip, rate_limit
 from routes.notifications import create_notification
@@ -169,7 +169,8 @@ def list_listings(
 
 
 @router.post("/listings")
-def create_listing(listing: Listing, user_id: str = Depends(require_user)):
+def create_listing(listing: Listing, request: Request, user_id: str = Depends(require_user)):
+    rate_limit(f"listing:{user_id}:{client_ip(request)}", max_attempts=15, window_seconds=3600)
     listing.id = listing.id or generate_id()
     listing.seller_id = user_id
     results = [ensure_photo_url(user_id, p) for p in listing.photos]
@@ -362,8 +363,8 @@ def _sync_sold_at(updates: dict, current_status: str) -> None:
 
 
 @router.patch("/listings/{id}")
-def update_listing(id: str, updates: dict, user_id: str = Depends(require_user)):
-    updates = {k: v for k, v in updates.items() if k != "seller_id"}
+def update_listing(id: str, body: ListingUpdate, user_id: str = Depends(require_user)):
+    updates = {k: v for k, v in body.model_dump(exclude_unset=True).items()}
 
     if db:
         existing = db.table("listings").select("*").eq("id", id).execute()

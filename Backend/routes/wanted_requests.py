@@ -10,13 +10,14 @@ import re
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
 from auth import require_user
 from broadcast import broadcast
 from database import db, users, wanted_request_responses, wanted_requests
 from models import WantedRequestCreate, WantedRequestUpdate
 from moderation import find_prohibited_reasons
+from ratelimit import client_ip, rate_limit
 from routes.notifications import create_notification
 from storage import ensure_photo_url
 
@@ -336,7 +337,10 @@ def list_user_requests(
 
 
 @router.post("/requests")
-def create_request(body: WantedRequestCreate, caller_id: str = Depends(require_user)):
+def create_request(
+    body: WantedRequestCreate, request: Request, caller_id: str = Depends(require_user)
+):
+    rate_limit(f"request:{caller_id}:{client_ip(request)}", max_attempts=15, window_seconds=3600)
     expires_at = _validate(
         body.title,
         body.category,

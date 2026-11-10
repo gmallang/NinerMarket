@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from auth import notification_email, require_user
 from database import db, listings, threads, users
 from models import MarkReadRequest, OpenThreadRequest, SendMessageRequest
 from broadcast import broadcast
 from push import send_push
+from ratelimit import client_ip, rate_limit
 from routes.notifications import user_email
 
 router = APIRouter()
@@ -532,9 +533,13 @@ def send_thread_message(
     user_id: str,
     thread_id: int,
     body: SendMessageRequest,
+    request: Request,
     caller_id: str = Depends(require_user),
 ):
     _check_caller(user_id, caller_id)
+    # Generous enough for genuine rapid-fire chat, tight enough to stop one
+    # account from flooding other users with messages.
+    rate_limit(f"message:{caller_id}:{client_ip(request)}", max_attempts=60, window_seconds=300)
     if not body.text.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 

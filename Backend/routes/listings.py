@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
@@ -168,9 +168,36 @@ def list_listings(
     return [_with_seller(l) for l in results[offset : offset + limit]]
 
 
+def _enforce_listing_cap(user_id: str, max_per_hour: int = 10) -> None:
+    """A real row count, not the in-memory rate_limit() above - that one
+    resets every time Vercel cold-starts a fresh serverless instance, which
+    is exactly how a scripted for-loop kept getting past it. Counting actual
+    rows holds regardless of which instance serves the request."""
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
+    if db:
+        res = (
+            db.table("listings")
+            .select("id", count="exact")
+            .eq("seller_id", user_id)
+            .gte("created_at", cutoff.isoformat())
+            .execute()
+        )
+        count = res.count or 0
+    else:
+        count = sum(
+            1 for l in listings.values() if l.seller_id == user_id and l.created_at >= cutoff
+        )
+    if count >= max_per_hour:
+        raise HTTPException(
+            status_code=429,
+            detail=f"You've hit the hourly limit of {max_per_hour} new listings. Please wait before adding more.",
+        )
+
+
 @router.post("/listings")
 def create_listing(listing: Listing, request: Request, user_id: str = Depends(require_user)):
     rate_limit(f"listing:{user_id}:{client_ip(request)}", max_attempts=15, window_seconds=3600)
+    _enforce_listing_cap(user_id)
     listing.id = listing.id or generate_id()
     listing.seller_id = user_id
     results = [ensure_photo_url(user_id, p) for p in listing.photos]

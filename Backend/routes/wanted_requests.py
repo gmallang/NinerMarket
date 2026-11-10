@@ -336,11 +336,41 @@ def list_user_requests(
     return _batch_out(rows)
 
 
+def _enforce_request_cap(user_id: str, max_per_hour: int = 10) -> None:
+    """A real row count, not the in-memory rate_limit() above - that one
+    resets every time Vercel cold-starts a fresh serverless instance, which
+    is exactly how a scripted for-loop kept getting past it. Counting actual
+    rows holds regardless of which instance serves the request."""
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
+    if db:
+        res = (
+            db.table("wanted_requests")
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .gte("created_at", cutoff.isoformat())
+            .execute()
+        )
+        count = res.count or 0
+    else:
+        cutoff_iso = cutoff.isoformat()
+        count = sum(
+            1
+            for row in wanted_requests.values()
+            if row["user_id"] == user_id and row["created_at"] >= cutoff_iso
+        )
+    if count >= max_per_hour:
+        raise HTTPException(
+            status_code=429,
+            detail=f"You've hit the hourly limit of {max_per_hour} new requests. Please wait before adding more.",
+        )
+
+
 @router.post("/requests")
 def create_request(
     body: WantedRequestCreate, request: Request, caller_id: str = Depends(require_user)
 ):
     rate_limit(f"request:{caller_id}:{client_ip(request)}", max_attempts=15, window_seconds=3600)
+    _enforce_request_cap(caller_id)
     expires_at = _validate(
         body.title,
         body.category,

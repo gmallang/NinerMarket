@@ -7,11 +7,9 @@ import { fromDto } from "@/lib/listings";
 import { currentUserId } from "@/lib/user";
 import type { Listing } from "@/lib/types";
 import { CATEGORIES, CONDITIONS } from "@/data/categories";
-import { CAMPUS_LOCATIONS } from "@/data/locations";
+import { CAMPUS_LOCATIONS, LOCATION_GROUPS } from "@/data/locations";
 import shared from "@/components/shared/shared.module.css";
 import s from "./SellForm.module.css";
-
-const MIN_LOCATION_CHARS = 3;
 
 // ─── Sell form ──────────────────────────────────────────────────────────────
 
@@ -31,16 +29,10 @@ export function SellForm({
   const [condition, setCondition] = useState(listing?.condition ?? CONDITIONS[0]);
   const [description, setDescription] = useState(listing?.description ?? "");
   const [location, setLocation] = useState(listing?.campus ?? "");
-  const [locationOpen, setLocationOpen] = useState(false);
   const [photos, setPhotos] = useState<string[]>(listing?.photos ?? []);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const locationMatches =
-    location.trim().length >= MIN_LOCATION_CHARS
-      ? CAMPUS_LOCATIONS.filter((loc) => loc.toLowerCase().includes(location.trim().toLowerCase()))
-      : [];
 
   const addFiles = (files: FileList | null) => {
     if (!files) return;
@@ -214,40 +206,33 @@ export function SellForm({
           </select>
         </label>
 
-        <label className={`${s.formField} ${s.locationField}`}>
+        <label className={s.formField}>
           <span className={s.formLabel}>Pickup location</span>
-          <input
-            className={s.formInput}
+          <select
+            className={s.formSelect}
             value={location}
-            onChange={(e) => {
-              setLocation(e.target.value);
-              setLocationOpen(true);
-            }}
-            onFocus={() => setLocationOpen(true)}
-            onBlur={() => window.setTimeout(() => setLocationOpen(false), 100)}              placeholder="e.g. Atkins Library"
-            autoComplete="off"
+            onChange={(e) => setLocation(e.target.value)}
             required
-          />
-          {locationOpen && locationMatches.length > 0 && (
-            <div className={s.locationDropdown} role="listbox">
-              {locationMatches.map((loc) => (
-                <button
-                  key={loc}
-                  type="button"
-                  className={s.locationOption}
-                  role="option"
-                  aria-selected={loc === location}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    setLocation(loc);
-                    setLocationOpen(false);
-                  }}
-                >
-                  {loc}
-                </button>
-              ))}
-            </div>
-          )}
+          >
+            <option value="" disabled>
+              Select a location
+            </option>
+            {/* An existing listing's saved location might predate this list
+                (or just not be on it) - keep it selectable so opening the
+                edit form and saving doesn't silently move it. */}
+            {location && !CAMPUS_LOCATIONS.includes(location) && (
+              <option value={location}>{location}</option>
+            )}
+            {LOCATION_GROUPS.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.options.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
         </label>
 
         <label className={s.formField}>

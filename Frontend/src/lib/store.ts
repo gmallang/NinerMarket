@@ -198,6 +198,7 @@ interface MarketState {
   openListingOverlay: (listingId: string) => void;
   closeListingOverlay: () => void;
   markListingSold: (listingId: string) => Promise<void>;
+  deleteListing: (listingId: string) => Promise<void>;
   reportListing: (listingId: string, reason: string, details: string) => Promise<void>;
   makeOffer: (listingId: string, price: number) => Promise<void>;
   checkPushEnabled: () => Promise<void>;
@@ -836,6 +837,19 @@ export const useMarketStore = create<MarketState>((set, get) => {
     set((state) => ({
       listings: state.listings.map((l) => (l.id === listingId ? { ...l, status: "sold" } : l)),
     }));
+  },
+
+  deleteListing: async (listingId) => {
+    await api.deleteListing(listingId);
+    set((state) => ({
+      listings: state.listings.filter((l) => l.id !== listingId),
+      listingOverlayId: state.listingOverlayId === listingId ? null : state.listingOverlayId,
+    }));
+    // The profile page keeps its own copy of a seller's complete listing set
+    // (sold rows included), so tell it to drop the row as well.
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("ninermarket:listing-deleted", { detail: listingId }));
+    }
   },
 
   reportListing: async (listingId, reason, details) => {

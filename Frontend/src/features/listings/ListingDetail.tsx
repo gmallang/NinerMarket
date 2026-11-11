@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, CheckCircle2, ChevronLeft, ChevronRight, Flag, HandCoins, Heart, MapPin, MessageCircle, MoreVertical, Pencil, Share2, X } from "lucide-react";
+import { Check, CheckCircle2, ChevronLeft, ChevronRight, Flag, HandCoins, Heart, MapPin, MessageCircle, MoreVertical, Pencil, Share2, Trash2, X } from "lucide-react";
 import { ProgressiveImage } from "@/components/shared/ProgressiveImage";
 import type { Listing } from "@/lib/types";
 import { avatarUrl } from "@/lib/avatar";
@@ -23,6 +23,7 @@ export function ListingDetail({
   onOpenSeller,
   onMarkSold,
   onEdit,
+  onDelete,
   onReport,
   onMakeOffer,
 }: {
@@ -35,6 +36,7 @@ export function ListingDetail({
   onOpenSeller?: () => void;
   onMarkSold?: () => Promise<void>;
   onEdit?: () => void;
+  onDelete?: () => Promise<void>;
   onReport?: (reason: string, details: string) => Promise<void>;
   onMakeOffer?: (price: number) => Promise<void>;
 }) {
@@ -42,6 +44,8 @@ export function ListingDetail({
   const [activeImg, setActiveImg] = useState(0);
   const [markingSold, setMarkingSold] = useState(false);
   const [markSoldError, setMarkSoldError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
@@ -71,6 +75,20 @@ export function ListingDetail({
       setMarkSoldError(err instanceof Error ? err.message : "Couldn't update listing.");
     } finally {
       setMarkingSold(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    if (!window.confirm(`Delete "${item.title}"? This can't be undone.`)) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await onDelete();
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Couldn't delete listing.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -377,6 +395,17 @@ export function ListingDetail({
                   {markSoldError && <p className={s.soldError}>{markSoldError}</p>}
                 </>
               )}
+              {onDelete && (
+                <button
+                  className={s.detailDeleteBtn}
+                  onClick={() => void handleDelete()}
+                  disabled={deleting}
+                >
+                  <Trash2 size={14} />
+                  {deleting ? "Deleting…" : "Delete listing"}
+                </button>
+              )}
+              {deleteError && <p className={s.soldError}>{deleteError}</p>}
             </div>
           </>
         ) : (

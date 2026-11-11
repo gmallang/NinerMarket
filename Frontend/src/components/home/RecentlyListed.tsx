@@ -11,7 +11,7 @@ export function RecentlyListed() {
   const openListingOverlay = useMarketStore((state) => state.openListingOverlay);
 
   const recent = [...listings]
-    .filter((l) => l.status !== "sold" && l.status !== "flagged")
+    .filter((l) => l.status !== "sold" && l.status !== "flagged" && l.status !== "pending")
     .sort((a, b) => (b.createdAt > a.createdAt ? 1 : b.createdAt < a.createdAt ? -1 : 0))
     .slice(0, 10);
 

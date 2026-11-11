@@ -11,6 +11,7 @@ from moderation import find_prohibited_reasons
 from ratelimit import client_ip, rate_limit
 from routes.notifications import create_notification
 from storage import ensure_photo_url
+from trust import is_posting_flagged, record_bad_listing, record_good_listing
 
 router = APIRouter()
 
@@ -46,6 +47,9 @@ def _with_seller(entry, seller: dict | None = None):
         data = entry.model_dump(mode="json")
     else:
         data = dict(entry)
+
+    # deleted_at is a moderation field; never leak it into a public payload.
+    data.pop("deleted_at", None)
 
     if seller is not None:
         data["seller"] = seller
@@ -93,7 +97,11 @@ def list_listings(
         return needle in haystack
 
     if db:
-        query = db.table("listings").select("*", count="exact")
+        query = (
+            db.table("listings")
+            .select("*", count="exact")
+            .is_("deleted_at", "null")
+        )
         if category and category != "all":
             query = query.eq("category", category)
         if min_price is not None:
@@ -138,7 +146,9 @@ def list_listings(
         response.headers["X-Total-Count"] = str(total if total is not None else len(rows))
         return rows
 
-    results = list(listings.values())
+    results = [
+        l for l in listings.values() if getattr(l, "deleted_at", None) is None
+    ]
     if category and category != "all":
         results = [l for l in results if l.category == category]
     if min_price is not None:
@@ -219,9 +229,15 @@ def create_listing(listing: Listing, request: Request, user_id: str = Depends(re
         listing.photos_small = [r["thumb_url"] for r in results]
 
     reasons = find_prohibited_reasons(listing.name, listing.description)
+    needs_approval = is_posting_flagged(user_id)
     if reasons:
         listing.status = "flagged"
         listing.flag_reason = ", ".join(reasons)
+    elif needs_approval:
+        # Accounts under review can still post, but nothing goes live until an
+        # admin approves it.
+        listing.status = "pending"
+        listing.flag_reason = "Waiting for admin approval"
 
     if db:
         data = db.table("listings").insert(listing.model_dump(mode="json")).execute()
@@ -237,7 +253,16 @@ def create_listing(listing: Listing, request: Request, user_id: str = Depends(re
             " and isn't visible to others yet. Edit it to remove the prohibited item.",
             listing.id,
         )
+        record_bad_listing(listing.seller_id, listing.flag_reason)
+    elif needs_approval:
+        create_notification(
+            listing.seller_id,
+            f"Your listing \"{listing.name}\" is waiting for admin approval because"
+            " your account is under review. It isn't visible to other students yet.",
+            listing.id,
+        )
     else:
+        record_good_listing(listing.seller_id)
         create_notification(
             listing.seller_id,
             f"Your listing \"{listing.name}\" is now live.",
@@ -248,7 +273,7 @@ def create_listing(listing: Listing, request: Request, user_id: str = Depends(re
 
     # Looking For matching: a new listing can be exactly what someone asked
     # for. Best-effort - a matcher failure must never fail the listing.
-    if not reasons:
+    if not reasons and not needs_approval:
         try:
             from routes.wanted_requests import notify_request_matches
 
@@ -263,11 +288,11 @@ def get_listing(id: str, response: Response):
     response.headers["Cache-Control"] = "public, max-age=15, stale-while-revalidate=60"
     if db:
         data = db.table("listings").select("*").eq("id", id).execute()
-        if not data.data:
+        if not data.data or data.data[0].get("deleted_at"):
             raise HTTPException(status_code=404, detail="Listing not found")
         return _with_seller(data.data[0])
 
-    if id not in listings:
+    if id not in listings or getattr(listings[id], "deleted_at", None):
         raise HTTPException(status_code=404, detail="Listing not found")
     return _with_seller(listings[id])
 
@@ -289,11 +314,11 @@ def report_listing(
     notified when that threshold is crossed and can edit to resolve."""
     if db:
         existing = db.table("listings").select("*").eq("id", id).execute()
-        if not existing.data:
+        if not existing.data or existing.data[0].get("deleted_at"):
             raise HTTPException(status_code=404, detail="Listing not found")
         listing = existing.data[0]
     else:
-        if id not in listings:
+        if id not in listings or getattr(listings[id], "deleted_at", None):
             raise HTTPException(status_code=404, detail="Listing not found")
         listing = listings[id]
 
@@ -342,6 +367,8 @@ def report_listing(
 
     if crosses_threshold:
         flag_label = f"User report: {body.reason}"
+        record_bad_listing(seller_id, flag_label)
+
         if db:
             existing_reason = listing.get("flag_reason") or ""
             if flag_label not in existing_reason:
@@ -391,6 +418,28 @@ def _apply_moderation(updates: dict, current_name: str, current_desc: str, curre
         updates["flag_reason"] = ""
 
 
+def _restrict_status(user_id: str, previous_status: str, updates: dict) -> None:
+    """A seller under review can't push a listing live themselves. An edit
+    that would activate a pending or flagged post leaves it pending for an
+    admin instead."""
+    if (
+        updates.get("status") == "active"
+        and previous_status in {"pending", "flagged"}
+        and is_posting_flagged(user_id)
+    ):
+        updates["status"] = "pending"
+        updates["flag_reason"] = updates.get("flag_reason") or "Waiting for admin approval"
+
+
+def _track_listing_streak(user_id: str, previous_status: str, new_status: str) -> None:
+    """Keeps the consecutive-bad-listing counter honest across edits: a flag
+    that appears counts once, and clearing it breaks the run."""
+    if new_status == "flagged" and previous_status != "flagged":
+        record_bad_listing(user_id, "Listing flagged for review")
+    elif previous_status == "flagged" and new_status != "flagged":
+        record_good_listing(user_id)
+
+
 def _sync_sold_at(updates: dict, current_status: str) -> None:
     """Tracks when a listing became sold so the seller can unsell their most
     recent ones: sold_at is stamped the moment a listing flips to sold and
@@ -408,7 +457,7 @@ def update_listing(id: str, body: ListingUpdate, user_id: str = Depends(require_
 
     if db:
         existing = db.table("listings").select("*").eq("id", id).execute()
-        if not existing.data:
+        if not existing.data or existing.data[0].get("deleted_at"):
             raise HTTPException(status_code=404, detail="Listing not found")
         row = existing.data[0]
         if row["seller_id"] != user_id:
@@ -418,8 +467,11 @@ def update_listing(id: str, body: ListingUpdate, user_id: str = Depends(require_
             updates["photos"] = [r["url"] for r in results]
             if "photos_small" not in updates:
                 updates["photos_small"] = [r["thumb_url"] for r in results]
-        _apply_moderation(updates, row["name"], row["description"], row["status"])
-        _sync_sold_at(updates, row["status"])
+        previous_status = row["status"]
+        _apply_moderation(updates, row["name"], row["description"], previous_status)
+        _restrict_status(user_id, previous_status, updates)
+        _track_listing_streak(user_id, previous_status, updates.get("status", previous_status))
+        _sync_sold_at(updates, previous_status)
         data = db.table("listings").update(updates).eq("id", id).execute()
         broadcast("listings", "listing_changed", {"id": id})
         # Fetch seller once and pass it in to avoid an extra DB query inside _with_seller.
@@ -427,12 +479,15 @@ def update_listing(id: str, body: ListingUpdate, user_id: str = Depends(require_
         seller = sres.data[0] if sres.data else None
         return _with_seller(data.data[0], seller=seller)
 
-    if id not in listings:
+    if id not in listings or getattr(listings[id], "deleted_at", None):
         raise HTTPException(status_code=404, detail="Listing not found")
     if listings[id].seller_id != user_id:
         raise HTTPException(status_code=403, detail="You can only edit your own listings")
-    _apply_moderation(updates, listings[id].name, listings[id].description, listings[id].status)
-    _sync_sold_at(updates, listings[id].status)
+    previous_status = listings[id].status
+    _apply_moderation(updates, listings[id].name, listings[id].description, previous_status)
+    _restrict_status(user_id, previous_status, updates)
+    _track_listing_streak(user_id, previous_status, updates.get("status", previous_status))
+    _sync_sold_at(updates, previous_status)
     for key, value in updates.items():
         setattr(listings[id], key, value)
     broadcast("listings", "listing_changed", {"id": id})
@@ -442,8 +497,8 @@ def update_listing(id: str, body: ListingUpdate, user_id: str = Depends(require_
 @router.delete("/listings/{id}")
 def delete_listing(id: str, user_id: str = Depends(require_user)):
     if db:
-        existing = db.table("listings").select("seller_id").eq("id", id).execute()
-        if not existing.data:
+        existing = db.table("listings").select("seller_id, deleted_at").eq("id", id).execute()
+        if not existing.data or existing.data[0].get("deleted_at"):
             raise HTTPException(status_code=404, detail="Listing not found")
         if existing.data[0]["seller_id"] != user_id:
             raise HTTPException(status_code=403, detail="You can only delete your own listings")
@@ -451,7 +506,7 @@ def delete_listing(id: str, user_id: str = Depends(require_user)):
         broadcast("listings", "listing_changed", {"id": id})
         return {"deleted": id}
 
-    if id not in listings:
+    if id not in listings or getattr(listings[id], "deleted_at", None):
         raise HTTPException(status_code=404, detail="Listing not found")
     if listings[id].seller_id != user_id:
         raise HTTPException(status_code=403, detail="You can only delete your own listings")

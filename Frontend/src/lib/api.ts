@@ -1,5 +1,8 @@
 import type {
+  AdminAuditEntry,
   AdminListing,
+  AdminRating,
+  AdminReport,
   AdminUser,
   AuthResponse,
   ListingDto,
@@ -329,6 +332,9 @@ export const api = {
       body: JSON.stringify({ status: "sold" }),
     }),
 
+  deleteListing: (id: string) =>
+    request<{ deleted: string }>(`/listings/${id}`, { method: "DELETE" }),
+
   reportListing: (id: string, reason: string, details: string) =>
     request<ListingDto>(`/listings/${id}/report`, {
       method: "POST",
@@ -429,6 +435,9 @@ export const api = {
   adminDeleteListing: (id: string) =>
     request<{ deleted: string }>(`/admin/listings/${id}`, { method: "DELETE" }),
 
+  adminApproveListing: (id: string) =>
+    request<{ id: string; status: string }>(`/admin/listings/${id}/approve`, { method: "POST" }),
+
   adminListRequests: async (
     params: { q?: string; status?: string; limit?: number; offset?: number } = {},
   ): Promise<{ items: WantedRequestDto[]; total?: number }> => {
@@ -449,11 +458,31 @@ export const api = {
   adminDeleteRequest: (id: string) =>
     request<{ deleted: string }>(`/admin/requests/${id}`, { method: "DELETE" }),
 
-  adminListUsers: async (
+  adminListRatings: async (
     params: { q?: string; limit?: number; offset?: number } = {},
+  ): Promise<{ items: AdminRating[]; total?: number }> => {
+    const q = new URLSearchParams();
+    if (params.q?.trim()) q.set("q", params.q.trim());
+    if (params.limit != null) q.set("limit", String(params.limit));
+    if (params.offset != null) q.set("offset", String(params.offset));
+    const qs = q.toString();
+    const res = await requestRaw(`/admin/ratings${qs ? `?${qs}` : ""}`);
+    const total = res.headers.get("X-Total-Count");
+    return {
+      items: (await res.json()) as AdminRating[],
+      total: total != null && total !== "" ? Number(total) : undefined,
+    };
+  },
+
+  adminDeleteRating: (id: string) =>
+    request<{ deleted: string }>(`/admin/ratings/${id}`, { method: "DELETE" }),
+
+  adminListUsers: async (
+    params: { q?: string; deleted?: boolean; limit?: number; offset?: number } = {},
   ): Promise<{ items: AdminUser[]; total?: number }> => {
     const q = new URLSearchParams();
     if (params.q?.trim()) q.set("q", params.q.trim());
+    if (params.deleted) q.set("deleted", "true");
     if (params.limit != null) q.set("limit", String(params.limit));
     if (params.offset != null) q.set("offset", String(params.offset));
     const qs = q.toString();
@@ -466,5 +495,57 @@ export const api = {
   },
 
   adminDeleteUser: (id: string) =>
-    request<{ deleted: string }>(`/admin/users/${id}`, { method: "DELETE" }),
+    request<{ deleted: string; listings_hidden: number; requests_hidden: number }>(
+      `/admin/users/${id}`,
+      { method: "DELETE" },
+    ),
+
+  adminRestoreUser: (id: string) =>
+    request<AdminUser>(`/admin/users/${id}/restore`, { method: "POST" }),
+
+  adminFlagUser: (id: string, flagged: boolean, reason = "") =>
+    request<AdminUser>(`/admin/users/${id}/flag`, {
+      method: "PATCH",
+      body: JSON.stringify({ flagged, reason }),
+    }),
+
+  adminListReports: async (
+    params: { q?: string; status?: string; limit?: number; offset?: number } = {},
+  ): Promise<{ items: AdminReport[]; total?: number }> => {
+    const q = new URLSearchParams();
+    if (params.q?.trim()) q.set("q", params.q.trim());
+    q.set("status", params.status ?? "open");
+    if (params.limit != null) q.set("limit", String(params.limit));
+    if (params.offset != null) q.set("offset", String(params.offset));
+    const res = await requestRaw(`/admin/reports?${q.toString()}`);
+    const total = res.headers.get("X-Total-Count");
+    return {
+      items: (await res.json()) as AdminReport[],
+      total: total != null && total !== "" ? Number(total) : undefined,
+    };
+  },
+
+  adminDismissReport: (id: string) =>
+    request<AdminReport>(`/admin/reports/${id}/dismiss`, { method: "POST" }),
+
+  adminUpholdReport: (id: string) =>
+    request<{ upheld: string; deleted: string }>(`/admin/reports/${id}/uphold`, {
+      method: "POST",
+    }),
+
+  adminListAudit: async (
+    params: { q?: string; limit?: number; offset?: number } = {},
+  ): Promise<{ items: AdminAuditEntry[]; total?: number }> => {
+    const q = new URLSearchParams();
+    if (params.q?.trim()) q.set("q", params.q.trim());
+    if (params.limit != null) q.set("limit", String(params.limit));
+    if (params.offset != null) q.set("offset", String(params.offset));
+    const qs = q.toString();
+    const res = await requestRaw(`/admin/audit${qs ? `?${qs}` : ""}`);
+    const total = res.headers.get("X-Total-Count");
+    return {
+      items: (await res.json()) as AdminAuditEntry[],
+      total: total != null && total !== "" ? Number(total) : undefined,
+    };
+  },
 };

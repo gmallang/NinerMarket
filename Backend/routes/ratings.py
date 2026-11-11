@@ -36,24 +36,38 @@ def create_rating(rating: Rating, user_id: str = Depends(require_user)):
     rating.id = rating.id or str(uuid.uuid4())
 
     if db:
-        data = db.table("ratings").insert(rating.model_dump(mode="json")).execute()
-        _update_seller_rating(rating.ratee_id, rating.stars)
-        return data.data[0]
+        inserted = db.table("ratings").insert(rating.model_dump(mode="json")).execute()
+    else:
+        ratings[rating.id] = rating
 
-    ratings[rating.id] = rating
-    return rating
+    recompute_seller_rating(rating.ratee_id)
+    return inserted.data[0] if db else rating
 
 
-def _update_seller_rating(ratee_id: str, stars: int):
-    user_data = db.table("users").select("rating_avg, rating_count").eq("id", ratee_id).execute()
-    if not user_data.data:
+def recompute_seller_rating(ratee_id: str) -> None:
+    """Rebuild the denormalized rating count/average from source rows.
+
+    This has to be a full recompute rather than an increment: deleting a
+    rating (for example from the admin panel) must remove its stars from the
+    seller's average, not leave the old total in place.
+    """
+    if db:
+        rows = db.table("ratings").select("stars").eq("ratee_id", ratee_id).execute().data
+        stars = [int(row["stars"]) for row in rows]
+        db.table("users").update(
+            {
+                "rating_avg": sum(stars) / len(stars) if stars else 0.0,
+                "rating_count": len(stars),
+            }
+        ).eq("id", ratee_id).execute()
         return
-    current = user_data.data[0]
-    count = current.get("rating_count", 0)
-    avg = current.get("rating_avg", 0.0)
-    new_count = count + 1
-    new_avg = (avg * count + stars) / new_count
-    db.table("users").update({"rating_avg": new_avg, "rating_count": new_count}).eq("id", ratee_id).execute()
+
+    stars = [r.stars for r in ratings.values() if r.ratee_id == ratee_id]
+    user = users.get(ratee_id)
+    if not user:
+        return
+    user.rating_avg = sum(stars) / len(stars) if stars else 0.0
+    user.rating_count = len(stars)
 
 
 def _attach_rater(rows: list[dict]) -> list[dict]:

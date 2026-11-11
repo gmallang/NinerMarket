@@ -84,15 +84,24 @@ def _row_to_user(row: dict) -> User:
         verification_expires=_parse_dt(row.get("verification_expires")),
         password_reset_code=row.get("password_reset_code", ""),
         password_reset_expires=_parse_dt(row.get("password_reset_expires")),
+        deleted_at=_parse_dt(row.get("deleted_at")),
     )
 
 
-def _find_user(email: str) -> User | None:
+def _find_user(email: str, include_deleted: bool = False) -> User | None:
+    """Looks an account up by email. Closed (soft-deleted) accounts are hidden
+    by default so every normal flow - login, reset, verification - treats them
+    as gone; the sign-in paths ask for them explicitly to give a clear message."""
     email = email.strip().lower()
+    user = None
     if db:
         res = db.table("users").select("*").eq("email", email).execute()
-        return _row_to_user(res.data[0]) if res.data else None
-    return _find_by_email(email)
+        user = _row_to_user(res.data[0]) if res.data else None
+    else:
+        user = _find_by_email(email)
+    if user and user.deleted_at and not include_deleted:
+        return None
+    return user
 
 
 def _save_user(user: User) -> User:
@@ -248,9 +257,13 @@ def login(body: LoginRequest, request: Request):
     rate_limit(f"login:{client_ip(request)}", max_attempts=20, window_seconds=15 * 60)
     rate_limit(f"login:{email}", max_attempts=6, window_seconds=15 * 60)
 
-    user = _find_user(email)
+    user = _find_user(email, include_deleted=True)
     if not user or not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Wrong email or password")
+    if user.deleted_at:
+        raise HTTPException(
+            status_code=403, detail="This account was closed by a moderator. Contact support if you think that's a mistake."
+        )
     if not user.email_verified:
         raise HTTPException(status_code=403, detail="Email not verified")
     return {"user": _to_public(user), "token": create_session_token(user.id)}
@@ -289,7 +302,11 @@ def google_login(body: GoogleLoginRequest, request: Request):
     if not info.get("email_verified"):
         raise HTTPException(status_code=403, detail="Your Google email is not verified")
 
-    user = _find_user(email)
+    user = _find_user(email, include_deleted=True)
+    if user and user.deleted_at:
+        raise HTTPException(
+            status_code=403, detail="This account was closed by a moderator."
+        )
     if user:
         user.email_verified = True
         user.display_name = user.display_name or (info.get("name") or email.split("@")[0])
@@ -343,7 +360,9 @@ async def google_callback(request: Request):
     if not info.get("email_verified"):
         return _back("nm_error=email-not-verified")
 
-    user = _find_user(email)
+    user = _find_user(email, include_deleted=True)
+    if user and user.deleted_at:
+        return _back("nm_error=account-closed")
     if user:
         user.email_verified = True
         user.display_name = user.display_name or (info.get("name") or email.split("@")[0])
@@ -413,12 +432,17 @@ def set_password(
 
 
 def get_user_by_id(id: str) -> User | None:
-    """Internal lookup returning the full User model. Never expose this directly
-    to the client - use _to_public()."""
+    """Internal lookup returning the full User model. A closed account is
+    treated as gone, which is what kills its existing session tokens too:
+    require_user -> require_admin -> every route resolves through here."""
     if db:
         data = db.table("users").select("*").eq("id", id).execute()
-        return _row_to_user(data.data[0]) if data.data else None
-    return users.get(id)
+        user = _row_to_user(data.data[0]) if data.data else None
+    else:
+        user = users.get(id)
+    if user and user.deleted_at:
+        return None
+    return user
 
 
 @router.get("/users/me")
@@ -464,7 +488,12 @@ def update_user(id: str, body: UserUpdate, caller_id: str = Depends(require_user
 @router.get("/users/{id}/listings")
 def get_user_listings(id: str, status: str | None = Query(default=None, max_length=60)):
     if db:
-        query = db.table("listings").select("*").eq("seller_id", id)
+        query = (
+            db.table("listings")
+            .select("*")
+            .eq("seller_id", id)
+            .is_("deleted_at", "null")
+        )
         if status:
             query = query.eq("status", status)
         rows = query.execute().data
@@ -477,7 +506,11 @@ def get_user_listings(id: str, status: str | None = Query(default=None, max_leng
             row["seller"] = seller
         return rows
 
-    results = [l for l in listings.values() if l.seller_id == id]
+    results = [
+        l
+        for l in listings.values()
+        if l.seller_id == id and getattr(l, "deleted_at", None) is None
+    ]
     if status:
         results = [l for l in results if l.status == status]
     return [_with_seller(l) for l in results]

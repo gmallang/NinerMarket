@@ -661,3 +661,30 @@
   font-weight: 700;
 }
 
+.detailDeleteBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: transparent;
+  color: var(--color-danger);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background var(--duration) var(--ease),
+    border-color var(--duration) var(--ease);
+}
+
+.detailDeleteBtn:hover:not(:disabled) {
+  background: rgba(212, 24, 61, 0.08);
+  border-color: var(--color-danger);
+}
+
+.detailDeleteBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+

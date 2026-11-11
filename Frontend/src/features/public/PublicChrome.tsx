@@ -38,6 +38,15 @@ export function PublicNav({ onSignUp, onLogIn }: AuthActions) {
         </Link>
 
         <nav className={s.navLinks} aria-label="Main">
+          <a className={s.navLink} href="#how-it-works">
+            How it works
+          </a>
+          <a className={s.navLink} href="#categories">
+            Categories
+          </a>
+          <a className={s.navLink} href="#community">
+            Community
+          </a>
           <button type="button" className={s.navLink} onClick={() => onLogIn?.()}>
             Log in
           </button>

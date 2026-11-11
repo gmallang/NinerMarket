@@ -44,6 +44,11 @@ export function ListingRow({
               <span className={s.flaggedTag}>Under Review</span>
             </div>
           )}
+          {item.status === "pending" && (
+            <div className={s.pendingOverlay}>
+              <span className={s.pendingTag}>Awaiting Approval</span>
+            </div>
+          )}
         </ProgressiveImage>
       </div>
       <div className={s.rowBody}>

@@ -21,6 +21,7 @@ push_subscriptions = {}
 saved = {}  # user_id -> set of listing_ids
 wanted_requests = {}  # request_id -> WantedRequest
 wanted_request_responses = {}  # request_id -> list of response dicts
+admin_actions = []  # append-only audit log (oldest first)
 
 if SUPABASE_URL and SUPABASE_KEY:
     from supabase import create_client

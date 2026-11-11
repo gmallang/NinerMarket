@@ -28,7 +28,7 @@
 
 .navInner {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1240px;
   height: 64px;
   margin: 0 auto;
   padding: 0 24px;
@@ -265,13 +265,13 @@
 
 /* ── Footer ── */
 .footer {
-  padding: 32px 16px 44px;
-  background: #fff;
+  padding: 38px 24px 46px;
+  background: #fffdf9;
   border-top: 1px solid var(--color-border);
 }
 
 .footerInner {
-  max-width: 1000px;
+  max-width: 1192px;
   margin: 0 auto;
 }
 

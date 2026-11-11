@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, Grid, List } from "lucide-react";
+import { ArrowLeft, Search, Grid, List } from "lucide-react";
 import { api } from "@/lib/api";
 import { fromDto } from "@/lib/listings";
 import { useMarketStore } from "@/lib/store";
@@ -155,7 +155,7 @@ export function HomePage() {
         .filter((l) => {
           if (viewMine) return !!user && l.sellerId === user.id;
           if (viewSaved) return savedItems.has(l.id);
-          if (l.status === "flagged") return false;
+          if (l.status === "flagged" || l.status === "pending") return false;
           return !onlyAvailable || l.status !== "sold";
         })
         .sort((a, b) => {
@@ -213,6 +213,12 @@ export function HomePage() {
         <>
       <div className={s.mainHeader} id="listings">
         <div>
+          {activeCategory !== "all" && !viewSaved && !viewMine && (
+            <button type="button" className={s.backBtn} onClick={() => navigate("/")}>
+              <ArrowLeft size={15} aria-hidden="true" />
+              Back to all categories
+            </button>
+          )}
           <h1 className={s.mainTitle}>{heading}</h1>
           <p className={s.mainCount}>
             {viewMine

@@ -32,6 +32,23 @@ class User(BaseModel):
     verification_expires: datetime | None = None
     password_reset_code: str = ""
     password_reset_expires: datetime | None = None
+    # Set automatically after three consecutive listings need moderator action,
+    # or by an admin. While true, every new listing starts as "pending" and
+    # waits for admin approval before it is visible to other students.
+    posting_flagged: bool = False
+    flag_reason: str = ""
+    bad_listing_streak: int = 0
+    # Soft delete: set when an admin closes the account. The row (and every
+    # child row) stays put so the account can be restored.
+    deleted_at: datetime | None = None
+
+
+class UserFlagUpdate(BaseModel):
+    """Admin toggle for review-only posting. `reason` is shown to the seller
+    and in the admin panel; it is ignored when clearing the flag."""
+
+    flagged: bool
+    reason: str = Field(default="", max_length=200)
 
 
 class UserCreate(BaseModel):
@@ -117,6 +134,9 @@ class Listing(BaseModel):
     pickup_location: str = Field(min_length=1, max_length=120)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     sold_at: datetime | None = None
+    # Server-owned moderation field: hidden while the seller's account is
+    # closed. Never accepted from a request body (see ListingUpdate).
+    deleted_at: datetime | None = None
 
 
 class ListingUpdate(BaseModel):

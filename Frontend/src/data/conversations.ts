@@ -1,5 +1,7 @@
 // Conversation seed data (local; messaging backend not built yet)
 
+import { avatarUrl } from "@/lib/avatar";
+
 const minutesAgo = (n: number) => new Date(Date.now() - n * 60_000).toISOString();
 const hoursAgo = (n: number) => minutesAgo(n * 60);
 const daysAgo = (n: number) => hoursAgo(n * 24);
@@ -33,8 +35,7 @@ export const CONVS: Conversation[] = [
     id: 1,
     listingId: "4",
     name: "Chris L.",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format",
+    avatar: avatarUrl("Chris L."),
     online: true,
     unread: 2,
     lastMsg: "Is it still available?",
@@ -66,8 +67,7 @@ export const CONVS: Conversation[] = [
     id: 2,
     listingId: "1",
     name: "Maya T.",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&auto=format",
+    avatar: avatarUrl("Maya T."),
     online: false,
     unread: 0,
     lastMsg: "Can you hold it til Friday?",
@@ -97,8 +97,7 @@ export const CONVS: Conversation[] = [
     id: 3,
     listingId: "5",
     name: "Sam R.",
-    avatar:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&auto=format",
+    avatar: avatarUrl("Sam R."),
     online: true,
     unread: 2,
     lastMsg: "Meet at the bike rack?",
@@ -118,8 +117,7 @@ export const CONVS: Conversation[] = [
     id: 4,
     listingId: "7",
     name: "Olivia M.",
-    avatar:
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop&auto=format",
+    avatar: avatarUrl("Olivia M."),
     online: false,
     unread: 1,
     lastMsg: "Does the fridge smell?",

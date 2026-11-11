@@ -18,6 +18,7 @@ export function ListingOverlay() {
   const toggleSave = useMarketStore((s) => s.toggleSave);
   const openMessageOverlay = useMarketStore((s) => s.openMessageOverlay);
   const markListingSold = useMarketStore((s) => s.markListingSold);
+  const deleteListing = useMarketStore((s) => s.deleteListing);
   const reportListing = useMarketStore((s) => s.reportListing);
   const makeOffer = useMarketStore((s) => s.makeOffer);
   const openEditListing = useMarketStore((s) => s.openEditListing);
@@ -51,6 +52,12 @@ export function ListingOverlay() {
 
   const isOwner = !!item && !!user && user.id === item.sellerId;
 
+  const handleDelete = async () => {
+    if (!item) return;
+    await deleteListing(item.id);
+    closeListingOverlay();
+  };
+
   return (
     <Modal
       open={listingOverlayId != null}
@@ -78,6 +85,7 @@ export function ListingOverlay() {
                 }
               : undefined
           }
+          onDelete={isOwner ? handleDelete : undefined}
           onReport={(reason, details) => reportListing(item.id, reason, details)}
           onMakeOffer={(price) => makeOffer(item.id, price)}
         />

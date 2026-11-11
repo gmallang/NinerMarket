@@ -123,6 +123,49 @@ export interface AdminUser {
   rating_count: number;
   is_admin: boolean;
   listing_count: number;
+  /** When true, every new listing from this account waits for admin approval. */
+  posting_flagged?: boolean;
+  flag_reason?: string;
+  bad_listing_streak?: number;
+  /** Set when an admin closed the account; the Deleted tab can restore it. */
+  deleted_at?: string | null;
+}
+
+export interface AdminReport {
+  id: string;
+  listing_id: string;
+  reporter_id: string;
+  reason: string;
+  details: string;
+  status: "open" | "dismissed" | "upheld";
+  created_at: string;
+  resolved_at?: string | null;
+  reporter: { id: string; display_name: string; email?: string } | null;
+  listing: { id: string; name: string; status: string; price?: number } | null;
+}
+
+export interface AdminAuditEntry {
+  id: string;
+  admin_id: string;
+  admin_email: string;
+  action: string;
+  target_type: string;
+  target_id: string;
+  target_label: string;
+  details: string;
+  created_at: string;
+}
+
+export interface AdminRating {
+  id: string;
+  rater_id: string;
+  ratee_id: string;
+  listing_id: string;
+  stars: number;
+  comment: string;
+  created_at: string;
+  rater: { id: string; display_name: string } | null;
+  ratee: { id: string; display_name: string } | null;
 }
 
 export type WantedRequestStatus = "active" | "fulfilled" | "expired";

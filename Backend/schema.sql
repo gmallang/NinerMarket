@@ -28,12 +28,27 @@ create table if not exists users (
   verification_code     text not null default '',
   verification_expires  timestamptz,
   password_reset_code   text not null default '',
-  password_reset_expires timestamptz
+  password_reset_expires timestamptz,
+  -- Review-only posting: set by an admin or automatically after three bad
+  -- listings in a row. New listings from a flagged account start as "pending".
+  posting_flagged   boolean not null default false,
+  flag_reason       text not null default '',
+  bad_listing_streak integer not null default 0,
+  -- Soft delete. Closing an account sets this instead of removing the row, so
+  -- the Deleted tab can restore it. Closed accounts can't sign in, and their
+  -- listings/requests are hidden until they are restored.
+  deleted_at        timestamptz
 );
 
 -- Migration for databases created before the password-reset fields existed.
 alter table users add column if not exists password_reset_code text not null default '';
 alter table users add column if not exists password_reset_expires timestamptz;
+-- Migration for databases created before review-only posting existed.
+alter table users add column if not exists posting_flagged boolean not null default false;
+alter table users add column if not exists flag_reason text not null default '';
+alter table users add column if not exists bad_listing_streak integer not null default 0;
+-- Migration for databases created before soft delete existed.
+alter table users add column if not exists deleted_at timestamptz;
 
 create table if not exists listings (
   id               text primary key,
@@ -49,13 +64,17 @@ create table if not exists listings (
   photos_small     jsonb not null default '[]'::jsonb,
   pickup_location  text not null default '',
   created_at       timestamptz not null default now(),
-  sold_at          timestamptz
+  sold_at          timestamptz,
+  -- Hidden while the seller's account is closed (mirrors users.deleted_at).
+  deleted_at       timestamptz
 );
 
 -- Migration for databases created before sold_at existed.
 alter table listings add column if not exists sold_at timestamptz;
 -- Migration for databases created before photos_small existed.
 alter table listings add column if not exists photos_small jsonb not null default '[]'::jsonb;
+-- Migration for databases created before soft delete existed.
+alter table listings add column if not exists deleted_at timestamptz;
 
 create table if not exists ratings (
   id           text primary key,
@@ -131,6 +150,31 @@ create table if not exists listing_reports (
   reporter_id  text not null references users(id) on delete cascade,
   reason       text not null,
   details      text not null default '',
+  -- Resolution state for the admin report queue: open | dismissed | upheld.
+  status       text not null default 'open',
+  resolved_at  timestamptz,
+  resolved_by  text not null default '',
+  created_at   timestamptz not null default now()
+);
+
+-- Migration for databases created before the report queue existed. Existing
+-- reports stay "open" until a moderator resolves them.
+alter table listing_reports add column if not exists status text not null default 'open';
+alter table listing_reports add column if not exists resolved_at timestamptz;
+alter table listing_reports add column if not exists resolved_by text not null default '';
+
+-- Every admin action, append-only. Kept independent of the tables it describes
+-- (no foreign keys) so the log survives a content takedown and records who did
+-- what even after an account is closed.
+create table if not exists admin_actions (
+  id           text primary key,
+  admin_id     text not null default '',
+  admin_email  text not null default '',
+  action       text not null,
+  target_type  text not null,
+  target_id    text not null default '',
+  target_label text not null default '',
+  details      text not null default '',
   created_at   timestamptz not null default now()
 );
 
@@ -170,9 +214,14 @@ create table if not exists wanted_requests (
   -- stale row can never look active just because a cron job didn't run.
   status              text not null default 'active',
   expires_at          timestamptz not null default (now() + interval '30 days'),
+  -- Hidden while the requester's account is closed.
+  deleted_at          timestamptz,
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now()
 );
+
+-- Migration for databases created before soft delete existed.
+alter table wanted_requests add column if not exists deleted_at timestamptz;
 
 -- One row per (requester, responder, request): responding twice reuses the
 -- first row instead of piling up duplicates.
@@ -203,6 +252,10 @@ create index if not exists idx_notifications_user_id on notifications (user_id);
 create index if not exists idx_push_subscriptions_user_id on push_subscriptions (user_id);
 create index if not exists idx_listing_reports_listing_id on listing_reports (listing_id);
 create index if not exists idx_listing_reports_reporter_id on listing_reports (reporter_id);
+-- The report queue's default view is "open, newest first".
+create index if not exists idx_listing_reports_status_created
+  on listing_reports (status, created_at desc);
+create index if not exists idx_admin_actions_created_at on admin_actions (created_at desc);
 create index if not exists idx_offers_listing_id on offers (listing_id);
 create index if not exists idx_offers_buyer_id on offers (buyer_id);
 create index if not exists idx_offers_status on offers (status);
@@ -238,4 +291,5 @@ alter table offers enable row level security;
 alter table saved_listings enable row level security;
 alter table wanted_requests enable row level security;
 alter table wanted_request_responses enable row level security;
+alter table admin_actions enable row level security;
 

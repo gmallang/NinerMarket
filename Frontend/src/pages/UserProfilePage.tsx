@@ -87,6 +87,15 @@ export function UserProfilePage() {
     };
   }, [id, currentUser?.id]);
 
+  useEffect(() => {
+    const onListingDeleted = (event: Event) => {
+      const deletedId = (event as CustomEvent<string>).detail;
+      setListings((current) => current.filter((listing) => listing.id !== deletedId));
+    };
+    window.addEventListener("ninermarket:listing-deleted", onListingDeleted);
+    return () => window.removeEventListener("ninermarket:listing-deleted", onListingDeleted);
+  }, []);
+
   const isOwnProfile = !!currentUser && currentUser.id === id;
   const visibleListings = showAll ? listings : listings.slice(0, 3);
 

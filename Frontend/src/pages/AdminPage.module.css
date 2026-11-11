@@ -169,6 +169,66 @@
   margin-top: 2px;
 }
 
+.ratingComment {
+  font-size: 0.75rem;
+  color: var(--color-fg);
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+
+/* Report details and audit context can be long, unbroken user text. */
+.detailText {
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+
+.auditAction {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+  margin-right: 6px;
+}
+
+.resolvedLabel {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-fg-subtle);
+  padding: 7px 12px;
+}
+
+.dismissBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-fg-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 7px 12px;
+  transition:
+    background var(--duration) var(--ease),
+    border-color var(--duration) var(--ease);
+}
+
+.dismissBtn:hover:not(:disabled) {
+  background: var(--color-muted);
+  border-color: var(--color-fg-subtle);
+}
+
+.dismissBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .thumb {
   width: 48px;
   height: 48px;
@@ -216,6 +276,59 @@
 .badgeFlagged {
   background: rgba(212, 24, 61, 0.1);
   color: var(--color-danger);
+}
+
+.badgePending {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.approveBtn,
+.flagBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 7px 12px;
+  transition:
+    background var(--duration) var(--ease),
+    border-color var(--duration) var(--ease);
+}
+
+.approveBtn {
+  color: var(--color-primary);
+}
+
+.approveBtn:hover:not(:disabled) {
+  background: rgba(31, 122, 82, 0.08);
+  border-color: var(--color-primary);
+}
+
+.flagBtn {
+  color: #b45309;
+}
+
+.flagBtn:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: #b45309;
+}
+
+.approveBtn:disabled,
+.flagBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .deleteBtn {

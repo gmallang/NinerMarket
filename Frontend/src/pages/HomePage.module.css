@@ -19,6 +19,29 @@
   }
 }
 
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-card);
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--duration) var(--ease),
+    border-color var(--duration) var(--ease);
+}
+
+.backBtn:hover {
+  background: var(--color-accent);
+  border-color: var(--color-primary);
+}
+
 .mainTitle {
   font-family: var(--font-display);
   font-size: 1.5rem;

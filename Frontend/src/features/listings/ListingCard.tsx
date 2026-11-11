@@ -106,6 +106,11 @@ export function ListingCard({
             <span className={s.flaggedTag}>Under Review</span>
           </div>
         )}
+        {item.status === "pending" && (
+          <div className={s.pendingOverlay}>
+            <span className={s.pendingTag}>Awaiting Approval</span>
+          </div>
+        )}
       </div>
       <div className={s.cardBody}>
         <p className={s.cardPrice}>${item.price.toLocaleString()}</p>

@@ -218,9 +218,13 @@ def _validate(
 def _get_request_row(request_id: str) -> dict | None:
     if db:
         res = db.table("wanted_requests").select("*").eq("id", request_id).execute()
-        return res.data[0] if res.data else None
-    row = wanted_requests.get(request_id)
-    return dict(row) if row else None
+        row = res.data[0] if res.data else None
+    else:
+        stored = wanted_requests.get(request_id)
+        row = dict(stored) if stored else None
+    if row and row.get("deleted_at"):
+        return None
+    return row
 
 
 def _get_request_or_404(request_id: str) -> dict:
@@ -252,7 +256,11 @@ def list_requests(
     now = _now()
 
     if db:
-        query = db.table("wanted_requests").select("*", count="exact")
+        query = (
+            db.table("wanted_requests")
+            .select("*", count="exact")
+            .is_("deleted_at", "null")
+        )
         if status == "active":
             query = query.eq("status", "active").gt("expires_at", now.isoformat())
         elif status == "expired":
@@ -274,7 +282,7 @@ def list_requests(
         response.headers["X-Total-Count"] = str(total if total is not None else len(rows))
         return _batch_out(rows)
 
-    rows = [dict(r) for r in wanted_requests.values()]
+    rows = [dict(r) for r in wanted_requests.values() if not r.get("deleted_at")]
     if status == "active":
         rows = [r for r in rows if _effective_status(r) == "active"]
     elif status == "expired":
@@ -319,7 +327,12 @@ def list_user_requests(
         raise HTTPException(status_code=403, detail="You can only view your own requests")
 
     if db:
-        query = db.table("wanted_requests").select("*").eq("user_id", user_id)
+        query = (
+            db.table("wanted_requests")
+            .select("*")
+            .eq("user_id", user_id)
+            .is_("deleted_at", "null")
+        )
         if status in {"active", "fulfilled", "expired"}:
             if status == "expired":
                 query = query.eq("status", "active").lte("expires_at", _now().isoformat())
@@ -330,7 +343,11 @@ def list_user_requests(
         rows = query.order("created_at", desc=True).execute().data
         return _batch_out(rows)
 
-    rows = [dict(r) for r in wanted_requests.values() if r.get("user_id") == user_id]
+    rows = [
+        dict(r)
+        for r in wanted_requests.values()
+        if r.get("user_id") == user_id and not r.get("deleted_at")
+    ]
     if status in {"active", "fulfilled", "expired"}:
         rows = [r for r in rows if _effective_status(r) == status]
     rows.sort(key=lambda r: _parse_dt(r.get("created_at")) or _now(), reverse=True)

@@ -16,6 +16,7 @@ export function ListingDetailPage() {
   const toggleSave = useMarketStore((s) => s.toggleSave);
   const openMessageOverlay = useMarketStore((s) => s.openMessageOverlay);
   const markListingSold = useMarketStore((s) => s.markListingSold);
+  const deleteListing = useMarketStore((s) => s.deleteListing);
   const reportListing = useMarketStore((s) => s.reportListing);
   const makeOffer = useMarketStore((s) => s.makeOffer);
   const openEditListing = useMarketStore((s) => s.openEditListing);
@@ -67,6 +68,11 @@ export function ListingDetailPage() {
 
   const isOwner = !!user && user.id === item.sellerId;
 
+  const handleDelete = async () => {
+    await deleteListing(item.id);
+    navigate("/");
+  };
+
   return (
     <div className={ps.page}>
       <ListingDetail
@@ -79,6 +85,7 @@ export function ListingDetailPage() {
         onOpenSeller={handleOpenSeller}
         onMarkSold={() => markListingSold(item.id)}
         onEdit={isOwner ? () => openEditListing(item) : undefined}
+        onDelete={isOwner ? handleDelete : undefined}
         onReport={(reason, details) => reportListing(item.id, reason, details)}
         onMakeOffer={(price) => makeOffer(item.id, price)}
       />

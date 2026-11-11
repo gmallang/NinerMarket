@@ -111,10 +111,11 @@ export function AuthCard({
     authedRef.current = onAuthed;
   }, [onAuthed]);
 
-
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
     let cancelled = false;
+    let resizeTimer: number | undefined;
+    let stopResize: (() => void) | undefined;
 
     const mount = () => {
       const gid = window.google?.accounts?.id;
@@ -150,13 +151,29 @@ export function AuthCard({
           }
         },
       });
-      gid.renderButton(googleButtonRef.current, {
-        theme: "outline",
-        size: "large",
-        text: "continue_with",
-        shape: "rectangular",
-        width: 328,
-      });
+      // Google draws a fixed-width iframe at exactly the width we pass, so
+      // measure the slot instead of stretching the iframe with CSS (which
+      // leaves the button artwork sitting off-center in a wider frame).
+      const draw = () => {
+        const slot = googleButtonRef.current;
+        if (!slot || cancelled) return;
+        const measured = Math.floor(slot.getBoundingClientRect().width);
+        slot.replaceChildren();
+        gid.renderButton(slot, {
+          theme: "outline",
+          size: "large",
+          text: "continue_with",
+          shape: "rectangular",
+          width: Math.min(400, Math.max(200, measured || 328)),
+        });
+      };
+      draw();
+      const handleResize = () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(draw, 150);
+      };
+      window.addEventListener("resize", handleResize);
+      stopResize = () => window.removeEventListener("resize", handleResize);
     };
 
     if (window.google?.accounts?.id) {
@@ -175,6 +192,8 @@ export function AuthCard({
 
     return () => {
       cancelled = true;
+      window.clearTimeout(resizeTimer);
+      stopResize?.();
     };
   }, [GOOGLE_CLIENT_ID, setError]);
 
@@ -442,7 +461,7 @@ export function AuthCard({
           ? "Enter the code we sent to your Niner email."
           : mode === "signup"
             ? "Join your campus community."
-            : "Welcome back, Niner."}
+            : "Welcome back"}
       </p>
 
       {verifying ? (
@@ -584,11 +603,7 @@ export function AuthCard({
           {mode === "signup" ? (
             <p className={s.switchRow}>
               Already have an account?{" "}
-              <button
-                type="button"
-                className={s.switchLink}
-                onClick={() => onModeChange("signin")}
-              >
+              <button type="button" className={s.switchLink} onClick={() => onModeChange("signin")}>
                 Log in
               </button>
             </p>
@@ -658,11 +673,7 @@ export function AuthCard({
         foreground
       >
         <div className={s.xModalHeader}>
-          <button
-            className={s.xModalClose}
-            onClick={() => setForgotOpen(false)}
-            aria-label="Close"
-          >
+          <button className={s.xModalClose} onClick={() => setForgotOpen(false)} aria-label="Close">
             <X size={18} />
           </button>
           <h2 className={s.xModalTitle}>Reset your password</h2>

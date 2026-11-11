@@ -43,17 +43,9 @@
   margin-top: 0;
 }
 
-/* Google renders a fixed-width iframe, which overflows a narrow card. Let it
-   scale down on small screens while keeping the configured width on desktop. */
-.googleSlot > div {
-  width: 100% !important;
-  max-width: 328px;
-}
-
-.googleSlot iframe {
-  width: 100% !important;
-}
-
+/* Google sizes its iframe from the width passed to renderButton (see
+   AuthCard), so leave it alone here - forcing a width stretches the frame
+   without redrawing the button inside it, which clips the artwork. */
 .googleBtn {
   display: flex;
   align-items: center;
@@ -667,4 +659,3 @@
     padding: 24px 18px 22px;
   }
 }
-

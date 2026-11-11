@@ -1,133 +1,97 @@
-import { useEffect, useState } from "react";
-import { ArrowRight, Lock, Megaphone } from "lucide-react";
-import { ListingCard } from "@/features/listings/ListingCard";
-import { fromDto } from "@/lib/listings";
-import { api } from "@/lib/api";
-import type { CurrentUser, Listing, WantedRequestDto } from "@/lib/types";
+import { useState } from "react";
+import { LockKeyhole } from "lucide-react";
+import ninerLogo from "@/assets/NinerMarket.png";
 import { AuthCard } from "@/features/login/AuthCard";
-import type { AuthMode } from "@/features/public/PublicChrome";
 import {
-  PublicFooter,
-  PublicHero,
-  PublicJoinBand,
-  PublicNav,
-  PublicTiles,
-} from "@/features/public/PublicChrome";
-import s from "@/features/public/publicChrome.module.css";
-import l from "./landing.module.css";
-
-/** "$40 – $60", "Up to $35", … for the Looking For preview. */
-function budgetLabel(request: WantedRequestDto): string {
-  if (request.budget_min != null && request.budget_max != null) {
-    return `$${request.budget_min} – $${request.budget_max}`;
-  }
-  if (request.budget_max != null) return `Up to $${request.budget_max}`;
-  if (request.budget_min != null) return `From $${request.budget_min}`;
-  return "Open budget";
-}
+  HelpModal,
+  PrivacyModal,
+  TermsModal,
+} from "@/features/login/AuthModals";
+import type { AuthMode } from "@/features/public/PublicChrome";
+import type { CurrentUser } from "@/lib/types";
+import s from "./landing.module.css";
 
 /**
- * Public about page. Same shell as /login - green navbar, the auth card hero,
- * the three example columns - plus a preview of what is live on the market.
+ * Public login page, shared by /login and /about (the RequireAuth redirect
+ * target). The marketplace itself stays gated: this page only renders the
+ * branding and the existing AuthCard. It reads no marketplace data.
  */
 export function LandingPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
-  const [mode, setMode] = useState<AuthMode>("signup");
-  const [featured, setFeatured] = useState<Listing[]>([]);
-  const [requests, setRequests] = useState<WantedRequestDto[]>([]);
-
-  useEffect(() => {
-    let alive = true;
-    api
-      .listListings({ limit: 4, sort: "recent" })
-      .then(({ items }) => {
-        if (!alive) return;
-        setFeatured(items.map(fromDto));
-      })
-      .catch(() => {
-        // The preview is decorative - the page still reads fine without it.
-      });
-    api
-      .listRequests({ status: "active", limit: 3 })
-      .then(({ items }) => {
-        if (!alive) return;
-        setRequests(items);
-      })
-      .catch(() => {
-        // Same as above.
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  const openSignUp = () => setMode("signup");
+  const [mode, setMode] = useState<AuthMode>("signin");
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   return (
     <div className={s.page}>
-      <PublicNav onSignUp={openSignUp} onLogIn={() => setMode("signin")} />
-
       <main className={s.main}>
-        <PublicHero onSignUp={openSignUp}>
-          <AuthCard mode={mode} onModeChange={setMode} onAuthed={onAuthed} />
-        </PublicHero>
-
-        <PublicTiles />
-
-        <div className={l.container}>
-          <section className={l.marketRow}>
-            <div className={l.recentCol}>
-              <div className={l.recentHead}>
-                <div>
-                  <h2 className={l.recentTitle}>Recently Listed</h2>
-                  <p className={l.recentSub}>Browse items fellow Niners are selling.</p>
-                </div>
-                <button type="button" className={l.viewAll} onClick={openSignUp}>
-                  View all →
-                </button>
-              </div>
-              <div className={l.recentGrid}>
-                {featured.map((item) => (
-                  <ListingCard
-                    key={item.id}
-                    item={item}
-                    saved={false}
-                    onToggleSave={openSignUp}
-                    onOpen={openSignUp}
-                    blurSeller
-                  />
-                ))}
-              </div>
+        <div className={s.layout}>
+          <section className={s.brandPane} aria-labelledby="landing-title">
+            <div className={s.wordmark}>
+              <img src={ninerLogo} alt="" className={s.logo} />
+              <span className={s.brandName}>NinerMarket</span>
             </div>
 
-            <aside className={l.lookingCol}>
-              <h2 className={l.lookingTitle}>
-                <Megaphone size={19} /> Looking For?
-              </h2>
-              <p className={l.lookingSub}>Help fellow Niners find what they need.</p>
-              <ul className={l.reqList}>
-                {requests.map((request) => (
-                  <li key={request.id} className={l.reqRow}>
-                    <span className={l.reqIcon}>
-                      <Lock size={15} />
-                    </span>
-                    <div className={l.reqBody}>
-                      <span className={l.reqTitle}>{request.title}</span>
-                      <span className={l.reqBudget}>{budgetLabel(request)}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <button type="button" className={l.browseAll} onClick={openSignUp}>
-                Browse all requests <ArrowRight size={15} />
-              </button>
-            </aside>
+            <h1
+              id="landing-title"
+              className={s.headline}
+              aria-label="Your Campus. Your People. Your Marketplace."
+            >
+              Your Campus.
+              <br />
+              <span className={s.headlineAccent}>Your People.</span>
+              <br />
+              Your Marketplace.
+            </h1>
+
+            <p className={s.description}>
+              NinerMarket is a student-only marketplace for verified UNC Charlotte students. Buy
+              and sell what you no longer need, ask campus for what you are looking for, and keep
+              the community close to home.
+            </p>
+
+            <p className={s.accessNote}>
+              <LockKeyhole size={14} aria-hidden="true" />
+              A verified @charlotte.edu email is required to join.
+            </p>
+          </section>
+
+          <section className={s.loginPane} aria-label="Log in or create an account">
+            <AuthCard mode={mode} onModeChange={setMode} onAuthed={onAuthed} />
           </section>
         </div>
-
-        <PublicJoinBand onJoin={openSignUp} />
       </main>
 
-      <PublicFooter onSignUp={openSignUp} onLogIn={() => setMode("signin")} />
+      <footer className={s.footer}>
+        <div className={s.footerInner}>
+          <p className={s.disclaimer}>
+            NinerMarket is an independent student project built by UNC Charlotte students. It is
+            not officially affiliated with, endorsed by, or operated by UNC Charlotte.
+          </p>
+          <div className={s.footerActions}>
+            <button type="button" className={s.footerLink} onClick={() => setPrivacyOpen(true)}>
+              Privacy
+            </button>
+            <button type="button" className={s.footerLink} onClick={() => setTermsOpen(true)}>
+              Terms
+            </button>
+            <button type="button" className={s.footerLink} onClick={() => setHelpOpen(true)}>
+              Help
+            </button>
+            <span className={s.copyright}>© 2026 NinerMarket</span>
+          </div>
+        </div>
+      </footer>
+
+      {privacyOpen && <PrivacyModal onClose={() => setPrivacyOpen(false)} />}
+      {helpOpen && <HelpModal onClose={() => setHelpOpen(false)} />}
+      {termsOpen && (
+        <TermsModal
+          accepted
+          onAccept={() => setTermsOpen(false)}
+          onClose={() => setTermsOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -9,17 +9,18 @@ afterEach(() => {
 });
 
 describe("AboutPage", () => {
-  it("renders the landing page and opens the join panel", async () => {
+  it("renders the gated login page without marketplace content", () => {
     vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "");
-    const { user } = renderWithRouter(<AboutPage />);
+    renderWithRouter(<AboutPage />);
 
-    expect(screen.getByRole("heading", { name: /Your campus/ })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Recently Listed" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: /Your Campus/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Log in to NinerMarket" })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Email address (@charlotte.edu)")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create new account" })).toBeInTheDocument();
 
-    await user.click(screen.getAllByRole("button", { name: "Sign Up / Log In" })[0]);
-
-    expect(screen.getByText("Continue with Google")).toBeInTheDocument();
-    expect(screen.getByText(/UNC Charlotte students, faculty/)).toBeInTheDocument();
+    expect(screen.queryByText("Recently Listed")).not.toBeInTheDocument();
+    expect(screen.queryByText("Looking For?")).not.toBeInTheDocument();
+    expect(screen.queryByText("Preview")).not.toBeInTheDocument();
   });
 
   it("renders the Google Identity button when a client id is configured", async () => {
@@ -30,26 +31,21 @@ describe("AboutPage", () => {
       accounts: { id: { initialize, renderButton } },
     };
 
-    const { user } = renderWithRouter(<AboutPage />);
-    await user.click(screen.getAllByRole("button", { name: "Sign Up / Log In" })[0]);
+    renderWithRouter(<AboutPage />);
 
-    await waitFor(() => {
-      expect(initialize).toHaveBeenCalledWith(
-        expect.objectContaining({
-          client_id: "test-client-id.apps.googleusercontent.com",
-          hd: "charlotte.edu",
-        })
-      );
-    });
-    expect(renderButton).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(initialize).toHaveBeenCalled());
+    expect(initialize).toHaveBeenCalledWith(
+      expect.objectContaining({
+        client_id: "test-client-id.apps.googleusercontent.com",
+        hd: "charlotte.edu",
+      })
+    );
+    await waitFor(() => expect(renderButton).toHaveBeenCalledTimes(1));
   });
 
   it("rejects an invalid email with a field-level warning", async () => {
     vi.stubEnv("VITE_GOOGLE_CLIENT_ID", "");
     const { user } = renderWithRouter(<AboutPage />);
-
-    await user.click(screen.getAllByRole("button", { name: "Sign Up / Log In" })[0]);
-    await user.click(screen.getByText("Sign up with your @charlotte.edu email instead"));
 
     const emailInput = screen.getByPlaceholderText("Email address (@charlotte.edu)");
     await user.type(emailInput, "anna@gmail.com");

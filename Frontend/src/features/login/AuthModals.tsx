@@ -70,6 +70,7 @@ export function GoogleChooser({
         }}
         className={s.googleModal}
         ariaLabel="Sign in with Google"
+        foreground
       >
         <div className={s.googleLogo}>
           <GoogleG />
@@ -140,6 +141,7 @@ export function TermsModal({
       }}
       className={s.termsModal}
       ariaLabel="Terms and conditions"
+      foreground
     >
       <div className={s.termsHeader}>
         <h2 className={s.googleTitle}>Terms &amp; Conditions</h2>
@@ -177,6 +179,7 @@ export function PrivacyModal({ onClose }: { onClose: () => void }) {
       }}
       className={s.termsModal}
       ariaLabel="Privacy policy"
+      foreground
     >
       <div className={s.termsHeader}>
         <h2 className={s.googleTitle}>Privacy Policy</h2>
@@ -211,6 +214,7 @@ export function HelpModal({ onClose }: { onClose: () => void }) {
       }}
       className={s.helpModal}
       ariaLabel="Help and support"
+      foreground
     >
       <div className={s.termsHeader}>
         <MessageCircle size={20} className={s.termsIcon} />

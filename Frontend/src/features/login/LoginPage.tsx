@@ -1,33 +1,11 @@
-import { useState } from "react";
-import { AuthCard } from "./AuthCard";
-import type { AuthMode } from "@/features/public/PublicChrome";
-import {
-  PublicFooter,
-  PublicHero,
-  PublicJoinBand,
-  PublicNav,
-  PublicTiles,
-} from "@/features/public/PublicChrome";
+import { LandingPage } from "@/features/landing/LandingPage";
 import type { CurrentUser } from "@/lib/types";
-import s from "@/features/public/publicChrome.module.css";
 
+/**
+ * /login renders the same public landing page as /about. The mandatory gate
+ * lives in the router (PublicOnly here, RequireAuth on every app route), so
+ * this page only needs to hand a successful sign-in back to the page wrapper.
+ */
 export function LoginPage({ onAuthed }: { onAuthed: (user: CurrentUser) => void }) {
-  const [mode, setMode] = useState<AuthMode>("signup");
-
-  return (
-    <div className={s.page}>
-      <PublicNav onSignUp={() => setMode("signup")} onLogIn={() => setMode("signin")} />
-
-      <main className={s.main}>
-        <PublicHero onSignUp={() => setMode("signup")}>
-          <AuthCard mode={mode} onModeChange={setMode} onAuthed={onAuthed} />
-        </PublicHero>
-
-        <PublicTiles />
-        <PublicJoinBand onJoin={() => setMode("signup")} />
-      </main>
-
-      <PublicFooter onSignUp={() => setMode("signup")} onLogIn={() => setMode("signin")} />
-    </div>
-  );
+  return <LandingPage onAuthed={onAuthed} />;
 }

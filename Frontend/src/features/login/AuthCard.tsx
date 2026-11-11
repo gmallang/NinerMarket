@@ -430,8 +430,20 @@ export function AuthCard({
 
   return (
     <div className={s.card}>
-      <h1 className={s.cardTitle}>Discover your campus marketplace</h1>
-      <p className={s.cardSub}>Buy, sell, and trade with verified Niners.</p>
+      <h2 className={s.cardTitle}>
+        {verifying
+          ? "Verify your email"
+          : mode === "signup"
+            ? "Create your account"
+            : "Log in to NinerMarket"}
+      </h2>
+      <p className={s.cardSub}>
+        {verifying
+          ? "Enter the code we sent to your Niner email."
+          : mode === "signup"
+            ? "Join your campus community."
+            : "Welcome back, Niner."}
+      </p>
 
       {verifying ? (
         <form onSubmit={verifySubmit} className={s.cardForm}>
@@ -469,29 +481,6 @@ export function AuthCard({
         </form>
       ) : (
         <>
-          {GOOGLE_CLIENT_ID ? (
-            <div ref={googleButtonRef} className={s.googleSlot} />
-          ) : (
-            <button
-              type="button"
-              className={s.googleBtn}
-              onClick={() => {
-                if (!agree) {
-                  setError("Please accept the Terms & Conditions to continue.");
-                  return;
-                }
-                setGoogleOpen(true);
-              }}
-            >
-              <GoogleG />
-              Continue with Google
-            </button>
-          )}
-
-          <div className={s.or}>
-            <span>or</span>
-          </div>
-
           <form onSubmit={submit} className={s.cardForm}>
             {mode === "signup" && (
               <input
@@ -500,6 +489,7 @@ export function AuthCard({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Full name"
                 aria-label="Full name"
+                autoComplete="name"
               />
             )}
             <input
@@ -509,6 +499,7 @@ export function AuthCard({
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email address (@charlotte.edu)"
               aria-label="Email address"
+              autoComplete="email"
             />
             {emailTyped && (
               <span className={s.fieldError}>
@@ -523,6 +514,7 @@ export function AuthCard({
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
                 aria-label="Password"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
               />
               <button
                 type="button"
@@ -557,24 +549,60 @@ export function AuthCard({
             </label>
             {error && <p className={s.error}>{error}</p>}
             <button type="submit" className={s.submitBtn} disabled={!agree}>
-              {mode === "signup" ? "Continue" : "Log in"}
+              {mode === "signup" ? "Create account" : "Log in"}
             </button>
           </form>
 
-          <p className={s.onlyNote}>
-            NinerMarket is for UNC Charlotte students, faculty &amp; staff only. Sign in with your
-            @charlotte.edu Google account.
-          </p>
-          <p className={s.switchRow}>
-            {mode === "signup" ? "Already have an account? " : "New to NinerMarket? "}
+          <div className={s.or}>
+            <span>or</span>
+          </div>
+
+          {GOOGLE_CLIENT_ID ? (
+            <div ref={googleButtonRef} className={s.googleSlot} />
+          ) : (
             <button
               type="button"
-              className={s.switchLink}
-              onClick={() => onModeChange(mode === "signup" ? "signin" : "signup")}
+              className={s.googleBtn}
+              onClick={() => {
+                if (!agree) {
+                  setError("Please accept the Terms & Conditions to continue.");
+                  return;
+                }
+                setGoogleOpen(true);
+              }}
             >
-              {mode === "signup" ? "Log in" : "Create an account"}
+              <GoogleG />
+              Continue with Google
             </button>
+          )}
+
+          <p className={s.onlyNote}>
+            For UNC Charlotte students, faculty &amp; staff. Use your @charlotte.edu email to sign
+            in.
           </p>
+
+          {mode === "signup" ? (
+            <p className={s.switchRow}>
+              Already have an account?{" "}
+              <button
+                type="button"
+                className={s.switchLink}
+                onClick={() => onModeChange("signin")}
+              >
+                Log in
+              </button>
+            </p>
+          ) : (
+            <div className={s.accountRow}>
+              <button
+                type="button"
+                className={s.createAccountBtn}
+                onClick={() => onModeChange("signup")}
+              >
+                Create new account
+              </button>
+            </div>
+          )}
         </>
       )}
 
@@ -584,6 +612,7 @@ export function AuthCard({
           if (!open) skipSetPwd();
         }}
         ariaLabel="Set a password"
+        foreground
       >
         <div className={s.xModalHeader}>
           <h2 className={s.xModalTitle}>Set a password</h2>
@@ -626,6 +655,7 @@ export function AuthCard({
         open={forgotOpen}
         onOpenChange={(open) => !open && setForgotOpen(false)}
         ariaLabel="Reset your password"
+        foreground
       >
         <div className={s.xModalHeader}>
           <button

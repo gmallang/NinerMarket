@@ -41,6 +41,28 @@
   border-radius: 4px;
 }
 
+.details {
+  display: inline-block;
+  margin: 6px 0 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #92400e;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.details:hover {
+  color: #78350f;
+}
+
+.details:focus-visible {
+  outline: 2px solid #92400e;
+  outline-offset: 2px;
+}
+
 .link {
   color: #78350f;
   font-weight: 600;

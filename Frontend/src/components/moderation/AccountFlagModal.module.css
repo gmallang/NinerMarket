@@ -1,0 +1,227 @@
+.dialog {
+  /* Wider than the shared 400px dialog: this one carries a list, not a form. */
+  width: min(560px, calc(100vw - 32px));
+  padding: 0;
+}
+
+.media {
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(var(--radius-lg) - 1px) calc(var(--radius-lg) - 1px) 0 0;
+  background: #0b1220;
+  line-height: 0;
+}
+
+.art {
+  display: block;
+  width: 100%;
+  /* The clip is wider than the strip is tall: crop to a fixed band so the
+     notice body still fits on a laptop screen without the list scrolling. */
+  height: 220px;
+  object-fit: cover;
+  object-position: center;
+}
+
+.chip {
+  position: absolute;
+  left: var(--space-4);
+  bottom: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  background: rgb(11 18 32 / 78%);
+  border: 1px solid rgb(245 158 11 / 55%);
+  color: #fbbf24;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: rgb(11 18 32 / 72%);
+  color: #fde68a;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: rgb(11 18 32 / 92%);
+}
+
+.close:focus-visible {
+  outline: 2px solid #fbbf24;
+  outline-offset: 2px;
+}
+
+.body {
+  padding: var(--space-5);
+}
+
+.title {
+  margin: 0 0 var(--space-2);
+  font-size: 1.1875rem;
+  font-weight: 800;
+  color: var(--color-fg);
+}
+
+.lead {
+  margin: 0 0 var(--space-4);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-fg-muted);
+}
+
+.reason {
+  margin: 0 0 var(--space-4);
+  padding: 8px 12px;
+  background: #fef3c7;
+  border-left: 3px solid #d97706;
+  border-radius: 6px;
+  color: #78350f;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.heading {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.item {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.itemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-md);
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.itemTitle {
+  margin: 0 0 2px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-fg);
+}
+
+.itemText {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-fg-muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chipItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-bg);
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+}
+
+.next {
+  margin: var(--space-4) 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-fg-muted);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-4);
+}
+
+.gotIt {
+  flex: 1;
+}
+
+.contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.fineprint {
+  margin: var(--space-3) 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-fg-muted);
+}
+
+.link {
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* The still badge carries the meaning; the motion is decoration only. */
+@media (prefers-reduced-motion: reduce) {
+  .art {
+    visibility: hidden;
+  }
+}
+
+@media (width <= 640px) {
+  .body {
+    padding: var(--space-4);
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .contact {
+    justify-content: center;
+  }
+}

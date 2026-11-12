@@ -12,7 +12,12 @@ import s from "./AccountFlagBanner.module.css";
  * moderator's latest decision on the next page load. Dismissing hides it for
  * this visit only; the server flag is the source of truth.
  */
-export function AccountFlagBanner() {
+interface AccountFlagBannerProps {
+  /** Opens the full notice. The banner is the terse reminder after dismissal. */
+  onShowDetails?: () => void;
+}
+
+export function AccountFlagBanner({ onShowDetails }: AccountFlagBannerProps) {
   const user = useMarketStore((state) => state.user);
   const [dismissed, setDismissed] = useState(false);
 
@@ -36,6 +41,11 @@ export function AccountFlagBanner() {
           <p className={s.reason}>
             Reason on file: <strong>{reason}</strong>
           </p>
+        )}
+        {onShowDetails && (
+          <button type="button" className={s.details} onClick={onShowDetails}>
+            See the full notice
+          </button>
         )}
         <p className={s.text}>
           Think this is a mistake? Reply to the notification in your bell menu, or email{" "}

@@ -33,6 +33,7 @@ import { RequestForm } from "@/components/requests/RequestForm";
 import { MessagesOverlay } from "@/features/messaging/MessagesOverlay";
 import { ListingOverlay } from "@/features/listings/ListingOverlay";
 import { AccountFlagBanner } from "@/components/moderation/AccountFlagBanner";
+import { AccountFlagModal } from "@/components/moderation/AccountFlagModal";
 import { formatRelativeTime } from "@/lib/format";
 import { pushSupported } from "@/lib/push";
 import type { NotificationDto } from "@/lib/types";
@@ -100,6 +101,8 @@ export function AppLayout() {
   const [showScrollFade, setShowScrollFade] = useState(false);
   const [pushError, setPushError] = useState("");
   const [sellSuccess, setSellSuccess] = useState(false);
+  const [flagNoticeOpen, setFlagNoticeOpen] = useState(false);
+  const [flagNoticeSettledKey, setFlagNoticeSettledKey] = useState("");
   const fadeSentinelRef = useRef<HTMLDivElement | null>(null);
   const totalUnread = convs.reduce((n, c) => n + c.unread, 0);
   const unreadNotifs = notifications.filter((n) => !n.read).length;
@@ -120,6 +123,25 @@ export function AppLayout() {
   useEffect(() => {
     void refreshProfile();
   }, [refreshProfile]);
+
+  // A flagged account gets the full notice once per browser session: it's
+  // meant to be unmissable, but re-trapping them on every reload would make
+  // the app unusable. The banner stays as the reminder and reopens this.
+  //
+  // Decided during render - the same adjust-state pattern as prevPathname
+  // above - so the notice is up on the first paint instead of after an effect.
+  const flagNoticeKey = user?.posting_flagged ? `nmk-flag-notice-${user.id}` : "";
+  if (flagNoticeKey && flagNoticeKey !== flagNoticeSettledKey) {
+    setFlagNoticeSettledKey(flagNoticeKey);
+    let alreadySeen = false;
+    try {
+      alreadySeen = sessionStorage.getItem(flagNoticeKey) === "1";
+      sessionStorage.setItem(flagNoticeKey, "1");
+    } catch {
+      // Storage can be blocked in private mode; showing it twice is harmless.
+    }
+    if (!alreadySeen) setFlagNoticeOpen(true);
+  }
 
   useEffect(() => {
     if (user) {
@@ -701,7 +723,7 @@ export function AppLayout() {
         </aside>
 
         <main className={s.content}>
-          <AccountFlagBanner />
+          <AccountFlagBanner onShowDetails={() => setFlagNoticeOpen(true)} />
           <Outlet />
         </main>
       </div>
@@ -816,6 +838,8 @@ export function AppLayout() {
           onClose={closeRequestForm}
         />
       </Modal>
+
+      <AccountFlagModal open={flagNoticeOpen} onOpenChange={setFlagNoticeOpen} />
 
       <MessagesOverlay />
       <ListingOverlay />

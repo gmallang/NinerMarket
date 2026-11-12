@@ -52,9 +52,12 @@ jobs:
           fi
           python schema_check.py
 
+      # Node >= 22: jsdom resolves undici 7, which calls
+      # node:internal/webidl markAsUncloneable, absent on Node 20, so every test
+      # file dies at worker startup.
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: Frontend/package-lock.json
 

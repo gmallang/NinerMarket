@@ -56,26 +56,26 @@ jobs:
         with:
           node-version: "20"
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: Frontend/package-lock.json
 
       - name: Install frontend dependencies
-        working-directory: frontend
+        working-directory: Frontend
         run: npm ci
 
       - name: Typecheck
-        working-directory: frontend
+        working-directory: Frontend
         run: npx tsc -b
 
       - name: Lint
-        working-directory: frontend
+        working-directory: Frontend
         run: npx eslint .
 
       - name: Frontend tests
-        working-directory: frontend
+        working-directory: Frontend
         run: npx vitest run
 
       - name: Production build
-        working-directory: frontend
+        working-directory: Frontend
         run: npm run build
 
   deploy-frontend:

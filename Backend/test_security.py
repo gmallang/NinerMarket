@@ -172,6 +172,24 @@ def test_client_ip_uses_the_hop_our_proxy_appended():
     assert client_ip(_FakeRequest("9.9.9.9, 203.0.113.7")) == "203.0.113.7"
 
 
+def test_flag_state_is_private_to_the_account_owner():
+    """A public profile must not reveal moderation state; the owner's own
+    payload must, so the app can say why their posts are in review."""
+    _signup("sec-flagged@charlotte.edu")
+    user_store["u-sec-flagged"].posting_flagged = True
+    user_store["u-sec-flagged"].flag_reason = "Repeated spam"
+
+    public = client.get("/users/u-sec-flagged")
+    assert public.status_code == 200, public.text
+    assert public.json().get("posting_flagged") is not True
+    assert public.json().get("flag_reason", "") == ""
+
+    mine = client.get("/users/me", headers=_auth("u-sec-flagged"))
+    assert mine.status_code == 200, mine.text
+    assert mine.json()["posting_flagged"] is True
+    assert mine.json()["flag_reason"] == "Repeated spam"
+
+
 if __name__ == "__main__":
     test_listing_seller_comes_from_the_session_not_the_body()
     test_patch_cannot_reassign_an_owner()
@@ -182,4 +200,5 @@ if __name__ == "__main__":
     test_external_photo_urls_are_rejected()
     test_uploaded_photo_urls_are_still_accepted()
     test_client_ip_uses_the_hop_our_proxy_appended()
+    test_flag_state_is_private_to_the_account_owner()
     print("ok")

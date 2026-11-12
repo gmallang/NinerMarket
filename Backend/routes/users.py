@@ -55,6 +55,21 @@ def _to_public(user: User) -> UserPublic:
     )
 
 
+def _to_self(user: User) -> dict:
+    """The signed-in user's own payload: their public profile plus the
+    moderation state they are entitled to see about themselves.
+
+    Deliberately kept out of _to_public - a stranger's profile must never
+    reveal that the account behind it is in review.
+    """
+    return {
+        **_to_public(user).model_dump(),
+        "posting_flagged": bool(user.posting_flagged),
+        "flag_reason": user.flag_reason or "",
+        "bad_listing_streak": int(user.bad_listing_streak or 0),
+    }
+
+
 def _find_by_email(email: str) -> User | None:
     return next((u for u in users.values() if u.email == email), None)
 
@@ -175,7 +190,7 @@ def verify_user(body: VerifyRequest, request: Request):
     user.verification_code = ""
     user.verification_expires = None
     _save_user(user)
-    return {"user": _to_public(user), "token": create_session_token(user.id)}
+    return {"user": _to_self(user), "token": create_session_token(user.id)}
 
 
 @router.post("/users/resend")
@@ -266,7 +281,7 @@ def login(body: LoginRequest, request: Request):
         )
     if not user.email_verified:
         raise HTTPException(status_code=403, detail="Email not verified")
-    return {"user": _to_public(user), "token": create_session_token(user.id)}
+    return {"user": _to_self(user), "token": create_session_token(user.id)}
 
 
 @router.post("/users/google")
@@ -311,7 +326,7 @@ def google_login(body: GoogleLoginRequest, request: Request):
         user.email_verified = True
         user.display_name = user.display_name or (info.get("name") or email.split("@")[0])
         _save_user(user)
-        return {"user": _to_public(user), "token": create_session_token(user.id)}
+        return {"user": _to_self(user), "token": create_session_token(user.id)}
 
     created = User(
         id=make_user_id(email),
@@ -320,7 +335,7 @@ def google_login(body: GoogleLoginRequest, request: Request):
         email_verified=True,
     )
     _save_user(created)
-    return {"user": _to_public(created), "token": create_session_token(created.id)}
+    return {"user": _to_self(created), "token": create_session_token(created.id)}
 
 
 @router.post("/users/google/callback")
@@ -447,10 +462,12 @@ def get_user_by_id(id: str) -> User | None:
 
 @router.get("/users/me")
 def me(user_id: str = Depends(require_user)):
+    """The signed-in user's own record, including moderation state - this is
+    what keeps the account-in-review banner accurate after a moderator acts."""
     user = get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return _to_public(user)
+    return _to_self(user)
 
 
 @router.get("/users/{id}")

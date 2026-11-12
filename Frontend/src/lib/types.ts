@@ -19,6 +19,9 @@ export interface UserDto {
   has_password?: boolean;
   /** Set by the backend from its admin allow-list; also gates /admin. */
   is_admin?: boolean;
+  /** Moderation state. Only the signed-in user's own payload carries this. */
+  posting_flagged?: boolean;
+  flag_reason?: string;
 }
 
 export interface AuthResponse {
@@ -107,6 +110,10 @@ export interface CurrentUser {
   email_verified?: boolean;
   has_password?: boolean;
   is_admin?: boolean;
+  /** True means new listings wait for moderator approval; drives the banner. */
+  posting_flagged?: boolean;
+  /** The reason a moderator recorded, shown verbatim to the account owner. */
+  flag_reason?: string;
 }
 
 export interface AdminListing extends ListingDto {

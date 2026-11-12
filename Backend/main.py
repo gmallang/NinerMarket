@@ -4,7 +4,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from database import db
 from image_moderation import ImageRejected
+from observability import RequestContextMiddleware, configure_logging
 from routes import (
     admin,
     users,
@@ -18,12 +20,14 @@ from routes import (
     saved,
     wanted_requests,
 )
+from schema_check import check_schema
 
 # Swagger UI / ReDoc / the raw OpenAPI schema list every endpoint (including
 # that /admin/* exists) to anyone who asks. Harmless in local dev; on Vercel
 # (see database.py's own VERCEL check) there's no reason to advertise the
 # full API surface to the public internet, so all three are disabled there.
 _in_prod = bool(os.getenv("VERCEL"))
+configure_logging()
 app = FastAPI(
     title="NinerMarket API",
     docs_url=None if _in_prod else "/docs",
@@ -42,6 +46,13 @@ def _image_rejected(_request: Request, exc: ImageRejected) -> JSONResponse:
 
 _allowed = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 
+# Middleware order is load-bearing: Starlette runs the LAST added middleware
+# outermost. RequestContextMiddleware is added first so CORSMiddleware wraps it,
+# and the 500 it returns for an unhandled exception still carries CORS headers.
+# Added the other way round, the browser reports that 500 as a CORS failure and
+# the real error is invisible - which is exactly what happened when production
+# was missing three `users` columns.
+app.add_middleware(RequestContextMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed or ["*"],
@@ -61,6 +72,32 @@ async def security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
+
+
+@app.get("/healthz")
+def healthz() -> dict:
+    """Liveness: the process is up. Deliberately touches nothing external, so
+    a provider outage can't get a healthy instance restarted."""
+    return {"ok": True}
+
+
+@app.get("/readyz")
+def readyz() -> JSONResponse:
+    """Readiness: can this instance serve authenticated traffic?
+
+    With the in-memory dev store that is always yes. On Supabase it means every
+    table and column the models use still exists (see schema_check.py) - the
+    check that would have caught the 2026-11-11 outage before users did. The
+    missing list stays in the server log: it names internal tables and has no
+    business in a public response.
+    """
+    if db is None:
+        return JSONResponse({"ok": True, "store": "memory"})
+
+    report = check_schema()
+    if report.ok:
+        return JSONResponse({"ok": True, "store": "supabase"})
+    return JSONResponse(status_code=503, content={"ok": False, "store": "supabase"})
 
 
 app.include_router(users.router)

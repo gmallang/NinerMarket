@@ -383,7 +383,9 @@ export const useMarketStore = create<MarketState>((set, get) => {
     const user = get().user;
     if (!user) return;
     try {
-      const u = await api.getUser(user.id);
+      // /users/me, not the public profile: it is the only payload that carries
+      // this account's own moderation state, which drives the review banner.
+      const u = await api.getMe();
       const updated: CurrentUser = {
         ...user,
         display_name: u.display_name,
@@ -393,6 +395,10 @@ export const useMarketStore = create<MarketState>((set, get) => {
         // Re-read on every refresh so losing admin access (or gaining it)
         // takes effect without the user signing out.
         is_admin: u.is_admin ?? false,
+        // A moderator can flag an account while it is signed in; pick that up
+        // without waiting for the next login.
+        posting_flagged: u.posting_flagged ?? false,
+        flag_reason: u.flag_reason ?? "",
       };
       saveUser(updated);
       set({ user: updated });

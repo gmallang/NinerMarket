@@ -1,0 +1,3 @@
+-r requirements.txt
+# FastAPI's TestClient is built on httpx; the runtime image never needs it.
+httpx

@@ -32,6 +32,7 @@ import { SellForm } from "@/features/sell/SellForm";
 import { RequestForm } from "@/components/requests/RequestForm";
 import { MessagesOverlay } from "@/features/messaging/MessagesOverlay";
 import { ListingOverlay } from "@/features/listings/ListingOverlay";
+import { AccountFlagBanner } from "@/components/moderation/AccountFlagBanner";
 import { formatRelativeTime } from "@/lib/format";
 import { pushSupported } from "@/lib/push";
 import type { NotificationDto } from "@/lib/types";
@@ -700,6 +701,7 @@ export function AppLayout() {
         </aside>
 
         <main className={s.content}>
+          <AccountFlagBanner />
           <Outlet />
         </main>
       </div>

@@ -1,4 +1,4 @@
-name: Deploy to Vercel
+name: Verify and deploy
 
 # Vercel's own GitHub integration blocks deploys from commits authored by
 # anyone who isn't a collaborator on the connected Vercel account (Hobby
@@ -6,12 +6,80 @@ name: Deploy to Vercel
 # authorship — they just build whatever is currently on the branch — so
 # this workflow (which runs under the repo's own permissions, regardless
 # of who pushed) triggers them directly instead.
+#
+# The `verify` job exists because the hooks used to fire on any push with no
+# checks at all: a change that broke the backend tests, the typecheck, or the
+# live schema still went to production. Both deploy jobs now depend on it.
 on:
   push:
     branches: [main, dev]
 
 jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        working-directory: Backend
+        run: pip install -r requirements-dev.txt
+
+      - name: Backend tests (in-memory store, no network)
+        working-directory: Backend
+        run: |
+          for test_file in test_*.py; do
+            echo "::group::$test_file"
+            python "$test_file"
+            echo "::endgroup::"
+          done
+
+      # Skipped (not failed) when the repo has no production credentials, so
+      # contributions from forks still verify. With credentials present this
+      # stops a deploy whose migration was never applied.
+      - name: Live schema check
+        working-directory: Backend
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "No SUPABASE_URL/SUPABASE_KEY secret in CI - skipping the live schema check."
+            exit 0
+          fi
+          python schema_check.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npx tsc -b
+
+      - name: Lint
+        working-directory: frontend
+        run: npx eslint .
+
+      - name: Frontend tests
+        working-directory: frontend
+        run: npx vitest run
+
+      - name: Production build
+        working-directory: frontend
+        run: npm run build
+
   deploy-frontend:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Vercel frontend deploy hook
@@ -31,6 +99,7 @@ jobs:
           curl -fsS -X POST "$CLEAN_URL"
 
   deploy-backend:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Vercel backend deploy hook

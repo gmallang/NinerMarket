@@ -46,6 +46,15 @@ def _image_rejected(_request: Request, exc: ImageRejected) -> JSONResponse:
 
 _allowed = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 
+if not _allowed and _in_prod:
+    raise RuntimeError(
+        "ALLOWED_ORIGINS is not set. Without it the API falls back to "
+        "allow_origins=['*'] and accepts requests (with the caller's own "
+        "bearer token) from any website. Add it to the Vercel backend "
+        "project's Environment Variables, e.g. "
+        "https://ninermarket.com,https://www.ninermarket.com"
+    )
+
 # Middleware order is load-bearing: Starlette runs the LAST added middleware
 # outermost. RequestContextMiddleware is added first so CORSMiddleware wraps it,
 # and the 500 it returns for an unhandled exception still carries CORS headers.

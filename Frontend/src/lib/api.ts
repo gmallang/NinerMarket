@@ -412,6 +412,20 @@ export const api = {
       body: JSON.stringify({ endpoint }),
     }),
 
+  // Native app push (FCM token), separate from the web-push subscription
+  // above - the wrapped iOS/Android app can't use the browser Push API.
+  registerPushToken: (userId: string, token: string, platform: "ios" | "android") =>
+    request<{ ok: boolean }>(`/users/${userId}/push-tokens`, {
+      method: "POST",
+      body: JSON.stringify({ token, platform }),
+    }),
+
+  unregisterPushToken: (userId: string, token: string) =>
+    request<{ ok: boolean }>(`/users/${userId}/push-tokens`, {
+      method: "DELETE",
+      body: JSON.stringify({ token }),
+    }),
+
   // ── Admin panel ──────────────────────────────────────────────────────────
   // Every call is rejected with 403 by the backend unless the signed-in user
   // is on the admin allow-list; hiding the panel in the UI is only cosmetic.

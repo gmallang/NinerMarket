@@ -26,6 +26,21 @@ if (Capacitor.isNativePlatform()) {
   });
 }
 
+// Tapping a native (FCM) push: the browser path does this in the service
+// worker's notificationclick handler, which doesn't exist in the WebView.
+// The backend puts the destination in the payload's `data.url`.
+if (Capacitor.isNativePlatform()) {
+  void import("@capacitor-firebase/messaging").then(({ FirebaseMessaging }) => {
+    void FirebaseMessaging.addListener("notificationActionPerformed", ({ notification }) => {
+      const url = (notification.data as { url?: unknown } | undefined)?.url;
+      // Same-origin paths only - never navigate to an arbitrary pushed URL.
+      if (typeof url === "string" && url.startsWith("/") && !url.startsWith("//")) {
+        window.location.href = url;
+      }
+    });
+  });
+}
+
 // A tab left open across a deploy holds chunk hashes that no longer exist
 // on the server (every lazy-loaded route) - Vite fires this event when such
 // a fetch fails. Reload once to pick up the current build instead of

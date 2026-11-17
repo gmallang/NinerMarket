@@ -29,6 +29,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>NinerMarket needs camera access so you can take a photo of an item you're listing.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>NinerMarket needs photo library access so you can choose a photo of an item you're listing.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

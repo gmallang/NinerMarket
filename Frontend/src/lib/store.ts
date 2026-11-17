@@ -5,7 +5,9 @@ import type { ListParams } from "@/lib/api";
 import { avatarUrl } from "@/lib/avatar";
 import { fromDto } from "@/lib/listings";
 import { broadcastTyping, subscribeInbox, subscribeListings } from "@/lib/realtime";
-import { enablePush, getExistingPushSubscription } from "@/lib/push";
+import { Capacitor } from "@capacitor/core";
+import { FirebaseMessaging } from "@capacitor-firebase/messaging";
+import { enablePush, getExistingPushSubscription, nativePushEnable } from "@/lib/push";
 import { clearUser, loadUser, saveUser } from "@/lib/user";
 import type { CurrentUser, Listing, NotificationDto, WantedRequestDto } from "@/lib/types";
 
@@ -767,6 +769,13 @@ export const useMarketStore = create<MarketState>((set, get) => {
   },
 
   checkPushEnabled: async () => {
+    if (Capacitor.isNativePlatform()) {
+      const { receive } = await FirebaseMessaging.checkPermissions().catch(() => ({
+        receive: "denied" as const,
+      }));
+      set({ pushEnabled: receive === "granted" });
+      return;
+    }
     const sub = await getExistingPushSubscription().catch(() => null);
     set({ pushEnabled: !!sub });
   },
@@ -775,6 +784,14 @@ export const useMarketStore = create<MarketState>((set, get) => {
     const user = get().user;
     if (!user) return "failed";
     try {
+      if (Capacitor.isNativePlatform()) {
+        const token = await nativePushEnable();
+        if (!token) return "denied";
+        const platform = Capacitor.getPlatform() as "ios" | "android";
+        await api.registerPushToken(user.id, token, platform);
+        set({ pushEnabled: true });
+        return "ok";
+      }
       const { key } = await api.getVapidPublicKey();
       if (!key) return "nokey";
       const subscription = await enablePush(key);

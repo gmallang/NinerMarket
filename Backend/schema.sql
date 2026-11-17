@@ -144,6 +144,16 @@ create table if not exists push_subscriptions (
   created_at timestamptz not null default now()
 );
 
+-- Native app push (FCM token from the wrapped iOS/Android app). A device's
+-- token changes when the app reinstalls or the OS rotates it, so the app
+-- re-registers on launch and upserting on token naturally drops the stale row.
+create table if not exists push_tokens (
+  token      text primary key,
+  user_id    text not null references users(id) on delete cascade,
+  platform   text not null check (platform in ('ios', 'android')),
+  created_at timestamptz not null default now()
+);
+
 create table if not exists listing_reports (
   id           text primary key,
   listing_id   text not null references listings(id) on delete cascade,
@@ -250,6 +260,7 @@ create index if not exists idx_messages_thread_id_id on messages (thread_id, id)
 create index if not exists idx_thread_members_user_id on thread_members (user_id);
 create index if not exists idx_notifications_user_id on notifications (user_id);
 create index if not exists idx_push_subscriptions_user_id on push_subscriptions (user_id);
+create index if not exists idx_push_tokens_user_id on push_tokens (user_id);
 create index if not exists idx_listing_reports_listing_id on listing_reports (listing_id);
 create index if not exists idx_listing_reports_reporter_id on listing_reports (reporter_id);
 -- The report queue's default view is "open, newest first".
@@ -286,6 +297,7 @@ alter table messages enable row level security;
 alter table thread_members enable row level security;
 alter table notifications enable row level security;
 alter table push_subscriptions enable row level security;
+alter table push_tokens enable row level security;
 alter table listing_reports enable row level security;
 alter table offers enable row level security;
 alter table saved_listings enable row level security;

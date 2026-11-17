@@ -18,6 +18,7 @@ notifications = {}
 reports = {}
 offers = {}
 push_subscriptions = {}
+push_tokens = {}  # user_id -> list of {token, user_id, platform} (native FCM push)
 saved = {}  # user_id -> set of listing_ids
 wanted_requests = {}  # request_id -> WantedRequest
 wanted_request_responses = {}  # request_id -> list of response dicts

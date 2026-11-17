@@ -348,7 +348,12 @@ async def google_callback(request: Request):
     rate_limit(f"google:{client_ip(request)}", max_attempts=30, window_seconds=15 * 60)
     form = await request.form()
     credential = (form.get("credential") or "").strip()
-    is_native_app = request.query_params.get("target") == "app"
+    # `?target=app` is the GIS login_uri convention; `state=app` is what the
+    # native app's system-browser flow sends (see AuthCard.nativeGoogleAuthUrl),
+    # so the redirect_uri can stay exactly the registered one.
+    is_native_app = (
+        request.query_params.get("target") == "app" or (form.get("state") or "") == "app"
+    )
 
     def _back(suffix: str) -> RedirectResponse:
         if is_native_app:

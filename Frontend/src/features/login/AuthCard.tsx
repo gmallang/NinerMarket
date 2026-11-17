@@ -27,6 +27,32 @@ const IS_MOBILE =
     /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
 
 /**
+ * Google refuses to run OAuth inside an embedded WebView (it answers with
+ * `disallowed_useragent`), so the wrapped app cannot use the GIS button at all -
+ * not even in redirect mode. It opens the same authorization request in the
+ * system browser instead, where Google does allow it (Safari View Controller /
+ * Chrome Custom Tabs). The backend's /users/google/callback then bounces the
+ * result to the app's own URL scheme, which main.tsx hands back to /login.
+ */
+function nativeGoogleAuthUrl(clientId: string): string {
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: `${API_BASE_URL}/users/google/callback`,
+    response_type: "id_token",
+    response_mode: "form_post",
+    scope: "openid email profile",
+    // Marks the callback as app traffic: the backend answers with the custom
+    // URL scheme instead of a website URL. `state` rather than a query
+    // parameter on redirect_uri, because Google matches that URI against the
+    // registered string exactly.
+    state: "app",
+    prompt: "select_account",
+    hd: "charlotte.edu",
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+
+/**
  * The card that floats over the hero photo on /login and /about. It holds the
  * whole email/Google/password flow; only the surrounding page changes.
  */
@@ -113,6 +139,9 @@ export function AuthCard({
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
+    // Native renders its own button (see startNativeGoogle); mounting GIS here
+    // would only put a frame in the DOM that Google refuses to load.
+    if (Capacitor.isNativePlatform()) return;
     let cancelled = false;
     let resizeTimer: number | undefined;
     let stopResize: (() => void) | undefined;
@@ -331,6 +360,20 @@ export function AuthCard({
       await api.resendCode(verifyEmailAddress);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't resend the code.");
+    }
+  };
+
+  // Native only, because the GIS button can't run in the Capacitor WebView.
+  // Browser.open launches Safari View Controller / Chrome Custom Tabs, and
+  // the callback's custom-scheme redirect comes back through appUrlOpen.
+  const startNativeGoogle = async () => {
+    if (!GOOGLE_CLIENT_ID) return;
+    setError("");
+    try {
+      const { Browser } = await import("@capacitor/browser");
+      await Browser.open({ url: nativeGoogleAuthUrl(GOOGLE_CLIENT_ID) });
+    } catch {
+      setError("Couldn't open Google sign-in. Please try again.");
     }
   };
 
@@ -576,7 +619,7 @@ export function AuthCard({
             <span>or</span>
           </div>
 
-          {GOOGLE_CLIENT_ID ? (
+          {GOOGLE_CLIENT_ID && !Capacitor.isNativePlatform() ? (
             <div ref={googleButtonRef} className={s.googleSlot} />
           ) : (
             <button
@@ -585,6 +628,10 @@ export function AuthCard({
               onClick={() => {
                 if (!agree) {
                   setError("Please accept the Terms & Conditions to continue.");
+                  return;
+                }
+                if (Capacitor.isNativePlatform()) {
+                  void startNativeGoogle();
                   return;
                 }
                 setGoogleOpen(true);

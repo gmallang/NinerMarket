@@ -95,16 +95,33 @@ Backend (set in the host's project settings, then redeploy):
 | `SUPABASE_KEY` | service_role key |
 | `SUPABASE_ANON_KEY` | anon key (Realtime broadcasts only) |
 | `SESSION_SECRET` | signs session tokens |
-| `ALLOWED_ORIGINS` | comma-separated allowed frontend origins |
+| `ALLOWED_ORIGINS` | comma-separated allowed frontend origins - include `capacitor://localhost,http://localhost` (the wrapped app's own origin) or its API calls are blocked |
 | `FRONTEND_URL` | deployed frontend origin |
 | `RESEND_API_KEY` | transactional email |
 | `GOOGLE_CLIENT_ID` | Google sign-in |
 | `ADMIN_EMAILS` | comma-separated emails allowed into `/admin` (defaults to the two admins) |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | web push |
 
-Frontend: `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+Frontend: `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_GOOGLE_CLIENT_ID`.
 
 Generate a VAPID keypair with `npx web-push generate-vapid-keys`.
+
+## Native app (iOS / Android)
+
+The Capacitor shell in `frontend/` loads the built web app from `capacitor://localhost`
+(iOS) or `http://localhost` (Android) and talks to `https://api.ninermarket.com`, so that
+origin has to be in `ALLOWED_ORIGINS`.
+
+Google sign-in can't run inside the WebView at all - Google rejects embedded user agents -
+so the native app opens the authorization page in the system browser (Safari View
+Controller / Chrome Custom Tabs) and comes back through the `com.ninermarket.app://auth`
+deep link. Nothing to configure beyond `VITE_GOOGLE_CLIENT_ID` and the redirect URI
+`<API>/users/google/callback` already registered in the Google console.
+
+Release builds are signed from a git-ignored `frontend/android/keystore.properties`
+(copy `keystore.properties.example`); without it `assembleRelease` still builds, but the
+artifact is unsigned and Play will reject it. Run `npx cap sync` after changing web code
+or adding a Capacitor plugin.
 
 ## Pre-deploy checklist
 

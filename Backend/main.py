@@ -52,7 +52,10 @@ if not _allowed and _in_prod:
         "allow_origins=['*'] and accepts requests (with the caller's own "
         "bearer token) from any website. Add it to the Vercel backend "
         "project's Environment Variables, e.g. "
-        "https://ninermarket.com,https://www.ninermarket.com"
+        "https://ninermarket.com,https://www.ninermarket.com,"
+        "capacitor://localhost,http://localhost - the last two are the wrapped "
+        "iOS/Android app's own origin, which it needs or its API calls are "
+        "blocked."
     )
 
 # Middleware order is load-bearing: Starlette runs the LAST added middleware

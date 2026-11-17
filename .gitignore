@@ -8,3 +8,7 @@ venv/
 .env.*
 node_modules/
 dist/
+.vercel
+frontend/android/keystore.properties
+frontend/android/*.jks
+frontend/android/*.keystore

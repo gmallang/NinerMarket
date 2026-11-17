@@ -16,11 +16,22 @@ import type {
   WantedRequestDto,
 } from "./types";
 import type { Conversation } from "@/data/conversations";
+import { Capacitor } from "@capacitor/core";
 
-export const API_BASE_URL: string = (import.meta.env.VITE_API_URL ?? "/api").replace(
-  /\/+$/,
-  ""
-);
+// The website is same-origin with the API (Vite proxies /api in dev, Vercel
+// rewrites it in production), so a relative base is right there. The wrapped
+// iOS/Android app has no proxy: a relative fetch resolves against
+// capacitor://localhost, which serves the bundle and nothing else, so every
+// API call - including native push's FCM token registration - would fail with
+// a network error. Native therefore needs an absolute URL, and falling back to
+// the public API keeps a build that forgot VITE_API_URL working instead of
+// silently pointing at the WebView.
+const NATIVE_API_BASE_URL = "https://api.ninermarket.com";
+
+export const API_BASE_URL: string = (
+  import.meta.env.VITE_API_URL?.trim() ||
+  (Capacitor.isNativePlatform() ? NATIVE_API_BASE_URL : "/api")
+).replace(/\/+$/, "");
 const TOKEN_KEY = "ninermarket-token";
 
 export function getToken(): string | null {

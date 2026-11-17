@@ -305,3 +305,23 @@ alter table wanted_requests enable row level security;
 alter table wanted_request_responses enable row level security;
 alter table admin_actions enable row level security;
 
+-- Supabase's rls_auto_enable() helper is a function, and PostgREST turns every
+-- function in `public` into an RPC endpoint. Functions grant EXECUTE to PUBLIC
+-- by default, so the public anon key could call it. Nothing in the app calls
+-- it - the event trigger that uses it runs as the owner - so take the grant
+-- away. Guarded because a non-Supabase database won't have the function.
+do $$
+begin
+  if exists (
+    select 1
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.proname = 'rls_auto_enable'
+      and p.pronargs = 0
+  ) then
+    execute 'revoke execute on function public.rls_auto_enable() from public, anon, authenticated';
+  end if;
+end
+$$;
+

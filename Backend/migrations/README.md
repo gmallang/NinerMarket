@@ -37,6 +37,7 @@ of changing the schema.
 | 001 | `001_users_moderation_columns.sql` | `users.posting_flagged`, `flag_reason`, `bad_listing_streak` | 2026-11-11 |
 | 002 | `002_account_soft_delete.sql` | `deleted_at` on `users`, `listings`, `wanted_requests` | 2026-11-11 |
 | 003 | `003_report_queue_and_audit_log.sql` | report `status` / `resolved_at` / `resolved_by`, `admin_actions` | 2026-11-11 |
+| 004 | `004_push_tokens.sql` | `push_tokens` (native FCM device tokens) | 2026-11-17 (table; re-run for the `notify pgrst` line) |
 
 `schema_check.py` is the source of truth for what is actually applied - the
 dates above are when the delta was last run, not a promise about the live

@@ -77,6 +77,17 @@ python Backend/migrate_photos.py
   fails open and logs a warning. Only photos uploaded through the API are accepted - an
   external image URL is rejected with HTTP 400, so screening can't be sidestepped by
   hot-linking. This is not a CSAM control.
+- **Account deletion.** `DELETE /users/me` is the in-app path Apple 5.1.1(v) and Google Play
+  require. It re-authenticates (password when the account has one, typed email for a
+  Google-only account) and then runs the same soft close as the admin panel: `deleted_at`
+  is set, listings/requests are hidden, pending offers are cancelled, push tokens are
+  deleted, and every existing session token stops resolving. `Backend/account.py` is the
+  shared implementation; a moderator can still restore the account from the Deleted tab.
+- **Blocking and reporting.** `blocks` stores one direction but takes effect both ways:
+  `open_thread`, `send_thread_message` and `create_offer` all check `is_blocked_between`
+  (`Backend/blocks.py`). `user_reports` is a separate queue from `listing_reports` and shows
+  up on the admin Reports tab, where upholding it closes the reported account. Blocks hide
+  nothing in the feed yet - they stop contact, not visibility.
 - **Local dev is `.env`-less:** don't expect Supabase behavior locally unless you add `Backend/.env`.
 
 ## Supabase schema

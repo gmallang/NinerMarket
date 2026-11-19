@@ -173,6 +173,15 @@ class ReportRequest(BaseModel):
     details: str = Field(default="", max_length=500)
 
 
+class DeleteAccountRequest(BaseModel):
+    """Re-authentication for DELETE /users/me. An account with a password must
+    send it; a Google-only account has none, so it types its own address
+    instead. Both are checked server-side against the session's account."""
+
+    password: str = Field(default="", max_length=128)
+    confirm_email: str = Field(default="", max_length=_EMAIL_MAX)
+
+
 class OfferCreate(BaseModel):
     price: float = Field(gt=0, le=PRICE_MAX)
 

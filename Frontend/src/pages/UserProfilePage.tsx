@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { MessageCircle, Star } from "lucide-react";
+import { Ban, Flag, MessageCircle, Star, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { avatarUrl } from "@/lib/avatar";
 import { formatRelativeTime } from "@/lib/format";
@@ -8,6 +8,7 @@ import { fromDto } from "@/lib/listings";
 import { useMarketStore } from "@/lib/store";
 import type { Listing, Offer, Rating, UserDto } from "@/lib/types";
 import { ListingCard } from "@/features/listings/ListingCard";
+import { ReportModal } from "@/features/listings/ReportModal";
 import ps from "./page.module.css";
 import s from "./UserProfilePage.module.css";
 
@@ -35,6 +36,7 @@ export function UserProfilePage() {
   const toggleSave = useMarketStore((s) => s.toggleSave);
   const openListingOverlay = useMarketStore((s) => s.openListingOverlay);
   const openMessageOverlayWithBuyer = useMarketStore((s) => s.openMessageOverlayWithBuyer);
+  const logout = useMarketStore((s) => s.logout);
 
   const [profile, setProfile] = useState<UserDto | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
@@ -51,6 +53,18 @@ export function UserProfilePage() {
   const [offerMsg, setOfferMsg] = useState<string | null>(null);
   const [unsellingId, setUnsellingId] = useState<string | null>(null);
   const [unsellMsg, setUnsellMsg] = useState<string | null>(null);
+  const [blockedId, setBlockedId] = useState<string | null>(null);
+  const [safetyBusy, setSafetyBusy] = useState(false);
+  const [safetyMsg, setSafetyMsg] = useState<string | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reportDone, setReportDone] = useState(false);
+  const [dangerOpen, setDangerOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteEmail, setDeleteEmail] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -95,6 +109,29 @@ export function UserProfilePage() {
     window.addEventListener("ninermarket:listing-deleted", onListingDeleted);
     return () => window.removeEventListener("ninermarket:listing-deleted", onListingDeleted);
   }, []);
+
+  // Whether this viewer has blocked the profile's owner. The backend enforces
+  // the block regardless; this only decides which label the button shows.
+  useEffect(() => {
+    let active = true;
+    if (!id || !currentUser || currentUser.id === id) return;
+    void api
+      .getBlockedUsers()
+      .then((people) => {
+        if (!active) return;
+        setBlockedId(people.some((person) => person.id === id) ? id : null);
+      })
+      .catch(() => {
+        // Leave the button as "Block" - the server still refuses contact.
+      });
+    return () => {
+      active = false;
+    };
+  }, [id, currentUser]);
+
+  // Keyed by id so navigating between profiles never shows the previous
+  // person's block state while the new list is loading.
+  const blocked = blockedId === id;
 
   const isOwnProfile = !!currentUser && currentUser.id === id;
   const visibleListings = showAll ? listings : listings.slice(0, 3);
@@ -217,6 +254,55 @@ export function UserProfilePage() {
     }
   };
 
+  const toggleBlock = async () => {
+    if (!id) return;
+    setSafetyBusy(true);
+    setSafetyMsg(null);
+    try {
+      if (blocked) {
+        await api.unblockUser(id);
+        setBlockedId(null);
+        setSafetyMsg("You unblocked this person.");
+      } else {
+        await api.blockUser(id);
+        setBlockedId(id);
+        setSafetyMsg("Blocked. Neither of you can message or make offers to the other.");
+      }
+    } catch (err) {
+      setSafetyMsg(err instanceof Error ? err.message : "Couldn't update the block.");
+    } finally {
+      setSafetyBusy(false);
+    }
+  };
+
+  const submitReport = async (reason: string, details: string) => {
+    if (!id) return;
+    setReportSubmitting(true);
+    setReportError(null);
+    try {
+      await api.reportUser(id, reason, details);
+      setReportDone(true);
+    } catch (err) {
+      setReportError(err instanceof Error ? err.message : "Couldn't submit the report.");
+    } finally {
+      setReportSubmitting(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await api.deleteAccount({ password: deletePassword, confirm_email: deleteEmail });
+      logout();
+      navigate("/");
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Couldn't delete the account.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className={ps.page}>
@@ -262,6 +348,32 @@ export function UserProfilePage() {
           </div>
         </div>
       </div>
+
+      {!isOwnProfile && currentUser && (
+        <div className={s.safetyActions}>
+          <button
+            type="button"
+            className={s.safetyBtn}
+            onClick={() => void toggleBlock()}
+            disabled={safetyBusy}
+          >
+            <Ban size={14} /> {blocked ? "Unblock" : "Block"}
+          </button>
+          <button
+            type="button"
+            className={s.safetyBtn}
+            onClick={() => {
+              setReportDone(false);
+              setReportError(null);
+              setReportOpen(true);
+            }}
+          >
+            <Flag size={14} /> Report
+          </button>
+        </div>
+      )}
+
+      {safetyMsg && <p className={s.safetyMsg}>{safetyMsg}</p>}
 
       {!isOwnProfile && (
         <section className={s.rateCard} aria-label="Rate this seller">
@@ -525,6 +637,75 @@ export function UserProfilePage() {
           </>
         )}
       </section>
+
+      {isOwnProfile && (
+        <section className={s.dangerSection} aria-label="Delete your account">
+          <h2 className={s.sectionTitle}>Delete your account</h2>
+          <p className={s.dangerText}>
+            Deleting your account hides your listings and requests, signs you out on every
+            device, and closes the account for good. Moderators keep the closed record for
+            safety, but you can't sign back in.
+          </p>
+          {!dangerOpen ? (
+            <button className={s.dangerBtn} onClick={() => setDangerOpen(true)}>
+              <Trash2 size={14} /> Delete my account
+            </button>
+          ) : (
+            <div className={s.dangerForm}>
+              {profile.has_password && (
+                <input
+                  className={s.dangerInput}
+                  type="password"
+                  placeholder="Your password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              )}
+              <input
+                className={s.dangerInput}
+                type="email"
+                placeholder={`Type ${profile.email} to confirm`}
+                value={deleteEmail}
+                onChange={(e) => setDeleteEmail(e.target.value)}
+                autoComplete="off"
+              />
+              {deleteError && <p className={s.dangerError}>{deleteError}</p>}
+              <div className={s.dangerActions}>
+                <button
+                  className={s.dangerCancel}
+                  onClick={() => setDangerOpen(false)}
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  className={s.dangerConfirm}
+                  onClick={() => void deleteAccount()}
+                  disabled={deleting}
+                >
+                  {deleting ? "Deleting…" : "Delete permanently"}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {!isOwnProfile && (
+        <ReportModal
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          onSubmit={(reason, details) => void submitReport(reason, details)}
+          submitting={reportSubmitting}
+          error={reportError}
+          done={reportDone}
+          title={`Report ${profile.display_name}`}
+          subtitle="What's the problem with this person?"
+          doneText="Thanks for letting us know. A moderator will review this account."
+          ariaLabel="Report person"
+        />
+      )}
     </div>
   );
 }

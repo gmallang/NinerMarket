@@ -154,6 +154,31 @@ create table if not exists push_tokens (
   created_at timestamptz not null default now()
 );
 
+-- Blocks: one student cutting another out of their marketplace. Stored in one
+-- direction (blocker -> blocked) but the API treats it as mutual, so neither
+-- side can start a conversation, send a message, or make an offer to the
+-- other. Existing threads stay readable.
+create table if not exists blocks (
+  blocker_id  text not null references users(id) on delete cascade,
+  blocked_id  text not null references users(id) on delete cascade,
+  created_at  timestamptz not null default now(),
+  primary key (blocker_id, blocked_id)
+);
+
+-- A report against a person, separate from listing_reports so the admin queue
+-- can tell "this item is bad" from "this person is a problem".
+create table if not exists user_reports (
+  id           text primary key,
+  reported_id  text not null references users(id) on delete cascade,
+  reporter_id  text not null references users(id) on delete cascade,
+  reason       text not null,
+  details      text not null default '',
+  status       text not null default 'open',
+  resolved_at  timestamptz,
+  resolved_by  text not null default '',
+  created_at   timestamptz not null default now()
+);
+
 create table if not exists listing_reports (
   id           text primary key,
   listing_id   text not null references listings(id) on delete cascade,
@@ -261,6 +286,11 @@ create index if not exists idx_thread_members_user_id on thread_members (user_id
 create index if not exists idx_notifications_user_id on notifications (user_id);
 create index if not exists idx_push_subscriptions_user_id on push_subscriptions (user_id);
 create index if not exists idx_push_tokens_user_id on push_tokens (user_id);
+create index if not exists idx_blocks_blocked_id on blocks (blocked_id);
+create index if not exists idx_user_reports_reported_id on user_reports (reported_id);
+-- The person-report queue's default view is "open, newest first".
+create index if not exists idx_user_reports_status_created
+  on user_reports (status, created_at desc);
 create index if not exists idx_listing_reports_listing_id on listing_reports (listing_id);
 create index if not exists idx_listing_reports_reporter_id on listing_reports (reporter_id);
 -- The report queue's default view is "open, newest first".
@@ -298,6 +328,8 @@ alter table thread_members enable row level security;
 alter table notifications enable row level security;
 alter table push_subscriptions enable row level security;
 alter table push_tokens enable row level security;
+alter table blocks enable row level security;
+alter table user_reports enable row level security;
 alter table listing_reports enable row level security;
 alter table offers enable row level security;
 alter table saved_listings enable row level security;

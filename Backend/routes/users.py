@@ -1,11 +1,13 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 import os
+import uuid
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 
+from account import close_account
 from auth import (
     code_expiry,
     code_is_valid,
@@ -20,11 +22,14 @@ from auth import (
     verify_password,
     verify_session_token,
 )
-from database import db, listings, users
+from blocks import block, list_blocked, unblock
+from database import db, listings, user_reports, users
 from models import (
+    DeleteAccountRequest,
     ForgotPasswordRequest,
     GoogleLoginRequest,
     LoginRequest,
+    ReportRequest,
     ResetPasswordRequest,
     ResendRequest,
     SetPasswordRequest,
@@ -475,6 +480,41 @@ def me(user_id: str = Depends(require_user)):
     return _to_self(user)
 
 
+@router.get("/users/me/blocked")
+def get_blocked_users(user_id: str = Depends(require_user)):
+    """The people this account has blocked, newest first."""
+    return list_blocked(user_id)
+
+
+@router.delete("/users/me")
+def delete_me(body: DeleteAccountRequest, user_id: str = Depends(require_user)):
+    """Deletes the signed-in user's own account.
+
+    Apple 5.1.1(v) and Google Play both require in-app account deletion. This
+    re-authenticates first - a password account must send its password, and a
+    Google-only account (which has no password to re-enter) types its own
+    address - so a stolen session alone can't erase someone's account. The
+    close itself is the same cascade the admin panel uses, so listings,
+    requests and pending offers disappear from the marketplace at once.
+    """
+    user = get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.password_hash:
+        if not body.password or not verify_password(body.password, user.password_hash):
+            raise HTTPException(status_code=401, detail="Wrong password")
+    elif (body.confirm_email or "").strip().lower() != user.email:
+        raise HTTPException(
+            status_code=400,
+            detail="Type your email address to confirm you want to delete this account.",
+        )
+
+    result = close_account(user_id)
+    result.pop("display_name", None)
+    return result
+
+
 @router.get("/users/{id}")
 def get_user(id: str, authorization: str | None = Header(default=None)):
     user = get_user_by_id(id)
@@ -505,6 +545,86 @@ def update_user(id: str, body: UserUpdate, caller_id: str = Depends(require_user
     for key, value in clean.items():
         setattr(users[id], key, value)
     return _to_public(users[id])
+
+
+@router.post("/users/{id}/block")
+def block_user(id: str, caller_id: str = Depends(require_user)):
+    """Blocks another student. Mutual in effect: neither side can start a
+    conversation, send a message, or make an offer to the other."""
+    if id == caller_id:
+        raise HTTPException(status_code=400, detail="You can't block yourself")
+    if not get_user_by_id(id):
+        raise HTTPException(status_code=404, detail="User not found")
+    block(caller_id, id)
+    return {"blocked": id}
+
+
+@router.delete("/users/{id}/block")
+def unblock_user(id: str, caller_id: str = Depends(require_user)):
+    unblock(caller_id, id)
+    return {"unblocked": id}
+
+
+@router.post("/users/{id}/report")
+def report_user(
+    id: str,
+    body: ReportRequest,
+    request: Request,
+    caller_id: str = Depends(require_user),
+):
+    """Reports a person, as opposed to one of their listings. Lands in the
+    admin panel's person-report queue; one open report per reporter, so a
+    grudge can't flood the queue."""
+    if id == caller_id:
+        raise HTTPException(status_code=400, detail="You can't report yourself")
+    if not get_user_by_id(id):
+        raise HTTPException(status_code=404, detail="User not found")
+
+    rate_limit(f"user-report:{caller_id}:{client_ip(request)}", max_attempts=10, window_seconds=3600)
+
+    if db:
+        dup = (
+            db.table("user_reports")
+            .select("id")
+            .eq("reported_id", id)
+            .eq("reporter_id", caller_id)
+            .eq("status", "open")
+            .execute()
+        )
+        if dup.data:
+            raise HTTPException(status_code=409, detail="You've already reported this person.")
+        db.table("user_reports").insert(
+            {
+                "id": str(uuid.uuid4()),
+                "reported_id": id,
+                "reporter_id": caller_id,
+                "reason": body.reason,
+                "details": body.details,
+                "status": "open",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+        ).execute()
+    else:
+        already_open = any(
+            report["reported_id"] == id
+            and report["reporter_id"] == caller_id
+            and report.get("status", "open") == "open"
+            for report in user_reports.values()
+        )
+        if already_open:
+            raise HTTPException(status_code=409, detail="You've already reported this person.")
+        report_id = str(uuid.uuid4())
+        user_reports[report_id] = {
+            "id": report_id,
+            "reported_id": id,
+            "reporter_id": caller_id,
+            "reason": body.reason,
+            "details": body.details,
+            "status": "open",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    return {"reported": id}
 
 
 @router.get("/users/{id}/listings")

@@ -100,6 +100,18 @@ EXPECTED: dict[str, tuple[str, ...]] = {
     ),
     "push_subscriptions": ("endpoint", "user_id", "p256dh", "auth", "created_at"),
     "push_tokens": ("token", "user_id", "platform", "created_at"),
+    "blocks": ("blocker_id", "blocked_id", "created_at"),
+    "user_reports": (
+        "id",
+        "reported_id",
+        "reporter_id",
+        "reason",
+        "details",
+        "status",
+        "resolved_at",
+        "resolved_by",
+        "created_at",
+    ),
     "listing_reports": (
         "id",
         "listing_id",

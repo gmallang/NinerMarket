@@ -151,6 +151,19 @@ export interface AdminReport {
   listing: { id: string; name: string; status: string; price?: number } | null;
 }
 
+export interface AdminUserReport {
+  id: string;
+  reported_id: string;
+  reporter_id: string;
+  reason: string;
+  details: string;
+  status: "open" | "dismissed" | "upheld";
+  created_at: string;
+  resolved_at?: string | null;
+  reporter: { id: string; display_name: string; email?: string } | null;
+  reported: { id: string; display_name: string; email?: string } | null;
+}
+
 export interface AdminAuditEntry {
   id: string;
   admin_id: string;

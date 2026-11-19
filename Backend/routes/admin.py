@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
+from account import close_account
 from audit import list_actions, log_action
 from auth import is_admin_email, require_user
 from broadcast import broadcast
@@ -33,6 +34,7 @@ from database import (
     ratings,
     reports,
     saved,
+    user_reports,
     users,
     wanted_request_responses,
     wanted_requests,
@@ -599,6 +601,141 @@ def uphold_report(report_id: str, admin_id: str = Depends(require_admin)):
     return {"upheld": report_id, "deleted": listing_id}
 
 
+# ── person reports ─────────────────────────────────────────────────────────
+
+
+USER_REPORT_COLUMNS = (
+    "id, reported_id, reporter_id, reason, details, status, resolved_at, "
+    "resolved_by, created_at"
+)
+
+
+def _get_user_report_row(report_id: str) -> dict | None:
+    if db:
+        res = (
+            db.table("user_reports")
+            .select(USER_REPORT_COLUMNS)
+            .eq("id", report_id)
+            .execute()
+        )
+        return res.data[0] if res.data else None
+    return user_reports.get(report_id)
+
+
+def _resolve_user_report(
+    report_id: str, resolution: str, admin_id: str, row: dict
+) -> dict:
+    fields = {
+        "status": resolution,
+        "resolved_at": _now_iso(),
+        "resolved_by": admin_id,
+    }
+    if db:
+        db.table("user_reports").update(fields).eq("id", report_id).execute()
+    else:
+        user_reports.setdefault(report_id, {}).update(fields)
+    return {**row, **fields}
+
+
+@router.get("/admin/user-reports")
+def list_user_reports(
+    response: Response,
+    status: str = Query(default="open", max_length=30),
+    q: str | None = Query(default=None, max_length=120),
+    limit: int = Query(default=100, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    _: str = Depends(require_admin),
+):
+    """Reports against a person rather than a listing. Same queue mechanics as
+    listing reports: open by default, newest first, dismiss or uphold."""
+    needle = (q or "").strip().lower()
+
+    if db:
+        query = db.table("user_reports").select(USER_REPORT_COLUMNS, count="exact")
+        if status != "all":
+            query = query.eq("status", status)
+        res = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+        rows = res.data or []
+        total = getattr(res, "count", None)
+    else:
+        rows = [dict(row) for row in user_reports.values()]
+        for row in rows:
+            row.setdefault("status", "open")
+        if status != "all":
+            rows = [row for row in rows if row["status"] == status]
+        rows.sort(key=lambda row: str(row.get("created_at") or ""), reverse=True)
+        total = len(rows)
+        rows = rows[offset : offset + limit]
+
+    people = _people(
+        {row.get("reporter_id") for row in rows}
+        | {row.get("reported_id") for row in rows}
+    )
+    for row in rows:
+        row["reporter"] = people.get(row.get("reporter_id"))
+        row["reported"] = people.get(row.get("reported_id"))
+
+    if needle:
+
+        def report_text(row: dict) -> str:
+            reporter = row.get("reporter") or {}
+            reported = row.get("reported") or {}
+            return (
+                f'{row.get("reason", "")} {row.get("details", "")} '
+                f'{reporter.get("display_name", "")} {reported.get("display_name", "")}'
+            )
+
+        rows = [row for row in rows if _matches(report_text(row), needle)]
+
+    response.headers["X-Total-Count"] = str(total if total is not None else len(rows))
+    return rows
+
+
+@router.post("/admin/user-reports/{report_id}/dismiss")
+def dismiss_user_report(report_id: str, admin_id: str = Depends(require_admin)):
+    """Closes a report about a person without touching their account."""
+    row = _get_user_report_row(report_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Report not found")
+    if row.get("status", "open") != "open":
+        raise HTTPException(status_code=400, detail="This report is already resolved")
+
+    row = _resolve_user_report(report_id, "dismissed", admin_id, row)
+    log_action(
+        admin_id,
+        "user-report.dismiss",
+        "user-report",
+        report_id,
+        (row.get("reason") or "")[:200],
+        f'Dismissed a report on {row.get("reported_id") or "a user"}',
+    )
+    return row
+
+
+@router.post("/admin/user-reports/{report_id}/uphold")
+def uphold_user_report(report_id: str, admin_id: str = Depends(require_admin)):
+    """Agrees with a report: the reported account is closed, which hides its
+    listings and requests. Reversible from the Deleted tab."""
+    row = _get_user_report_row(report_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Report not found")
+    if row.get("status", "open") != "open":
+        raise HTTPException(status_code=400, detail="This report is already resolved")
+
+    reported_id = row.get("reported_id") or ""
+    result = close_account(reported_id)
+    _resolve_user_report(report_id, "upheld", admin_id, row)
+    log_action(
+        admin_id,
+        "user-report.uphold",
+        "user",
+        reported_id,
+        result["display_name"],
+        f'Closed the account after a report: {row.get("reason", "")}',
+    )
+    return {"upheld": report_id, "deleted": reported_id}
+
+
 # ── Looking For requests ───────────────────────────────────────────────────
 
 
@@ -886,86 +1023,23 @@ def delete_any_user(user_id: str, admin_id: str = Depends(require_admin)):
             status_code=400, detail="You can't close your own account from the admin panel"
         )
 
-    now = _now_iso()
-    if db:
-        existing = (
-            db.table("users")
-            .select("id, display_name, email, deleted_at")
-            .eq("id", user_id)
-            .execute()
-        )
-        if not existing.data:
-            raise HTTPException(status_code=404, detail="User not found")
-        user = existing.data[0]
-        if user.get("deleted_at"):
-            raise HTTPException(status_code=400, detail="This account is already closed")
-
-        db.table("users").update({"deleted_at": now}).eq("id", user_id).execute()
-        hidden_listings = len(
-            db.table("listings")
-            .select("id")
-            .eq("seller_id", user_id)
-            .is_("deleted_at", "null")
-            .execute()
-            .data
-        )
-        db.table("listings").update({"deleted_at": now}).eq("seller_id", user_id).is_(
-            "deleted_at", "null"
-        ).execute()
-        hidden_requests = len(
-            db.table("wanted_requests")
-            .select("id")
-            .eq("user_id", user_id)
-            .is_("deleted_at", "null")
-            .execute()
-            .data
-        )
-        db.table("wanted_requests").update({"deleted_at": now}).eq(
-            "user_id", user_id
-        ).is_("deleted_at", "null").execute()
-        # Pending offers from a closed buyer would otherwise block a seller
-        # from accepting anyone else.
-        db.table("offers").update({"status": "cancelled"}).eq(
-            "buyer_id", user_id
-        ).eq("status", "pending").execute()
-    else:
-        user = users.get(user_id)
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        if getattr(user, "deleted_at", None):
-            raise HTTPException(status_code=400, detail="This account is already closed")
-        user.deleted_at = datetime.now(timezone.utc)
-        hidden_listings = 0
-        hidden_requests = 0
-        for listing in listings.values():
-            if listing.seller_id == user_id and getattr(listing, "deleted_at", None) is None:
-                listing.deleted_at = user.deleted_at
-                hidden_listings += 1
-        for row in wanted_requests.values():
-            if row.get("user_id") == user_id and not row.get("deleted_at"):
-                row["deleted_at"] = now
-                hidden_requests += 1
-        for offer in offers.values():
-            if offer.get("buyer_id") == user_id and offer.get("status") == "pending":
-                offer["status"] = "cancelled"
-        user_row = _account_row(user)
-
-    display_name = user.get("display_name", "") if db else user_row["display_name"]
+    result = close_account(user_id)
     log_action(
         admin_id,
         "user.delete",
         "user",
         user_id,
-        display_name,
-        f"Closed the account; hid {hidden_listings} listing(s) and {hidden_requests} request(s)",
+        result["display_name"],
+        (
+            "Closed the account; hid "
+            f'{result["listings_hidden"]} listing(s) and {result["requests_hidden"]} request(s)'
+        ),
     )
-    broadcast("listings", "listing_changed", {})
-    broadcast("requests", "request_changed", {})
     return {
-        "deleted": user_id,
-        "deleted_at": now,
-        "listings_hidden": hidden_listings,
-        "requests_hidden": hidden_requests,
+        "deleted": result["deleted"],
+        "deleted_at": result["deleted_at"],
+        "listings_hidden": result["listings_hidden"],
+        "requests_hidden": result["requests_hidden"],
     }
 
 

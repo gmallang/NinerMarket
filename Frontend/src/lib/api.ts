@@ -4,6 +4,7 @@ import type {
   AdminRating,
   AdminReport,
   AdminUser,
+  AdminUserReport,
   AuthResponse,
   ListingDto,
   NewListing,
@@ -276,6 +277,52 @@ export const api = {
 
   getUserListings: (id: string, status = "active") =>
     request<ListingDto[]>(`/users/${id}/listings?status=${status}`),
+
+  // ── blocking, reporting a person, deleting your own account ─────────────
+  getBlockedUsers: () =>
+    request<{ id: string; display_name: string }[]>("/users/me/blocked"),
+
+  blockUser: (id: string) =>
+    request<{ blocked: string }>(`/users/${id}/block`, { method: "POST" }),
+
+  unblockUser: (id: string) =>
+    request<{ unblocked: string }>(`/users/${id}/block`, { method: "DELETE" }),
+
+  reportUser: (id: string, reason: string, details: string) =>
+    request<{ reported: string }>(`/users/${id}/report`, {
+      method: "POST",
+      body: JSON.stringify({ reason, details }),
+    }),
+
+  deleteAccount: (data: { password?: string; confirm_email?: string }) =>
+    request<{
+      deleted: string;
+      deleted_at: string;
+      listings_hidden: number;
+      requests_hidden: number;
+    }>("/users/me", { method: "DELETE", body: JSON.stringify(data) }),
+
+  adminListUserReports: async (
+    params: { q?: string; status?: string } = {},
+  ): Promise<{ items: AdminUserReport[]; total?: number }> => {
+    const q = new URLSearchParams();
+    if (params.status) q.set("status", params.status);
+    if (params.q?.trim()) q.set("q", params.q.trim());
+    const res = await requestRaw(`/admin/user-reports?${q.toString()}`);
+    const total = res.headers.get("X-Total-Count");
+    return {
+      items: (await res.json()) as AdminUserReport[],
+      total: total != null && total !== "" ? Number(total) : undefined,
+    };
+  },
+
+  adminDismissUserReport: (id: string) =>
+    request<AdminUserReport>(`/admin/user-reports/${id}/dismiss`, { method: "POST" }),
+
+  adminUpholdUserReport: (id: string) =>
+    request<{ upheld: string; deleted: string }>(`/admin/user-reports/${id}/uphold`, {
+      method: "POST",
+    }),
 
   // ── Looking For requests ────────────────────────────────────────────────
   listRequests: async (

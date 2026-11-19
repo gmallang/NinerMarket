@@ -20,6 +20,10 @@ export function ReportModal({
   submitting,
   error,
   done,
+  title = "Report listing",
+  subtitle = "Why are you reporting this listing?",
+  doneText = "Thanks for letting us know. The listing is now under review.",
+  ariaLabel = "Report listing",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,19 +31,22 @@ export function ReportModal({
   submitting: boolean;
   error: string | null;
   done: boolean;
+  /** Defaults describe a listing; the profile page passes person wording. */
+  title?: string;
+  subtitle?: string;
+  doneText?: string;
+  ariaLabel?: string;
 }) {
   const [reason, setReason] = useState(REPORT_REASONS[0]);
   const [details, setDetails] = useState("");
 
   return (
-    <Modal open={open} onOpenChange={onOpenChange} ariaLabel="Report listing" foreground>
+    <Modal open={open} onOpenChange={onOpenChange} ariaLabel={ariaLabel} foreground>
       {done ? (
         <div className={s.reportDone}>
           <CheckCircle2 size={32} className={s.reportDoneIcon} />
           <h2 className={s.reportTitle}>Report submitted</h2>
-          <p className={s.reportDoneText}>
-            Thanks for letting us know. The listing is now under review.
-          </p>
+          <p className={s.reportDoneText}>{doneText}</p>
           <button
             className={`${shared.btnPrimary} ${s.reportSubmit}`}
             onClick={() => onOpenChange(false)}
@@ -51,8 +58,8 @@ export function ReportModal({
         <>
           <div className={s.reportHead}>
             <div>
-              <h2 className={s.reportTitle}>Report listing</h2>
-              <p className={s.reportSub}>Why are you reporting this listing?</p>
+              <h2 className={s.reportTitle}>{title}</h2>
+              <p className={s.reportSub}>{subtitle}</p>
             </div>
             <button className={shared.modalClose} onClick={() => onOpenChange(false)} aria-label="Close">
               <X size={16} />

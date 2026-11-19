@@ -13,6 +13,11 @@ vi.mock("@/lib/api", () => ({
     getRatings: vi.fn(),
     getUserListings: vi.fn(),
     createRating: vi.fn(),
+    getBlockedUsers: vi.fn(),
+    blockUser: vi.fn(),
+    unblockUser: vi.fn(),
+    reportUser: vi.fn(),
+    deleteAccount: vi.fn(),
   },
 }));
 
@@ -80,6 +85,7 @@ describe("UserProfilePage", () => {
   beforeEach(() => {
     vi.mocked(api.getUser).mockResolvedValue(PROFILE);
     vi.mocked(api.getRatings).mockResolvedValue(RATINGS);
+    vi.mocked(api.getBlockedUsers).mockResolvedValue([]);
     vi.mocked(api.getUserListings).mockResolvedValue([
       makeListing("1", "Chemistry Textbook"),
       makeListing("2", "Desk Lamp"),

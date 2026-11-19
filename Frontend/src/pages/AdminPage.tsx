@@ -20,6 +20,7 @@ import type {
   AdminRating,
   AdminReport,
   AdminUser,
+  AdminUserReport,
   WantedRequestDto,
 } from "@/lib/types";
 import s from "./AdminPage.module.css";
@@ -85,6 +86,7 @@ export function AdminPage() {
   const [listings, setListings] = useState<AdminListing[] | null>(null);
   const [requests, setRequests] = useState<WantedRequestDto[] | null>(null);
   const [reports, setReports] = useState<AdminReport[] | null>(null);
+  const [userReports, setUserReports] = useState<AdminUserReport[] | null>(null);
   const [ratings, setRatings] = useState<AdminRating[] | null>(null);
   const [accounts, setAccounts] = useState<AdminUser[] | null>(null);
   const [deletedAccounts, setDeletedAccounts] = useState<AdminUser[] | null>(null);
@@ -99,7 +101,10 @@ export function AdminPage() {
   const clearTab = (target: Tab) => {
     if (target === "listings") setListings(null);
     else if (target === "requests") setRequests(null);
-    else if (target === "reports") setReports(null);
+    else if (target === "reports") {
+      setReports(null);
+      setUserReports(null);
+    }
     else if (target === "ratings") setRatings(null);
     else if (target === "accounts") setAccounts(null);
     else if (target === "deleted") setDeletedAccounts(null);
@@ -124,9 +129,13 @@ export function AdminPage() {
           setRequests(page.items);
           setTotal(page.total);
         } else if (tab === "reports") {
-          const page = await api.adminListReports({ q: query, status });
+          const [page, people] = await Promise.all([
+            api.adminListReports({ q: query, status }),
+            api.adminListUserReports({ q: query, status }),
+          ]);
           if (!alive) return;
           setReports(page.items);
+          setUserReports(people.items);
           setTotal(page.total);
         } else if (tab === "ratings") {
           const page = await api.adminListRatings({ q: query });
@@ -153,7 +162,10 @@ export function AdminPage() {
         if (!alive) return;
         if (tab === "listings") setListings([]);
         else if (tab === "requests") setRequests([]);
-        else if (tab === "reports") setReports([]);
+        else if (tab === "reports") {
+          setReports([]);
+          setUserReports([]);
+        }
         else if (tab === "ratings") setRatings([]);
         else if (tab === "accounts") setAccounts([]);
         else if (tab === "deleted") setDeletedAccounts([]);
@@ -270,6 +282,37 @@ export function AdminPage() {
     }
     void run(report.id, () => api.adminUpholdReport(report.id), () =>
       setReports((list) => list?.filter((item) => item.id !== report.id) ?? list),
+    );
+  };
+
+  const dismissUserReport = (report: AdminUserReport) => {
+    if (!window.confirm("Dismiss this report? Their account stays open.")) return;
+    void run(
+      report.id,
+      () => api.adminDismissUserReport(report.id),
+      () =>
+        setUserReports((list) => {
+          if (!list) return list;
+          if (status === "open") return list.filter((item) => item.id !== report.id);
+          return list.map((item) =>
+            item.id === report.id ? { ...item, status: "dismissed" } : item,
+          );
+        }),
+      false,
+    );
+  };
+
+  const upholdUserReport = (report: AdminUserReport) => {
+    if (
+      !window.confirm(
+        `Close ${report.reported?.display_name ?? "this account"}? Their listings and requests are hidden right away, and you can restore the account from the Deleted tab.`,
+      )
+    ) {
+      return;
+    }
+    void run(report.id, () => api.adminUpholdUserReport(report.id), () =>
+      setUserReports((list) => list?.filter((item) => item.id !== report.id) ?? list),
+      false,
     );
   };
 
@@ -570,7 +613,57 @@ export function AdminPage() {
           </div>
         )
       ) : tab === "reports" ? (
-        reports && reports.length > 0 ? (
+        <>
+        {userReports && userReports.length > 0 && (
+          <div className={s.list}>
+            {userReports.map((report) => (
+              <div key={report.id} className={s.row}>
+                <div className={s.rowMain}>
+                  <p className={s.rowTitle}>
+                    Report about {report.reported?.display_name ?? "a former member"}
+                  </p>
+                  <p className={s.rowMeta}>
+                    {report.reason} · reported by{" "}
+                    {report.reporter?.display_name ?? "Former member"} ·{" "}
+                    {formatRelativeTime(report.created_at)}
+                  </p>
+                  {report.details && <p className={s.detailText}>{report.details}</p>}
+                </div>
+
+                <div className={s.rowTags}>
+                  <span className={`${s.badge} ${reportBadge(report.status)}`}>
+                    {report.status}
+                  </span>
+                </div>
+
+                {report.status === "open" ? (
+                  <div className={s.rowActions}>
+                    <button
+                      type="button"
+                      className={s.dismissBtn}
+                      disabled={busyId === report.id}
+                      onClick={() => dismissUserReport(report)}
+                    >
+                      {busyId === report.id ? "Working…" : "Dismiss"}
+                    </button>
+                    <button
+                      type="button"
+                      className={s.deleteBtn}
+                      disabled={busyId === report.id}
+                      onClick={() => upholdUserReport(report)}
+                    >
+                      <Trash2 size={14} />
+                      {busyId === report.id ? "Working…" : "Close account"}
+                    </button>
+                  </div>
+                ) : (
+                  <span className={s.resolvedLabel}>resolved</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        {reports && reports.length > 0 ? (
           <div className={s.list}>
             {reports.map((report) => (
               <div key={report.id} className={s.row}>
@@ -631,7 +724,8 @@ export function AdminPage() {
               Nothing needs a decision here — try the dismissed or upheld filter to review history.
             </p>
           </div>
-        )
+        )}
+        </>
       ) : tab === "ratings" ? (
         ratings && ratings.length > 0 ? (
           <div className={s.list}>

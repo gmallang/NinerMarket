@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from auth import notification_email, require_user
+from blocks import is_blocked_between
 from database import db, listings, threads, users
 from models import MarkReadRequest, OpenThreadRequest, SendMessageRequest
 from broadcast import broadcast
@@ -480,6 +481,13 @@ def open_thread(user_id: str, body: OpenThreadRequest, caller_id: str = Depends(
     else:
         buyer_id = user_id
 
+    # Both sides of the thread have to be reachable by each other; a block in
+    # either direction stops a conversation before it starts.
+    if is_blocked_between(user_id, seller_id if user_id != seller_id else buyer_id):
+        raise HTTPException(
+            status_code=403, detail="You can't start a conversation with this person."
+        )
+
     if db:
         existing = (
             db.table("threads")
@@ -549,6 +557,11 @@ def send_thread_message(
             raise HTTPException(status_code=404, detail="Thread not found")
         thread_row = existing.data[0]
         sent_by_opener = thread_row["user_id"] == user_id
+        recipient_id = (
+            _counterpart_id(thread_row["listingId"]) if sent_by_opener else thread_row["user_id"]
+        )
+        if is_blocked_between(user_id, recipient_id):
+            raise HTTPException(status_code=403, detail="You can't message this person.")
         msg = {
             "id": int(datetime.now().timestamp() * 1000),
             "text": body.text.strip(),
@@ -586,9 +599,6 @@ def send_thread_message(
         # unread badge already signals new messages and clears correctly the
         # instant it's read, whereas a separate notification had no way to
         # stay in sync with that and just piled up as noise.
-        recipient_id = (
-            _counterpart_id(thread_row["listingId"]) if sent_by_opener else thread_row["user_id"]
-        )
         _notify_new_message(recipient_id, user_id, msg["text"], thread_id)
         return _viewer_relative(thread_row, existing_msgs, user_id)
 
@@ -597,6 +607,11 @@ def send_thread_message(
         raise HTTPException(status_code=404, detail="Thread not found")
 
     sent_by_opener = thread["user_id"] == user_id
+    recipient_id = (
+        _counterpart_id(thread["listingId"]) if sent_by_opener else thread["user_id"]
+    )
+    if is_blocked_between(user_id, recipient_id):
+        raise HTTPException(status_code=403, detail="You can't message this person.")
     msg = {
         "id": int(datetime.now().timestamp() * 1000),
         "text": body.text.strip(),
@@ -608,9 +623,6 @@ def send_thread_message(
     thread["lastTimestamp"] = msg["timestamp"]
     _advance_cursor(thread_id, user_id, msg["id"])
 
-    recipient_id = (
-        _counterpart_id(thread["listingId"]) if sent_by_opener else thread["user_id"]
-    )
     _notify_new_message(recipient_id, user_id, msg["text"], thread_id)
     return _viewer_relative(thread, thread["messages"], user_id)
 

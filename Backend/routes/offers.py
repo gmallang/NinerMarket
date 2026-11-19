@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from auth import require_user
+from blocks import is_blocked_between
 from broadcast import broadcast
 from database import db, listings, offers, users
 from models import OfferCreate
@@ -96,6 +97,10 @@ def create_offer(
         raise HTTPException(status_code=400, detail="You can't make an offer on your own listing")
     if _listing_attr(listing, "status") != "active":
         raise HTTPException(status_code=400, detail="This listing is no longer available")
+    if is_blocked_between(user_id, seller_id):
+        raise HTTPException(
+            status_code=403, detail="You can't make an offer on this person's listing."
+        )
     if body.price > _listing_attr(listing, "price"):
         raise HTTPException(status_code=400, detail="Offers can't exceed the listed price")
 
